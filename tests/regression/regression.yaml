@@ -1,0 +1,107 @@
+aircraft:
+  name: test_aircraft
+  model: "../../aircraft/test_aircraft.vsp3"
+
+analysis:
+  modes: [GRID_DATABASE, TRIM_DATABASE]
+
+operating_conditions:
+  speed: {start: 8, step: 1, end: 9, unit: m/s}
+  alpha: {start: 0, step: 1, end: 1, unit: deg}
+  beta: {values: [0], unit: deg}
+
+atmosphere:
+  rho_kg_m3: 1.225
+  dynamic_viscosity_pa_s: 1.7894e-5
+  speed_of_sound_mps: 340.294
+
+geometry_sets:
+  thin_set_index: 1
+  thick_set_index: 2
+  thin:
+    - {name: Wing, type: Wing}
+    - {name: Tail, type: Wing}
+    - {name: TailV, type: Wing}
+  thick:
+    - {name: Fuselage, type: Fuselage}
+
+solver:
+  wake_iterations: 3
+  ncpu: 4
+  tessellation_overrides:
+    - {name: Wing, type: Wing, tess_u: 8, tess_w: 17}
+    - {name: Tail, type: Wing, tess_u: 8, tess_w: 17}
+    - {name: TailV, type: Wing, tess_u: 8, tess_w: 17}
+    - {name: Fuselage, type: Fuselage, tess_u: 8, tess_w: 17}
+
+reference:
+  source: model
+  cg_source: model
+
+controls:
+  aileron: {group: Aileron, neutral_deg: 0, min_deg: -20, max_deg: 20}
+  elevator: {group: Elevator, neutral_deg: 0, min_deg: -20, max_deg: 20}
+  rudder: {group: Rudder, neutral_deg: 0, min_deg: -20, max_deg: 20}
+
+trim:
+  enabled: true
+  mass_kg: 25.0
+  gravity_m_s2: 9.80665
+  operating_conditions:
+    speed: {values: [8], unit: m/s}
+    beta: {values: [0], unit: deg}
+  alpha: {initial_deg: 2, min_deg: -5, max_deg: 12}
+  elevator: {initial_deg: 0, min_deg: -20, max_deg: 20}
+  force_tolerance_n: 1.0
+  moment_tolerance_nm: 1.0
+  max_iterations: 7
+  max_step_deg: 5
+
+derivatives:
+  manifest: "../../config/required_derivatives.yaml"
+  scales: [0.5, 1.0, 2.0]
+  perturbations:
+    alpha_deg: 0.5
+    beta_deg: 0.5
+    p_rad_s: 0.01
+    q_rad_s: 0.01
+    r_rad_s: 0.01
+    aileron_deg: 2.0
+    elevator_deg: 2.0
+    rudder_deg: 2.0
+  convergence:
+    near_zero_reference: 0.05
+    pass_relative: 0.10
+    warn_relative: 0.25
+    pass_absolute: 0.02
+    warn_absolute: 0.08
+
+validation:
+  conventional_fixed_wing: true
+  symmetry:
+    enabled: true
+    base_coefficient_absolute_warn: 0.02
+    base_coefficient_absolute_fail: 0.05
+  physics:
+    enabled: true
+    derivative_absolute_limit: 100.0
+  rate_derivative_method_status: WARN
+  autotune_allow_warn: true
+
+regression:
+  speed_mps: 8
+  beta_deg: 0
+  baseline: "baseline.json"
+  pass_relative: 0.08
+  warn_relative: 0.15
+  pass_absolute: 0.03
+  warn_absolute: 0.08
+
+resume:
+  enabled: true
+
+export:
+  output_root: "../../results"
+  csv: true
+  json: true
+  mat: true

@@ -1,0 +1,75 @@
+{
+  "dataset_status": "WARN",
+  "summary": {
+    "command": "all",
+    "openvsp_version": "OpenVSP 3.51.3",
+    "geometry_status": "PASS",
+    "grid": {
+      "requested": 4,
+      "completed": 4,
+      "failed": 0,
+      "skipped": 4,
+      "status": "PASS"
+    },
+    "trim": {
+      "requested": 1,
+      "completed": 1,
+      "failed": 0,
+      "skipped": 1,
+      "status": "WARN"
+    },
+    "derivatives": {
+      "required_derivatives": 23,
+      "flight_points": 1,
+      "required_instances": 23,
+      "calculated": 23,
+      "missing": 0,
+      "invalid": 0,
+      "validation_failed": 0,
+      "derivative_set_status": "WARN",
+      "overall_status": "WARN"
+    },
+    "fuselage_effect_status": "PASS",
+    "fuselage_validation_skipped": true,
+    "portability_status": "PASS",
+    "final_status": "WARN",
+    "limitations": [
+      "OpenVSP 3.51.3 public Sweep API has no negative p/q/r single-point input; rate derivatives are native forward differences and are marked WARN.",
+      "The delivered mesh and wake settings are smoke-test settings, not production convergence evidence."
+    ]
+  },
+  "flight_points": [
+    {
+      "speed_mps": 8.0,
+      "solver_status": "PASS",
+      "trim_status": "PASS",
+      "numerical_status": "WARN",
+      "derivative_status": "WARN",
+      "physics_status": "PASS",
+      "overall_status": "WARN",
+      "required_derivatives": {
+        "required": 23,
+        "calculated": 23,
+        "missing": 0,
+        "invalid": 0,
+        "validation_failed": 0,
+        "validation_warned": 9,
+        "missing_names": [],
+        "invalid_names": [],
+        "failed_names": [],
+        "warned_names": [
+          "CL_q",
+          "Cm_q",
+          "CY_p",
+          "Cl_p",
+          "Cn_p",
+          "CY_r",
+          "Cl_r",
+          "Cn_r",
+          "CY_delta_r"
+        ],
+        "status": "WARN"
+      }
+    }
+  ]
+}

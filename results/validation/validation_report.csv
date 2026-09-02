@@ -1,0 +1,46 @@
+﻿check,level,limit,message,speed_mps,status,value
+VSPAERO completion,SOLVER,,all requested solver runs completed,8.0,PASS,
+converged,TRIM,,Lift=Weight and Cm=0 residuals converged,8.0,PASS,
+lift residual,TRIM,1.0,absolute force residual in N,8.0,PASS,-0.01827043119993732
+pitch moment residual,TRIM,1.0,absolute pitch moment residual in N*m,8.0,PASS,0.14185749547200002
+alpha range,TRIM,-5..12 deg,trim alpha is inside the configured search range,8.0,PASS,4.268906787204264
+elevator range,TRIM,-20..20 deg,trim elevator is inside the configured search range,8.0,PASS,-5.952486745549647
+CL_alpha,NUMERICAL,PASS 0.5135992666917145; WARN 1.3139981667292864,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,4.935992666917145
+CD_alpha,NUMERICAL,PASS 0.05248975476415392; WARN 0.16122438691038482,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.3248975476415392
+Cm_alpha,NUMERICAL,PASS 0.14817770523491278; WARN 0.400444263087282,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-1.2817770523491279
+CL_q,NUMERICAL,PASS 0.89366601; WARN 2.264165025,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,8.7366601
+Cm_q,NUMERICAL,PASS 1.30210734; WARN 3.28526835,vspaero_native_forward_rate: step variation exceeds PASS but is within WARN tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,-12.8210734
+CY_beta,NUMERICAL,PASS 0.06583933999191342; WARN 0.19459834997978356,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-0.45839339991913425
+Cl_beta,NUMERICAL,PASS 0.02797612830593023; WARN 0.09994032076482556,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-0.07976128305930226
+Cn_beta,NUMERICAL,PASS 0.03113820821360024; WARN 0.1078455205340006,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.11138208213600237
+CY_p,NUMERICAL,PASS 0.0263898; WARN 0.0959745,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,-0.063898
+Cl_p,NUMERICAL,PASS 0.0668928; WARN 0.19723200000000002,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,-0.468928
+Cn_p,NUMERICAL,PASS 0.02563091; WARN 0.094077275,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,-0.0563091
+CY_r,NUMERICAL,PASS 0.04879708000000001; WARN 0.1519927,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,0.2879708
+Cl_r,NUMERICAL,PASS 0.02739578; WARN 0.09848945,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,0.0739578
+Cn_r,NUMERICAL,PASS 0.02969996; WARN 0.1042499,vspaero_native_forward_rate: step variation is within PASS absolute+relative tolerance; sample integrity: three real positive-rate samples and baselines exist; negative rate is unavailable,8.0,WARN,-0.0969996
+CL_delta_e,NUMERICAL,PASS 0.07411504894109625; WARN 0.21528762235274063,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.5411504894109624
+CD_delta_e,NUMERICAL,PASS 0.025; WARN 0.0925,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.0019437907467163527
+Cm_delta_e,NUMERICAL,PASS 0.17296658176813012; WARN 0.4624164544203253,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-1.5296658176813012
+CY_delta_a,NUMERICAL,PASS 0.025; WARN 0.0925,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-0.018811665728677464
+Cl_delta_a,NUMERICAL,PASS 0.04766964849601736; WARN 0.1491741212400434,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,-0.27669648496017357
+Cn_delta_a,NUMERICAL,PASS 0.025; WARN 0.0925,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.0012104364535149975
+CY_delta_r,NUMERICAL,PASS 0.03231832415742371; WARN 0.11079581039355926,centered_finite_difference: step variation exceeds PASS but is within WARN tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,WARN,-0.12318324157423706
+Cl_delta_r,NUMERICAL,PASS 0.025; WARN 0.0925,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.004707942063430617
+Cn_delta_r,NUMERICAL,PASS 0.025199777467277265; WARN 0.09299944366819317,centered_finite_difference: step variation is within PASS absolute+relative tolerance; sample integrity: all three scales contain real plus and minus samples,8.0,PASS,0.05199777467277266
+required derivative set,DERIVATIVE,"no missing, invalid, or failed required derivative","missing=0, invalid=0, failed=0, warned=9",8.0,WARN,23/23
+CL_alpha,PHYSICS,expected positive,finite and below configured magnitude limit,8.0,PASS,4.935992666917145
+Cm_alpha,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-1.2817770523491279
+Cm_q,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-12.8210734
+Cn_beta,PHYSICS,expected positive,finite and below configured magnitude limit,8.0,PASS,0.11138208213600237
+Cl_p,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-0.468928
+Cn_r,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-0.0969996
+beta=0 symmetry CY,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,0.0002912
+beta=0 symmetry Cl,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,8.46e-05
+beta=0 symmetry Cn,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,0.0001327
+beta centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,1.7111885500000005e-05
+aileron centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,3.2451885500000004e-05
+rudder centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,4.899082850000027e-05
+trim flight point overall,DATASET,,"worst status across solver, trim, numerical, derivative, and physics validation",8.0,WARN,
+fuselage participation,DATASET,1e-08,thin+thick differs from thin-only,,PASS,0.03594515554200001
+portable paths,DATASET,0,no scattered absolute paths outside config/openvsp.yaml,,PASS,0

@@ -4,7 +4,10 @@ import json
 import math
 import sys
 import unittest
+from copy import deepcopy
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 
 from scipy.io import loadmat
 
@@ -17,7 +20,20 @@ if str(SRC) not in sys.path:
 from case_generator import expand_axis, generate_grid_cases, generate_trim_cases
 from config_loader import load_project_config
 from coordinate_system import map_polar_coefficients, nondimensional_rate_step
-from finite_difference import convergence_result
+from finite_difference import convergence_result, dual_tolerance_result
+from numerical_convergence import (
+    boundary_continuity_result,
+    derivative_bundle_wake,
+    diagnose_cm_q,
+    diagnose_cy_delta_r,
+    midpoint_interpolation_error,
+    minimum_converged_level,
+    production_gate,
+    promote_discrete_level,
+    query_wake_schedule,
+    run_numerical_convergence,
+    trim_wake_decision,
+)
 
 
 class ConfigurationTests(unittest.TestCase):
@@ -81,6 +97,207 @@ class ConventionAndNumericsTests(unittest.TestCase):
         failed = convergence_result({"0.5": 1.5, "1": 1.0, "2": 0.5}, settings)
         self.assertEqual(passed["status"], "PASS")
         self.assertEqual(failed["status"], "FAIL")
+
+
+class NumericalConvergenceLogicTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tolerance = {
+            "near_zero_reference": 0.05,
+            "pass_relative": 0.05, "warn_relative": 0.15,
+            "pass_absolute": 0.01, "warn_absolute": 0.03,
+        }
+        self.derivatives = {
+            "scales": [0.5, 1.0, 2.0],
+            "perturbations": {"alpha_deg": 0.5, "beta_deg": 0.5},
+        }
+
+    @staticmethod
+    def schedule(*, safety: int = 0, buffer: float = 0.12) -> dict:
+        return {
+            "candidates": [3, 5, 8, 12],
+            "axis_scales": {"speed_mps": 1.0, "alpha_deg": 10.0, "beta_deg": 1.0},
+            "neighbor_count": 4,
+            "boundary_buffer_normalized": buffer,
+            "safety_margin_levels_for_untested": safety,
+            "sample_points": [
+                {"name": "low", "speed_mps": 8.0, "alpha_deg": 0.0, "beta_deg": 0.0, "required_wake": 5},
+                {"name": "high", "speed_mps": 8.0, "alpha_deg": 10.0, "beta_deg": 0.0, "required_wake": 8},
+            ],
+        }
+
+    def test_wake_candidates_are_centralized(self) -> None:
+        config = load_project_config(PROJECT_ROOT / "config" / "aircraft.yaml")
+        self.assertEqual(config["numerical_convergence"]["wake"]["candidates"], [3, 5, 8, 12])
+
+    def test_minimum_wake_requires_every_later_transition(self) -> None:
+        values = {3: {"CL": 1.00}, 5: {"CL": 1.005}, 8: {"CL": 1.20}, 12: {"CL": 1.201}}
+        result = minimum_converged_level(
+            [3, 5, 8, 12], values, ["CL"], self.tolerance,
+            allow_unverified_highest=True,
+        )
+        self.assertEqual(result["required_level"], 8)
+        self.assertEqual(result["status"], "PASS")
+
+    def test_highest_wake_is_not_assumed_converged(self) -> None:
+        values = {3: {"CL": 1.0}, 5: {"CL": 1.2}, 8: {"CL": 1.4}, 12: {"CL": 1.8}}
+        result = minimum_converged_level(
+            [3, 5, 8, 12], values, ["CL"], self.tolerance,
+            allow_unverified_highest=True,
+        )
+        self.assertEqual(result["required_level"], 12)
+        self.assertEqual(result["status"], "FAIL")
+
+    def test_dual_tolerance_handles_near_zero(self) -> None:
+        result = dual_tolerance_result(0.0, 0.005, self.tolerance)
+        self.assertEqual(result["status"], "PASS")
+
+    def test_safety_margin_and_discrete_map_query(self) -> None:
+        self.assertEqual(promote_discrete_level(5, [3, 5, 8, 12], 1), 8)
+        direct = query_wake_schedule(self.schedule(safety=1), {"speed_mps": 8, "alpha_deg": 0, "beta_deg": 0})
+        boundary = query_wake_schedule(self.schedule(safety=1), {"speed_mps": 8, "alpha_deg": 5, "beta_deg": 0})
+        self.assertEqual(direct["wake_iterations"], 5)
+        self.assertEqual(boundary["wake_iterations"], 12)
+        self.assertEqual(boundary["source"], "conservative_discrete_neighbors")
+
+    def test_derivative_bundle_uses_maximum_wake(self) -> None:
+        wake = derivative_bundle_wake(
+            self.schedule(safety=0),
+            {"speed_mps": 8, "alpha_deg": 1, "beta_deg": 0},
+            {"scales": [0.5, 1, 2], "perturbations": {"alpha_deg": 5, "beta_deg": 0.5}},
+        )
+        self.assertEqual(wake, 8)
+
+    def test_pretrim_selection_and_cross_region_upgrade(self) -> None:
+        no_perturbation = {"scales": [1], "perturbations": {"alpha_deg": 0, "beta_deg": 0}}
+        start = trim_wake_decision(
+            self.schedule(), {"speed_mps": 8, "alpha_deg": 0, "beta_deg": 0}, no_perturbation
+        )
+        crossed = trim_wake_decision(
+            self.schedule(), {"speed_mps": 8, "alpha_deg": 10, "beta_deg": 0},
+            no_perturbation, current_wake=5,
+        )
+        self.assertEqual(start["action"], "START_PRODUCTION")
+        self.assertEqual(crossed["action"], "UPGRADE_AND_RETRIM")
+        self.assertEqual(crossed["wake_iterations"], 8)
+
+    def test_boundary_continuity(self) -> None:
+        passed = boundary_continuity_result({"CL": 1.0}, {"CL": 1.005}, ["CL"], self.tolerance)
+        failed = boundary_continuity_result({"CL": 1.0}, {"CL": 1.3}, ["CL"], self.tolerance)
+        self.assertEqual(passed["status"], "PASS")
+        self.assertEqual(failed["status"], "FAIL")
+
+    def test_tessellation_recommends_lowest_stable_preset(self) -> None:
+        result = minimum_converged_level(
+            ["COARSE", "MEDIUM", "FINE"],
+            {"COARSE": {"CL": 0.8}, "MEDIUM": {"CL": 1.0}, "FINE": {"CL": 1.005}},
+            ["CL"], self.tolerance, allow_unverified_highest=False,
+        )
+        self.assertEqual(result["required_level"], "MEDIUM")
+        self.assertEqual(result["status"], "PASS")
+
+    def test_cy_delta_r_diagnostic(self) -> None:
+        samples = {}
+        for step in (0.5, 1.0, 2.0, 4.0):
+            angle = math.radians(step)
+            samples[step] = {
+                "minus": {"CY": -0.4 * angle, "Cl": 0.1 * angle, "Cn": -0.2 * angle},
+                "plus": {"CY": 0.4 * angle, "Cl": -0.1 * angle, "Cn": 0.2 * angle},
+            }
+        result = diagnose_cy_delta_r(samples, self.tolerance)
+        self.assertEqual(result["classification"], "LOCAL_LINEAR_VALID")
+        self.assertEqual(result["recommended_delta_r_deg"], 1.0)
+
+    def test_cm_q_limitation_remains_warn(self) -> None:
+        result = diagnose_cm_q(
+            {3: -8.0, 5: -8.01, 8: -8.02, 12: -8.02},
+            {"COARSE": -8.0, "MEDIUM": -8.01, "FINE": -8.02}, self.tolerance,
+        )
+        self.assertEqual(result["numerical_status"], "PASS")
+        self.assertEqual(result["status"], "WARN")
+        self.assertIn("negative steady q", result["api_limitation"])
+
+    def test_production_gate_and_adaptive_interface(self) -> None:
+        settings = {"production_gate": {"status": "WARN", "reason": "review"}}
+        self.assertTrue(production_gate(settings)["allowed"])
+        self.assertFalse(production_gate(settings, adaptive=True)["allowed"])
+        self.assertFalse(production_gate(
+            {**settings, "identity": {"model_sha256": "old"}},
+            expected_identity={"model_sha256": "new"},
+        )["allowed"])
+        self.assertTrue(production_gate(None, force=True)["forced"])
+        midpoint = midpoint_interpolation_error(
+            {"CL": 0.0}, {"CL": 1.0}, {"CL": 0.505}, ["CL"], self.tolerance
+        )
+        self.assertEqual(midpoint["status"], "PASS")
+
+    def test_mocked_full_convergence_writes_unified_outputs(self) -> None:
+        config = deepcopy(load_project_config(PROJECT_ROOT / "config" / "aircraft.yaml"))
+        reference = {
+            "sref_m2": 10.0, "bref_m": 10.0, "cref_m": 1.0,
+            "xcg_m": 0.0, "ycg_m": 0.0, "zcg_m": 0.0,
+        }
+        manifest = config["_manifest"]
+
+        class FakeRunner:
+            vsp = SimpleNamespace(GetVSPVersion=lambda: "OpenVSP 3.51.3")
+
+            def run(self, condition, parent, label, *, stability, control_deflections_deg=None, **_):
+                controls = control_deflections_deg or {}
+                rudder = math.radians(float(controls.get("rudder", 0.0)))
+                if not stability:
+                    raw_data = {
+                        "CFxtot": -0.01, "CFytot": 0.4 * rudder, "CFztot": -0.2,
+                        "CLtot": 0.2, "CDtot": 0.01,
+                        "CMxtot": 0.1 * rudder, "CMytot": 0.0, "CMztot": -0.2 * rudder,
+                    }
+                    return SimpleNamespace(raw_data=raw_data, duration_sec=0.001)
+                q_s = float(condition["dynamic_pressure_pa"]) * reference["sref_m2"]
+                cl_trim = float(config["trim"]["mass_kg"]) * float(config["trim"]["gravity_m_s2"]) / q_s
+                coefficients = {
+                    name: {"standard_value": value}
+                    for name, value in {
+                        "CL": cl_trim, "CD": 0.02, "CY": 0.0,
+                        "Cl": 0.0, "Cm": 0.0, "Cn": 0.0,
+                    }.items()
+                }
+                stability_derivatives = {}
+                control_derivatives = {
+                    role: {"derivatives": {}} for role in ("aileron", "elevator", "rudder")
+                }
+                for index, row in enumerate(manifest["derivatives"], 1):
+                    measurement = {"standard_value": -0.1 - 0.001 * index}
+                    perturbation = str(row["perturbation"])
+                    if perturbation in control_derivatives:
+                        control_derivatives[perturbation]["derivatives"][str(row["name"])] = measurement
+                    else:
+                        stability_derivatives[str(row["name"])] = measurement
+                stability_derivatives["CL_alpha"] = {"standard_value": 1.0}
+                stability_derivatives["Cm_alpha"] = {"standard_value": -0.5}
+                control_derivatives["elevator"]["derivatives"]["CL_delta_e"] = {"standard_value": 0.2}
+                control_derivatives["elevator"]["derivatives"]["Cm_delta_e"] = {"standard_value": -1.0}
+                payload = {
+                    "coefficients": coefficients,
+                    "stability_derivatives": stability_derivatives,
+                    "control_derivatives": control_derivatives,
+                    "native_rate_cases": {},
+                }
+                return SimpleNamespace(raw_data={}, payload=payload, duration_sec=0.001)
+
+        with TemporaryDirectory() as temporary:
+            config["_paths"]["results"] = Path(temporary)
+            report = run_numerical_convergence(
+                config=config, runner=FakeRunner(), reference=reference, manifest=manifest,
+                analysis_mapper=lambda raw: raw.payload,
+            )
+            output = Path(temporary) / "numerical_convergence"
+            self.assertEqual(report["production_gate_status"], "PASS")
+            for name in (
+                "numerical_convergence_report.md", "numerical_convergence_report.json",
+                "wake_convergence_map.csv", "tessellation_convergence.csv",
+                "derivative_diagnostics.csv", "production_numerical_settings.yaml",
+                "wake_convergence_map.png", "tessellation_convergence.png", "CY_vs_delta_r.png",
+            ):
+                self.assertTrue((output / name).is_file(), name)
 
 
 class DeliveredResultTests(unittest.TestCase):

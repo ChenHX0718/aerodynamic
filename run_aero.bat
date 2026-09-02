@@ -18,6 +18,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+if not exist "%PROJECT_ROOT%results\numerical_convergence\production_numerical_settings.yaml" (
+    echo.
+    echo [ERROR] Production Numerical Settings not found.
+    echo Run: .venv\Scripts\python.exe run.py numerical-convergence
+    pause
+    exit /b 1
+)
+
 "%PYTHON_EXE%" -u "%PROJECT_ROOT%run.py" all --config "%PROJECT_ROOT%config\aircraft.yaml"
 set "RUN_STATUS=%ERRORLEVEL%"
 echo.

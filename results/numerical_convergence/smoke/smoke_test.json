@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "status": "PASS",
+  "timestamp": "2026-09-02T15:07:44+08:00",
+  "openvsp_version": "OpenVSP 3.51.3",
+  "model_sha256": "5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b",
+  "condition": {
+    "speed_mps": 8.0,
+    "alpha_deg": 0.0,
+    "beta_deg": 0.0,
+    "rho_kg_m3": 1.225,
+    "dynamic_viscosity_pa_s": 1.7894e-05,
+    "speed_of_sound_mps": 340.294,
+    "mach": 0.023509083322068566,
+    "reynolds_cref": 816027.7187884208,
+    "dynamic_pressure_pa": 39.2
+  },
+  "wake_iterations": 3,
+  "tessellation_preset": "COARSE",
+  "coefficients": {
+    "CL": 0.1037327,
+    "CD": 0.0140512,
+    "Cm": -0.0315634,
+    "CY": 0.0001523,
+    "Cl": 3.25e-05,
+    "Cn": -6.39e-05
+  },
+  "solver_duration_sec": 101.42700720007997
+}

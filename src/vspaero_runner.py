@@ -77,6 +77,7 @@ class VSPAERORunner:
         condition: dict[str, float],
         stability: bool,
         include_thick: bool,
+        wake_iterations: int | None,
     ) -> str:
         analysis = "VSPAEROSweep"
         required = {
@@ -110,7 +111,10 @@ class VSPAERORunner:
         self._set_double(analysis, "ReCref", condition["reynolds_cref"])
         self._set_double(analysis, "ReCrefEnd", condition["reynolds_cref"])
         self._set_int(analysis, "ReCrefNpts", 1)
-        self._set_int(analysis, "WakeNumIter", int(solver.get("wake_iterations", 10)))
+        wake = int(wake_iterations if wake_iterations is not None else solver["wake_iterations"])
+        if wake <= 0:
+            raise OpenVSPError(f"WakeNumIter must be positive, got {wake}")
+        self._set_int(analysis, "WakeNumIter", wake)
         self._set_int(analysis, "NCPU", int(solver.get("ncpu", 4)))
         self._set_int(analysis, "UnsteadyType", self.vsp.STABILITY_DEFAULT if stability else self.vsp.STABILITY_OFF)
         self._set_string(analysis, "RedirectFile", str((case_dir / "vspaero_console.txt").resolve()))
@@ -131,12 +135,17 @@ class VSPAERORunner:
         self,
         case_dir: Path,
         control_deflections_deg: dict[str, float] | None,
+        tessellation_overrides: list[dict[str, Any]] | None,
     ) -> None:
         case_dir.mkdir(parents=True, exist_ok=False)
         self.model.load()
         self.model.apply_geometry_sets(self.geometry_selection)
         self.model.apply_tessellation_overrides(
-            list(self.config["solver"].get("tessellation_overrides", []))
+            list(
+                tessellation_overrides
+                if tessellation_overrides is not None
+                else self.config["solver"].get("tessellation_overrides", [])
+            )
         )
         requested = control_deflections_deg or {}
         for role in ("aileron", "elevator", "rudder"):
@@ -180,15 +189,19 @@ class VSPAERORunner:
         stability: bool,
         include_thick: bool = True,
         control_deflections_deg: dict[str, float] | None = None,
+        wake_iterations: int | None = None,
+        tessellation_overrides: list[dict[str, Any]] | None = None,
     ) -> AeroRunResult:
         start = time.perf_counter()
         case_dir = parent_dir.resolve() / label
-        self._prepare_case(case_dir, control_deflections_deg)
+        self._prepare_case(case_dir, control_deflections_deg, tessellation_overrides)
         old_cwd = Path.cwd()
         try:
             os.chdir(case_dir)
             geometry_id = self._configure_geometry(include_thick)
-            sweep_id = self._configure_sweep(case_dir, condition, stability, include_thick)
+            sweep_id = self._configure_sweep(
+                case_dir, condition, stability, include_thick, wake_iterations
+            )
             result_name = "VSPAERO_Stab" if stability else "VSPAERO_Polar"
             data_id = self.vsp.FindLatestResultsID(result_name)
             if not data_id:

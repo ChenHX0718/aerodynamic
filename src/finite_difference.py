@@ -14,6 +14,25 @@ def combine_status(statuses: list[str]) -> str:
     return max(normalized, key=STATUS_RANK.get) if normalized else "PASS"
 
 
+def dual_tolerance_result(reference: float, candidate: float, settings: dict[str, Any]) -> dict[str, Any]:
+    """Common absolute-plus-relative comparison with a near-zero reference floor."""
+    if not math.isfinite(float(reference)) or not math.isfinite(float(candidate)):
+        return {"status": "FAIL", "difference": math.nan, "reason": "non-finite value"}
+    scale = max(abs(float(reference)), abs(float(candidate)), float(settings["near_zero_reference"]))
+    difference = abs(float(candidate) - float(reference))
+    pass_limit = float(settings["pass_absolute"]) + float(settings["pass_relative"]) * scale
+    warn_limit = float(settings["warn_absolute"]) + float(settings["warn_relative"]) * scale
+    status = "PASS" if difference <= pass_limit else "WARN" if difference <= warn_limit else "FAIL"
+    return {
+        "status": status,
+        "difference": difference,
+        "relative_difference": difference / scale,
+        "pass_limit": pass_limit,
+        "warn_limit": warn_limit,
+        "reference_scale": scale,
+    }
+
+
 def convergence_result(values: dict[str, float], settings: dict[str, Any]) -> dict[str, Any]:
     required = ("0.5", "1", "2")
     if any(key not in values or not math.isfinite(float(values[key])) for key in required):
@@ -22,19 +41,18 @@ def convergence_result(values: dict[str, float], settings: dict[str, Any]) -> di
             "values": values,
         }
     nominal = float(values["1"])
-    max_change = max(abs(float(values["0.5"]) - nominal), abs(float(values["2"]) - nominal))
-    reference = max(abs(nominal), float(settings["near_zero_reference"]))
-    relative = max_change / reference
-    pass_limit = float(settings["pass_absolute"]) + float(settings["pass_relative"]) * reference
-    warn_limit = float(settings["warn_absolute"]) + float(settings["warn_relative"]) * reference
-    if max_change <= pass_limit:
-        status = "PASS"
+    comparisons = [
+        dual_tolerance_result(nominal, float(values[key]), settings) for key in ("0.5", "2")
+    ]
+    worst = max(comparisons, key=lambda item: (STATUS_RANK[item["status"]], item["difference"]))
+    max_change = max(float(item["difference"]) for item in comparisons)
+    relative = max(float(item["relative_difference"]) for item in comparisons)
+    status = combine_status([item["status"] for item in comparisons])
+    if status == "PASS":
         reason = "step variation is within PASS absolute+relative tolerance"
-    elif max_change <= warn_limit:
-        status = "WARN"
+    elif status == "WARN":
         reason = "step variation exceeds PASS but is within WARN tolerance"
     else:
-        status = "FAIL"
         reason = "step variation exceeds WARN absolute+relative tolerance"
     return {
         "status": status,
@@ -43,8 +61,8 @@ def convergence_result(values: dict[str, float], settings: dict[str, Any]) -> di
         "max_absolute_change": float(max_change),
         "relative_variation": float(relative),
         "relative_variation_pct": float(relative * 100.0),
-        "pass_limit": float(pass_limit),
-        "warn_limit": float(warn_limit),
+        "pass_limit": float(worst["pass_limit"]),
+        "warn_limit": float(worst["warn_limit"]),
         "near_zero_reference": float(settings["near_zero_reference"]),
     }
 
@@ -259,6 +277,8 @@ def calculate_trim_derivatives(
         "records": records,
         "run_count": run_count,
         "solver_duration_sec": float(solver_duration),
+        "bundle_wake_iterations": derivative_config.get("_bundle_wake_iterations"),
+        "bundle_rule": "base and every +/- perturbation use one fixed Wake Iteration",
     }
 
 

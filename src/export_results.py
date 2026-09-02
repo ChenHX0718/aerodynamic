@@ -218,6 +218,15 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             "geometry_sha256": database["metadata"]["model_sha256"],
             "coordinate_system": database["metadata"]["coordinate_system"],
             "derivatives": derivative_meta,
+            "production_numerical_settings": {
+                "gate_status": (
+                    database["metadata"].get("production_numerical_settings") or {}
+                ).get("production_gate", {}).get("status", "NOT_REQUESTED"),
+                "tessellation_preset": (
+                    database["metadata"].get("production_numerical_settings") or {}
+                ).get("production_tessellation", {}).get("preset", "CONFIGURED_FALLBACK"),
+                "wake_rule": "discrete state schedule plus derivative-bundle maximum",
+            },
         },
         "reference": database["reference"],
         "flight_points": flight_points,

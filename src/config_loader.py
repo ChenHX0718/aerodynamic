@@ -111,6 +111,91 @@ def _validate_axis(axis: Any, name: str) -> None:
             raise ConfigError(f"{name}.step points away from end")
 
 
+def _validate_tolerance(settings: Any, prefix: str) -> None:
+    if not isinstance(settings, dict):
+        raise ConfigError(f"{prefix} must be a mapping")
+    for name in (
+        "near_zero_reference", "pass_relative", "warn_relative",
+        "pass_absolute", "warn_absolute",
+    ):
+        _require_positive(settings, name, prefix)
+    if float(settings["pass_relative"]) >= float(settings["warn_relative"]):
+        raise ConfigError(f"{prefix}.pass_relative must be less than warn_relative")
+    if float(settings["pass_absolute"]) >= float(settings["warn_absolute"]):
+        raise ConfigError(f"{prefix}.pass_absolute must be less than warn_absolute")
+
+
+def _validate_numerical_convergence(data: dict[str, Any]) -> None:
+    numerical = _require_mapping(data, "numerical_convergence")
+    wake = _require_mapping(numerical, "wake")
+    candidates = [int(item) for item in wake.get("candidates", [])]
+    if len(candidates) < 2 or any(item <= 0 for item in candidates) or candidates != sorted(set(candidates)):
+        raise ConfigError("numerical_convergence.wake.candidates must be unique increasing positive integers")
+    states = wake.get("representative_states")
+    if not isinstance(states, list) or len(states) < 3:
+        raise ConfigError("wake.representative_states must contain at least three aerodynamic states")
+    names: set[str] = set()
+    for index, state in enumerate(states):
+        if not isinstance(state, dict) or not state.get("name"):
+            raise ConfigError(f"wake.representative_states[{index}].name is required")
+        name = str(state["name"])
+        if name in names:
+            raise ConfigError(f"Duplicate representative state name: {name}")
+        names.add(name)
+        _require_positive(state, "speed_mps", f"wake.representative_states[{index}]")
+        if not bool(state.get("trim", False)) and "alpha_deg" not in state:
+            raise ConfigError(f"wake.representative_states[{index}].alpha_deg is required unless trim=true")
+        float(state.get("beta_deg", 0.0))
+    _validate_tolerance(wake.get("tolerance"), "numerical_convergence.wake.tolerance")
+    if float(wake.get("boundary_buffer_normalized", 0.0)) <= 0:
+        raise ConfigError("wake.boundary_buffer_normalized must be positive")
+    if int(wake.get("safety_margin_levels_for_untested", -1)) < 0:
+        raise ConfigError("wake.safety_margin_levels_for_untested cannot be negative")
+    if int(wake.get("max_boundary_checks", 0)) <= 0:
+        raise ConfigError("wake.max_boundary_checks must be positive")
+
+    tessellation = _require_mapping(numerical, "tessellation")
+    presets = _require_mapping(tessellation, "presets")
+    for preset in ("COARSE", "MEDIUM", "FINE"):
+        rows = presets.get(preset)
+        if not isinstance(rows, list) or not rows:
+            raise ConfigError(f"tessellation.presets.{preset} must be a non-empty list")
+        for row in rows:
+            if not isinstance(row, dict) or not any(row.get(key) for key in ("id", "name", "type")):
+                raise ConfigError(f"tessellation.presets.{preset} contains an invalid geometry selector")
+            for key in ("tess_u", "tess_w"):
+                if key in row and int(row[key]) <= 0:
+                    raise ConfigError(f"tessellation.presets.{preset}.{key} must be positive")
+            for key in ("le_cluster", "te_cluster"):
+                if key in row and float(row[key]) <= 0:
+                    raise ConfigError(f"tessellation.presets.{preset}.{key} must be positive")
+    representative_names = tessellation.get("representative_state_names")
+    if not isinstance(representative_names, list) or not representative_names:
+        raise ConfigError("tessellation.representative_state_names must be a non-empty list")
+    unknown = sorted(set(map(str, representative_names)) - names)
+    if unknown:
+        raise ConfigError(f"Unknown tessellation representative state(s): {', '.join(unknown)}")
+    _validate_tolerance(tessellation.get("tolerance"), "numerical_convergence.tessellation.tolerance")
+
+    trim = _require_mapping(numerical, "trim")
+    if int(trim.get("pretrim_wake_iterations", 0)) not in candidates:
+        raise ConfigError("numerical_convergence.trim.pretrim_wake_iterations must be a Wake candidate")
+    if int(trim.get("max_wake_upgrades", 0)) <= 0:
+        raise ConfigError("numerical_convergence.trim.max_wake_upgrades must be positive")
+    diagnostics = _require_mapping(numerical, "diagnostics")
+    if str(diagnostics.get("representative_state_name", "")) not in names:
+        raise ConfigError("diagnostics.representative_state_name must identify a Wake representative")
+    if str(diagnostics.get("representative_state_name", "")) not in set(map(str, representative_names)):
+        raise ConfigError("diagnostics.representative_state_name must also be a tessellation representative")
+    steps = [float(item) for item in diagnostics.get("rudder_steps_deg", [])]
+    if steps != [0.5, 1.0, 2.0, 4.0]:
+        raise ConfigError("diagnostics.rudder_steps_deg must be [0.5, 1.0, 2.0, 4.0]")
+    _validate_tolerance(diagnostics.get("tolerance"), "numerical_convergence.diagnostics.tolerance")
+    gate = _require_mapping(numerical, "production_gate")
+    if not isinstance(gate.get("enabled"), bool):
+        raise ConfigError("numerical_convergence.production_gate.enabled must be boolean")
+
+
 def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]:
     root = project_root().resolve()
     path = Path(config_path).resolve() if config_path else root / "config" / "aircraft.yaml"
@@ -129,6 +214,10 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
     regression = _require_mapping(data, "regression")
     export = _require_mapping(data, "export")
     resume = _require_mapping(data, "resume")
+    grid = _require_mapping(data, "grid")
+    if str(grid.get("mode", "")).lower() not in {"uniform", "adaptive"}:
+        raise ConfigError("grid.mode must be uniform or adaptive")
+    _validate_numerical_convergence(data)
 
     model_value = aircraft.get("model")
     if not model_value:
@@ -242,15 +331,7 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
     ):
         _require_positive(perturbations, name, "derivatives.perturbations")
     convergence = _require_mapping(derivatives, "convergence")
-    for name in (
-        "near_zero_reference", "pass_relative", "warn_relative",
-        "pass_absolute", "warn_absolute",
-    ):
-        _require_positive(convergence, name, "derivatives.convergence")
-    if float(convergence["pass_relative"]) >= float(convergence["warn_relative"]):
-        raise ConfigError("convergence pass_relative must be less than warn_relative")
-    if float(convergence["pass_absolute"]) >= float(convergence["warn_absolute"]):
-        raise ConfigError("convergence pass_absolute must be less than warn_absolute")
+    _validate_tolerance(convergence, "derivatives.convergence")
 
     if "rate_derivative_method_status" not in validation:
         raise ConfigError("validation.rate_derivative_method_status must be explicitly configured")
@@ -283,6 +364,7 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
         "results": results_path,
         "manifest": manifest_path,
         "regression_baseline": baseline_path,
+        "production_settings": results_path / "numerical_convergence" / "production_numerical_settings.yaml",
     }
     data["_manifest"] = manifest
     data["_resume_enabled"] = bool(resume.get("enabled", True))

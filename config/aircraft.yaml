@@ -12,6 +12,10 @@ operating_conditions:
   alpha: {start: 0, step: 1, end: 1, unit: deg}
   beta: {values: [0], unit: deg}
 
+grid:
+  # adaptive 仅保留接口；只有 Numerical Convergence 为 PASS 时才允许启用。
+  mode: uniform
+
 atmosphere:
   rho_kg_m3: 1.225
   dynamic_viscosity_pa_s: 1.7894e-5
@@ -28,7 +32,7 @@ geometry_sets:
     - {name: Fuselage, type: Fuselage}
 
 solver:
-  # Smoke 验收设置；正式数据应提高剖分和尾迹迭代并另做网格收敛。
+  # 仅供 check/smoke/显式 --force 回退。Production 由收敛产物逐状态选择 Wake。
   wake_iterations: 3
   ncpu: 4
   tessellation_overrides:
@@ -36,6 +40,56 @@ solver:
     - {name: Tail, type: Wing, tess_u: 8, tess_w: 17}
     - {name: TailV, type: Wing, tess_u: 8, tess_w: 17}
     - {name: Fuselage, type: Fuselage, tess_u: 8, tess_w: 17}
+
+numerical_convergence:
+  wake:
+    candidates: [3, 5, 8, 12]
+    study_tessellation_preset: MEDIUM
+    # 代表点覆盖线性区、真实 Trim、中迎角和带 beta 的较大迎角；Wake 结果由求解器决定。
+    representative_states:
+      - {name: linear_low_alpha, speed_mps: 8, alpha_deg: 0, beta_deg: 0}
+      - {name: cruise_trim, speed_mps: 8, beta_deg: 0, trim: true}
+      - {name: medium_alpha, speed_mps: 9, alpha_deg: 6, beta_deg: 0}
+      - {name: high_alpha_beta, speed_mps: 9, alpha_deg: 10, beta_deg: 2}
+    tolerance: &numerical_tolerance
+      near_zero_reference: 0.05
+      pass_relative: 0.03
+      warn_relative: 0.08
+      pass_absolute: 0.01
+      warn_absolute: 0.03
+    neighbor_count: 4
+    boundary_buffer_normalized: 0.12
+    safety_margin_levels_for_untested: 1
+    max_boundary_checks: 3
+  tessellation:
+    # 各几何按气动职责分别加密，并在升力面前/后缘聚类；不是统一倍增。
+    presets:
+      COARSE:
+        - {name: Wing, type: Wing, tess_u: 8, tess_w: 21, le_cluster: 0.18, te_cluster: 0.18}
+        - {name: Tail, type: Wing, tess_u: 6, tess_w: 17, le_cluster: 0.20, te_cluster: 0.16}
+        - {name: TailV, type: Wing, tess_u: 6, tess_w: 17, le_cluster: 0.20, te_cluster: 0.16}
+        - {name: Fuselage, type: Fuselage, tess_u: 13, tess_w: 17}
+      MEDIUM:
+        - {name: Wing, type: Wing, tess_u: 12, tess_w: 31, le_cluster: 0.12, te_cluster: 0.10}
+        - {name: Tail, type: Wing, tess_u: 8, tess_w: 25, le_cluster: 0.14, te_cluster: 0.10}
+        - {name: TailV, type: Wing, tess_u: 8, tess_w: 25, le_cluster: 0.14, te_cluster: 0.10}
+        - {name: Fuselage, type: Fuselage, tess_u: 21, tess_w: 25}
+      FINE:
+        - {name: Wing, type: Wing, tess_u: 18, tess_w: 45, le_cluster: 0.08, te_cluster: 0.06}
+        - {name: Tail, type: Wing, tess_u: 12, tess_w: 35, le_cluster: 0.09, te_cluster: 0.06}
+        - {name: TailV, type: Wing, tess_u: 12, tess_w: 35, le_cluster: 0.09, te_cluster: 0.06}
+        - {name: Fuselage, type: Fuselage, tess_u: 33, tess_w: 37}
+    representative_state_names: [cruise_trim, high_alpha_beta]
+    tolerance: *numerical_tolerance
+  trim:
+    pretrim_wake_iterations: 5
+    max_wake_upgrades: 3
+  diagnostics:
+    representative_state_name: cruise_trim
+    rudder_steps_deg: [0.5, 1.0, 2.0, 4.0]
+    tolerance: *numerical_tolerance
+  production_gate:
+    enabled: true
 
 # source=model 从 .vsp3 的 VSPAEROSettings 读取 Sref/bref/cref 与 CG。
 reference:

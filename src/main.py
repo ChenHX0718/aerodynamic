@@ -7,6 +7,7 @@ import math
 import platform
 import shutil
 import traceback
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,14 @@ from coordinate_system import (
 )
 from export_results import build_database, export_database
 from finite_difference import calculate_trim_derivatives, combine_status
+from numerical_convergence import (
+    convergence_identity,
+    load_production_settings,
+    production_gate,
+    query_wake_schedule,
+    run_numerical_convergence,
+    trim_wake_decision,
+)
 from openvsp_interface import GeometrySelection, OpenVSPError, OpenVSPModel, load_openvsp_api
 from regression import compare_regression
 from trim_solver import solve_longitudinal_trim
@@ -45,9 +54,9 @@ from validation import (
 from vspaero_runner import AeroRunResult, VSPAERORunner
 
 
-INTERNAL_SCHEMA_VERSION = "3.1.0"
+INTERNAL_SCHEMA_VERSION = "4.0.0"
 AUTOTUNE_SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "3.1"
+TOOL_VERSION = "4.0"
 COEFFICIENT_NAMES = ("CL", "CD", "Cm", "CY", "Cl", "Cn")
 
 
@@ -174,6 +183,7 @@ def _signature_context(
         "manifest": _json_safe(config["_manifest"]),
         "derivatives": derivative_signature,
         "validation": config["validation"],
+        "numerical_convergence": config["numerical_convergence"],
     }
 
 
@@ -181,11 +191,29 @@ def _grid_case(
     spec: CaseSpec, *, runner: VSPAERORunner, config: dict[str, Any],
     reference: dict[str, float], cases_root: Path,
     signature_context: dict[str, Any], control_names: dict[str, str],
+    production_settings: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], bool]:
     if spec.alpha_deg is None:
         raise RuntimeError("GRID case has no alpha")
     condition = _condition(spec, spec.alpha_deg, config, reference)
-    signature = stable_signature({**signature_context, "mode": spec.mode, "condition": condition})
+    wake_iterations = int(config["solver"]["wake_iterations"])
+    tessellation = list(config["solver"].get("tessellation_overrides", []))
+    schedule_query: dict[str, Any] = {"source": "configured_fallback"}
+    production_preset = "CONFIGURED_FALLBACK"
+    if production_settings is not None:
+        schedule_query = query_wake_schedule(production_settings["wake_schedule"], condition)
+        wake_iterations = int(schedule_query["wake_iterations"])
+        production_tess = production_settings["production_tessellation"]
+        production_preset = str(production_tess["preset"])
+        tessellation = list(production_tess["overrides"])
+    numerical = {
+        "wake_iterations": wake_iterations,
+        "wake_schedule_query": schedule_query,
+        "tessellation_preset": production_preset,
+    }
+    signature = stable_signature({
+        **signature_context, "mode": spec.mode, "condition": condition, "numerical": numerical,
+    })
     case_dir = cases_root / spec.case_id
     result_path = case_dir / "result.json"
     if config["_resume_enabled"]:
@@ -195,7 +223,10 @@ def _grid_case(
     raw_dir = _reset_raw(case_dir)
     started = _now()
     try:
-        raw = runner.run(condition, raw_dir, "stability", stability=True, include_thick=True)
+        raw = runner.run(
+            condition, raw_dir, "stability", stability=True, include_thick=True,
+            wake_iterations=wake_iterations, tessellation_overrides=tessellation,
+        )
         outputs = _analysis_payload(raw, control_names)
         result = {
             "schema_version": INTERNAL_SCHEMA_VERSION,
@@ -207,6 +238,7 @@ def _grid_case(
             "inputs": condition,
             "outputs": outputs,
             "solver": {"status": "SUCCESS", "duration_sec": raw.duration_sec},
+            "numerical_settings": numerical,
         }
     except Exception as exc:
         result = {
@@ -229,11 +261,30 @@ def _trim_case(
     spec: CaseSpec, *, runner: VSPAERORunner, config: dict[str, Any],
     reference: dict[str, float], cases_root: Path,
     signature_context: dict[str, Any], control_names: dict[str, str],
+    production_settings: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], bool]:
     trim_config = config["trim"]
+    fallback_wake = int(config["solver"]["wake_iterations"])
+    fallback_tessellation = list(config["solver"].get("tessellation_overrides", []))
+    if production_settings is None:
+        schedule = None
+        pretrim_wake = fallback_wake
+        pretrim_tessellation = fallback_tessellation
+        production_tessellation = fallback_tessellation
+        production_preset = "CONFIGURED_FALLBACK"
+        max_upgrades = 1
+    else:
+        numerical_config = config["numerical_convergence"]
+        schedule = production_settings["wake_schedule"]
+        pretrim_wake = int(production_settings["trim"]["pretrim_wake_iterations"])
+        pretrim_tessellation = list(numerical_config["tessellation"]["presets"]["COARSE"])
+        production_tessellation = list(production_settings["production_tessellation"]["overrides"])
+        production_preset = str(production_settings["production_tessellation"]["preset"])
+        max_upgrades = int(production_settings["trim"]["max_wake_upgrades"])
     signature = stable_signature({
         **signature_context, "mode": spec.mode,
         "speed_mps": spec.speed_mps, "beta_deg": spec.beta_deg, "trim": trim_config,
+        "production_numerical_settings": production_settings,
     })
     case_dir = cases_root / spec.case_id
     result_path = case_dir / "result.json"
@@ -247,23 +298,89 @@ def _trim_case(
     last_condition = _condition(spec, float(trim_config["alpha"]["initial_deg"]), config, reference)
 
     try:
-        def evaluate(alpha_deg: float, elevator_deg: float, iteration: int) -> dict[str, Any]:
-            nonlocal last_condition
-            last_condition = _condition(spec, alpha_deg, config, reference)
-            raw = runner.run(
-                last_condition, raw_dir, f"trim_iter_{iteration:02d}",
-                stability=True, include_thick=True,
-                control_deflections_deg={"elevator": elevator_deg},
-            )
-            durations.append(raw.duration_sec)
-            return _analysis_payload(raw, control_names)
+        def solve_stage(
+            stage: str, wake_iterations: int, tessellation: list[dict[str, Any]],
+            alpha_initial: float, elevator_initial: float,
+        ) -> tuple[Any, dict[str, float]]:
+            stage_condition = _condition(spec, alpha_initial, config, reference)
+            stage_config = deepcopy(trim_config)
+            stage_config["alpha"]["initial_deg"] = alpha_initial
+            stage_config["elevator"]["initial_deg"] = elevator_initial
 
-        trim = solve_longitudinal_trim(
-            evaluate=evaluate,
-            trim_config=trim_config,
-            dynamic_pressure_pa=last_condition["dynamic_pressure_pa"],
-            reference=reference,
+            def evaluate(alpha_deg: float, elevator_deg: float, iteration: int) -> dict[str, Any]:
+                nonlocal stage_condition
+                stage_condition = _condition(spec, alpha_deg, config, reference)
+                raw = runner.run(
+                    stage_condition, raw_dir, f"{stage}_iter_{iteration:02d}",
+                    stability=True, include_thick=True,
+                    control_deflections_deg={"elevator": elevator_deg},
+                    wake_iterations=wake_iterations,
+                    tessellation_overrides=tessellation,
+                )
+                durations.append(raw.duration_sec)
+                return _analysis_payload(raw, control_names)
+
+            solved = solve_longitudinal_trim(
+                evaluate=evaluate, trim_config=stage_config,
+                dynamic_pressure_pa=stage_condition["dynamic_pressure_pa"], reference=reference,
+            )
+            return solved, stage_condition
+
+        pretrim, _ = solve_stage(
+            "pretrim", pretrim_wake, pretrim_tessellation,
+            float(trim_config["alpha"]["initial_deg"]),
+            float(trim_config["elevator"]["initial_deg"]),
         )
+        if not pretrim.converged:
+            raise RuntimeError(f"Pre-trim failed: {pretrim.failure_reason}")
+
+        base_state = {
+            "speed_mps": spec.speed_mps,
+            "alpha_deg": pretrim.alpha_deg,
+            "beta_deg": spec.beta_deg,
+        }
+        production_wake = (
+            int(trim_wake_decision(schedule, base_state, config["derivatives"])["wake_iterations"])
+            if schedule is not None else fallback_wake
+        )
+        production_history: list[dict[str, Any]] = []
+        alpha_initial = pretrim.alpha_deg
+        elevator_initial = pretrim.elevator_deg
+        trim = pretrim
+        for upgrade_index in range(max_upgrades + 1):
+            trim, last_condition = solve_stage(
+                f"production_{upgrade_index:02d}", production_wake, production_tessellation,
+                alpha_initial, elevator_initial,
+            )
+            production_history.append({
+                "wake_iterations": production_wake,
+                "converged": bool(trim.converged),
+                "alpha_trim_deg": trim.alpha_deg,
+                "elevator_trim_deg": trim.elevator_deg,
+                "iterations": trim.iterations,
+                "history": list(trim.history),
+                "failure_reason": trim.failure_reason,
+            })
+            if not trim.converged or schedule is None:
+                break
+            final_state = {
+                "speed_mps": spec.speed_mps,
+                "alpha_deg": trim.alpha_deg,
+                "beta_deg": spec.beta_deg,
+            }
+            wake_decision = trim_wake_decision(
+                schedule, final_state, config["derivatives"], production_wake
+            )
+            if wake_decision["action"] == "ACCEPT":
+                break
+            if upgrade_index >= max_upgrades:
+                raise RuntimeError(
+                    "Production trim crossed into a higher Wake region after the configured upgrade limit"
+                )
+            production_wake = int(wake_decision["wake_iterations"])
+            alpha_initial = trim.alpha_deg
+            elevator_initial = trim.elevator_deg
+
         outputs = trim.analysis_payload
         coefficients = outputs.get("coefficients", {})
         controls = {
@@ -293,6 +410,18 @@ def _trim_case(
             "history": list(trim.history),
             "failure_reason": trim.failure_reason,
             "solver_method": "bounded Newton using local VSPAERO stability/control Jacobian",
+            "pretrim": {
+                "wake_iterations": pretrim_wake,
+                "alpha_trim_deg": pretrim.alpha_deg,
+                "elevator_trim_deg": pretrim.elevator_deg,
+                "iterations": pretrim.iterations,
+                "history": list(pretrim.history),
+            },
+            "production_history": production_history,
+            "production_wake_iterations": production_wake,
+            "derivative_bundle_wake_iterations": production_wake,
+            "wake_upgrade_count": max(0, len(production_history) - 1),
+            "production_tessellation_preset": production_preset,
         }
         result: dict[str, Any] = {
             "schema_version": INTERNAL_SCHEMA_VERSION,
@@ -310,6 +439,12 @@ def _trim_case(
                 "status": "SUCCESS" if trim.converged else "TRIM_NOT_CONVERGED",
                 "duration_sec": sum(durations),
             },
+            "numerical_settings": {
+                "wake_iterations": production_wake,
+                "derivative_bundle_rule": "max Wake over the complete centered-difference bundle",
+                "tessellation_preset": production_preset,
+                "two_stage_trim": True,
+            },
         }
         if trim.converged:
             def run_polar(
@@ -318,6 +453,8 @@ def _trim_case(
                 raw = runner.run(
                     condition, raw_dir, label, stability=False, include_thick=True,
                     control_deflections_deg=deflections,
+                    wake_iterations=production_wake,
+                    tessellation_overrides=production_tessellation,
                 )
                 return {
                     "coefficients": map_polar_coefficients(raw.raw_data),
@@ -330,11 +467,18 @@ def _trim_case(
                 raw = runner.run(
                     condition, raw_dir, label, stability=True, include_thick=True,
                     control_deflections_deg=deflections,
+                    wake_iterations=production_wake,
+                    tessellation_overrides=production_tessellation,
                 )
                 return _analysis_payload(raw, control_names)
 
-            derivative_config = dict(config["derivatives"])
+            derivative_config = deepcopy(config["derivatives"])
             derivative_config["_controls"] = config["controls"]
+            derivative_config["_bundle_wake_iterations"] = production_wake
+            if production_settings is not None:
+                derivative_config["perturbations"].update(
+                    production_settings.get("recommended_control_perturbations_deg", {})
+                )
             derivative_package = calculate_trim_derivatives(
                 condition=last_condition,
                 base_outputs=outputs,
@@ -390,6 +534,7 @@ def _load_validation(path: Path, signature: str) -> dict[str, Any] | None:
 def _fuselage_validation(
     *, nominal: dict[str, Any], runner: VSPAERORunner, validation_root: Path,
     signature_context: dict[str, Any], config: dict[str, Any],
+    production_settings: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], bool]:
     condition = nominal["inputs"]
     controls = nominal.get("control_deflections_deg")
@@ -397,6 +542,8 @@ def _fuselage_validation(
     signature = stable_signature({
         **signature_context, "validation": "fuselage_effect",
         "condition": condition, "controls": controls, "settings": settings,
+        "numerical_settings": nominal.get("numerical_settings", {}),
+        "production_identity": (production_settings or {}).get("identity"),
     })
     result_path = validation_root / "fuselage_effect" / "result.json"
     if config["_resume_enabled"]:
@@ -408,6 +555,16 @@ def _fuselage_validation(
         thin_run = runner.run(
             condition, raw_dir, "thin_only", stability=False,
             include_thick=False, control_deflections_deg=controls,
+            wake_iterations=int(
+                nominal.get("numerical_settings", {}).get(
+                    "wake_iterations", config["solver"]["wake_iterations"]
+                )
+            ),
+            tessellation_overrides=(
+                list(production_settings["production_tessellation"]["overrides"])
+                if production_settings is not None
+                else list(config["solver"].get("tessellation_overrides", []))
+            ),
         )
         thin_mapped = map_polar_coefficients(thin_run.raw_data)
         thin = {name: float(thin_mapped[name]["standard_value"]) for name in COEFFICIENT_NAMES}
@@ -463,6 +620,7 @@ def _summary_text(summary: dict[str, Any], output_dir: Path) -> str:
         f"DERIVATIVE_SET           : {derivative['derivative_set_status']}",
         f"Fuselage effect          : {summary['fuselage_effect_status']}",
         f"Portability              : {summary['portability_status']}",
+        f"Production Gate          : {summary['production_gate_status']}",
         f"DATASET                   : {summary['final_status']}",
         "",
         f"Output                   : {output_dir}",
@@ -513,7 +671,45 @@ def _print_startup(context: dict[str, Any], config: dict[str, Any]) -> None:
     print(f"Required derivatives: {len(config['_manifest']['_required'])}")
 
 
-def run_workflow(command: str, config_path: str | Path | None = None) -> dict[str, Any]:
+def _run_openvsp_smoke(config: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+    point = next(
+        item for item in config["numerical_convergence"]["wake"]["representative_states"]
+        if not bool(item.get("trim", False))
+    )
+    condition = calculate_condition(
+        speed_mps=float(point["speed_mps"]), alpha_deg=float(point["alpha_deg"]),
+        beta_deg=float(point.get("beta_deg", 0.0)), atmosphere=config["atmosphere"],
+        cref_m=context["reference"]["cref_m"],
+    )
+    output_dir = config["_paths"]["results"] / "numerical_convergence" / "smoke"
+    raw_dir = _reset_raw(output_dir)
+    wake = int(config["numerical_convergence"]["wake"]["candidates"][0])
+    tessellation = list(config["numerical_convergence"]["tessellation"]["presets"]["COARSE"])
+    raw = context["runner"].run(
+        condition, raw_dir, "stability", stability=True, wake_iterations=wake,
+        tessellation_overrides=tessellation,
+    )
+    payload = _analysis_payload(raw, context["control_names"])
+    values = {
+        name: float(payload["coefficients"][name]["standard_value"])
+        for name in COEFFICIENT_NAMES
+    }
+    status = "PASS" if all(math.isfinite(value) for value in values.values()) else "FAIL"
+    report = {
+        "schema_version": "1.0", "status": status, "timestamp": _now(),
+        "openvsp_version": context["version"], "model_sha256": context["model_sha256"],
+        "condition": condition, "wake_iterations": wake,
+        "tessellation_preset": "COARSE", "coefficients": values,
+        "solver_duration_sec": raw.duration_sec,
+    }
+    _write_json(output_dir / "smoke_test.json", report)
+    print(f"OpenVSP end-to-end smoke: {status}")
+    return {"success": status == "PASS", "summary": {"final_status": status}, "report": report}
+
+
+def run_workflow(
+    command: str, config_path: str | Path | None = None, *, force: bool = False
+) -> dict[str, Any]:
     if command == "regression" and config_path is None:
         config_path = Path(__file__).resolve().parents[1] / "tests" / "regression" / "regression.yaml"
     config = load_project_config(config_path)
@@ -523,8 +719,42 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         return {"success": True, "summary": {"final_status": "PASS"}}
     if command == "regression":
         return _run_regression(config, context)
+    if command == "smoke":
+        return _run_openvsp_smoke(config, context)
+    if command == "numerical-convergence":
+        report = run_numerical_convergence(
+            config=config, runner=context["runner"], reference=context["reference"],
+            manifest=config["_manifest"],
+            analysis_mapper=lambda raw: _analysis_payload(raw, context["control_names"]),
+        )
+        status = str(report["production_gate_status"])
+        print(f"Numerical convergence: {report['convergence_status']}")
+        print(f"Production gate: {status}")
+        return {"success": status != "FAIL", "summary": {"final_status": status}, "report": report}
 
     results_root = config["_paths"]["results"]
+    production_settings = None
+    gate_status = "NOT_REQUESTED"
+    gate_config = config["numerical_convergence"]["production_gate"]
+    if command in {"all", "grid", "trim"} and bool(gate_config["enabled"]):
+        production_settings = load_production_settings(config["_paths"]["production_settings"])
+        adaptive = str(config.get("grid", {}).get("mode", "uniform")).lower() == "adaptive"
+        gate = production_gate(
+            production_settings, force=force, adaptive=adaptive,
+            expected_identity=convergence_identity(config, context["version"]),
+        )
+        gate_status = str(gate["status"])
+        if not gate["allowed"]:
+            raise RuntimeError(
+                f"Production Gate {gate['status']}: {gate['reason']}. "
+                "Run 'python run.py numerical-convergence' first, or use --force with an explicit audit record."
+            )
+        print(f"Production Gate: {gate['status']}{' (FORCED)' if gate['forced'] else ''}")
+        if gate["forced"]:
+            _write_json(results_root / "numerical_convergence" / "production_force_override.json", {
+                "timestamp": _now(), "command": command, "gate": gate,
+                "config_file": config["_paths"]["config_file"],
+            })
     cases_root = results_root / "cases"
     grid_specs = generate_grid_cases(config) if command in {"all", "grid"} else []
     trim_specs = generate_trim_cases(config) if command in {"all", "trim"} else []
@@ -538,6 +768,7 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
             spec, runner=context["runner"], config=config, reference=context["reference"],
             cases_root=cases_root, signature_context=context["signature_context"],
             control_names=context["control_names"],
+            production_settings=production_settings,
         )
         grid_results.append(result)
         grid_skipped += int(skipped)
@@ -548,6 +779,7 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
             spec, runner=context["runner"], config=config, reference=context["reference"],
             cases_root=cases_root, signature_context=context["signature_context"],
             control_names=context["control_names"],
+            production_settings=production_settings,
         )
         trim_results.append(result)
         trim_skipped += int(skipped)
@@ -567,6 +799,7 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         fuselage_validation, fuselage_skipped = _fuselage_validation(
             nominal=nominal, runner=context["runner"], validation_root=results_root / "validation",
             signature_context=context["signature_context"], config=config,
+            production_settings=production_settings,
         )
     print(f"Fuselage participation: {fuselage_validation['status']}")
 
@@ -586,6 +819,8 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         final_parts.append(grid_status)
     if trim_results:
         final_parts.append(trim_status)
+    if gate_status != "NOT_REQUESTED":
+        final_parts.append(gate_status)
     final_status = combine_status(final_parts)
     validation_rows = [row for item in trim_results for row in item.get("validation_rows", [])]
     validation_rows.append({
@@ -601,6 +836,12 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         "value": portability["hard_coded_paths_found"], "limit": 0,
         "message": "no scattered absolute paths outside config/openvsp.yaml",
     })
+    if gate_status != "NOT_REQUESTED":
+        validation_rows.append({
+            "speed_mps": "", "level": "DATASET", "check": "production numerical gate",
+            "status": gate_status, "value": gate_status, "limit": "PASS/WARN",
+            "message": "Wake, boundary, and tessellation convergence gate",
+        })
 
     summary = {
         "command": command,
@@ -620,10 +861,11 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         "fuselage_effect_status": fuselage_validation["status"],
         "fuselage_validation_skipped": fuselage_skipped,
         "portability_status": "PASS" if portability["portable"] else "FAIL",
+        "production_gate_status": gate_status,
         "final_status": final_status,
         "limitations": [
             "OpenVSP 3.51.3 public Sweep API has no negative p/q/r single-point input; rate derivatives are native forward differences and are marked WARN.",
-            "The delivered mesh and wake settings are smoke-test settings, not production convergence evidence.",
+            "Adaptive GRID exposes the mode and midpoint-error evaluator but does not yet perform automatic refinement.",
         ],
     }
     metadata = {
@@ -639,6 +881,7 @@ def run_workflow(command: str, config_path: str | Path | None = None) -> dict[st
         "model_sha256": context["model_sha256"],
         "solver": "VSPAERO mixed ThinGeomSet + GeomSet",
         "coordinate_system": COORDINATE_CONVENTION,
+        "production_numerical_settings": production_settings,
     }
     geometry_data = {
         "thin_set_index": context["geometry"].thin_set_index,
@@ -683,6 +926,7 @@ def _run_regression(config: dict[str, Any], context: dict[str, Any]) -> dict[str
         spec, runner=context["runner"], config=config, reference=context["reference"],
         cases_root=config["_paths"]["results"] / "cases",
         signature_context=context["signature_context"], control_names=context["control_names"],
+        production_settings=None,
     )
     report = compare_regression(
         current=result,
@@ -698,12 +942,19 @@ def _run_regression(config: dict[str, Any], context: dict[str, Any]) -> dict[str
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="OpenVSP/VSPAERO aerodynamic derivative dataset generator")
-    parser.add_argument("command", nargs="?", default="all", choices=("all", "grid", "trim", "regression", "check"))
+    parser.add_argument(
+        "command", nargs="?", default="all",
+        choices=("all", "grid", "trim", "numerical-convergence", "smoke", "regression", "check"),
+    )
     parser.add_argument("--config", help="Path to the unified aircraft YAML configuration")
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Run GRID/TRIM despite a FAIL Production Gate and write an audit record",
+    )
     parser.add_argument("--debug", action="store_true", help="Show a traceback on a fatal workflow error")
     args = parser.parse_args()
     try:
-        result = run_workflow(args.command, args.config)
+        result = run_workflow(args.command, args.config, force=args.force)
         return 0 if result["success"] else 1
     except (ConfigError, OpenVSPError, ValidationError, RuntimeError, OSError, ValueError) as exc:
         print("RUN FAILED")

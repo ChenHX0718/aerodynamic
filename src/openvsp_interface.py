@@ -199,6 +199,16 @@ class OpenVSPModel:
                         f"Geometry {geometry['name']} has no Shape/{parm_name} parameter"
                     )
                 self.vsp.SetParmVal(parm_id, float(override[config_name]))
+            cluster_names = {"le_cluster": "LECluster", "te_cluster": "TECluster"}
+            for config_name, parm_name in cluster_names.items():
+                if config_name not in override:
+                    continue
+                parm_id = self.vsp.GetParm(geometry["id"], parm_name, "WingGeom")
+                if not parm_id:
+                    raise OpenVSPError(
+                        f"Geometry {geometry['name']} has no WingGeom/{parm_name} parameter"
+                    )
+                self.vsp.SetParmVal(parm_id, float(override[config_name]))
         self.vsp.Update()
 
     def reference_quantities(self) -> dict[str, float]:

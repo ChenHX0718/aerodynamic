@@ -10,6 +10,9 @@ operating_conditions:
   alpha: {start: 0, step: 1, end: 1, unit: deg}
   beta: {values: [0], unit: deg}
 
+grid:
+  mode: uniform
+
 atmosphere:
   rho_kg_m3: 1.225
   dynamic_viscosity_pa_s: 1.7894e-5
@@ -33,6 +36,53 @@ solver:
     - {name: Tail, type: Wing, tess_u: 8, tess_w: 17}
     - {name: TailV, type: Wing, tess_u: 8, tess_w: 17}
     - {name: Fuselage, type: Fuselage, tess_u: 8, tess_w: 17}
+
+numerical_convergence:
+  wake:
+    candidates: [3, 5, 8, 12]
+    study_tessellation_preset: MEDIUM
+    representative_states:
+      - {name: linear_low_alpha, speed_mps: 8, alpha_deg: 0, beta_deg: 0}
+      - {name: cruise_trim, speed_mps: 8, beta_deg: 0, trim: true}
+      - {name: medium_alpha, speed_mps: 9, alpha_deg: 6, beta_deg: 0}
+    tolerance: &numerical_tolerance
+      near_zero_reference: 0.05
+      pass_relative: 0.03
+      warn_relative: 0.08
+      pass_absolute: 0.01
+      warn_absolute: 0.03
+    neighbor_count: 3
+    boundary_buffer_normalized: 0.12
+    safety_margin_levels_for_untested: 1
+    max_boundary_checks: 2
+  tessellation:
+    presets:
+      COARSE:
+        - {name: Wing, type: Wing, tess_u: 8, tess_w: 21}
+        - {name: Tail, type: Wing, tess_u: 6, tess_w: 17}
+        - {name: TailV, type: Wing, tess_u: 6, tess_w: 17}
+        - {name: Fuselage, type: Fuselage, tess_u: 13, tess_w: 17}
+      MEDIUM:
+        - {name: Wing, type: Wing, tess_u: 12, tess_w: 31}
+        - {name: Tail, type: Wing, tess_u: 8, tess_w: 25}
+        - {name: TailV, type: Wing, tess_u: 8, tess_w: 25}
+        - {name: Fuselage, type: Fuselage, tess_u: 21, tess_w: 25}
+      FINE:
+        - {name: Wing, type: Wing, tess_u: 18, tess_w: 45}
+        - {name: Tail, type: Wing, tess_u: 12, tess_w: 35}
+        - {name: TailV, type: Wing, tess_u: 12, tess_w: 35}
+        - {name: Fuselage, type: Fuselage, tess_u: 33, tess_w: 37}
+    representative_state_names: [cruise_trim]
+    tolerance: *numerical_tolerance
+  trim:
+    pretrim_wake_iterations: 3
+    max_wake_upgrades: 3
+  diagnostics:
+    representative_state_name: cruise_trim
+    rudder_steps_deg: [0.5, 1.0, 2.0, 4.0]
+    tolerance: *numerical_tolerance
+  production_gate:
+    enabled: false
 
 reference:
   source: model

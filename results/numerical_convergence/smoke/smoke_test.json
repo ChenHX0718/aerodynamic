@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status": "PASS",
-  "timestamp": "2026-09-02T20:33:19+08:00",
+  "timestamp": "2026-09-03T15:30:07+08:00",
   "openvsp_version": "OpenVSP 3.51.3",
   "model_sha256": "5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b",
   "condition": {
@@ -16,14 +16,14 @@
     "dynamic_pressure_pa": 39.2
   },
   "wake_iterations": 3,
-  "tessellation_preset": "COARSE",
+  "mesh_source": "current_openvsp_model",
   "coefficients": {
-    "CL": 0.1037327,
-    "CD": 0.0140512,
-    "Cm": -0.0315634,
-    "CY": 0.0001523,
-    "Cl": 3.25e-05,
-    "Cn": -6.39e-05
+    "CL": 0.1133356,
+    "CD": 0.0141632,
+    "Cm": -0.0370557,
+    "CY": 0.0001695,
+    "Cl": -0.0005647,
+    "Cn": -0.0003231
   },
-  "solver_duration_sec": 98.98267009994015
+  "solver_duration_sec": 323.97325150016695
 }

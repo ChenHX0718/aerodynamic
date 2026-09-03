@@ -185,32 +185,6 @@ class OpenVSPModel:
         self.vsp.SetSetName(selection.thick_set_index, "AERO_THICK")
         self.vsp.Update()
 
-    def apply_tessellation_overrides(self, overrides: list[dict[str, Any]]) -> None:
-        parameter_names = {"tess_u": "Tess_U", "tess_w": "Tess_W"}
-        for override in overrides:
-            selector = {key: override[key] for key in ("id", "name", "type") if override.get(key)}
-            geometry = self._resolve_selectors([selector], "tessellation")[0]
-            for config_name, parm_name in parameter_names.items():
-                if config_name not in override:
-                    continue
-                parm_id = self.vsp.GetParm(geometry["id"], parm_name, "Shape")
-                if not parm_id:
-                    raise OpenVSPError(
-                        f"Geometry {geometry['name']} has no Shape/{parm_name} parameter"
-                    )
-                self.vsp.SetParmVal(parm_id, float(override[config_name]))
-            cluster_names = {"le_cluster": "LECluster", "te_cluster": "TECluster"}
-            for config_name, parm_name in cluster_names.items():
-                if config_name not in override:
-                    continue
-                parm_id = self.vsp.GetParm(geometry["id"], parm_name, "WingGeom")
-                if not parm_id:
-                    raise OpenVSPError(
-                        f"Geometry {geometry['name']} has no WingGeom/{parm_name} parameter"
-                    )
-                self.vsp.SetParmVal(parm_id, float(override[config_name]))
-        self.vsp.Update()
-
     def reference_quantities(self) -> dict[str, float]:
         container_id = self.vsp.FindContainer("VSPAEROSettings", 0)
         if not container_id:

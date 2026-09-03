@@ -54,9 +54,9 @@ from validation import (
 from vspaero_runner import AeroRunResult, VSPAERORunner
 
 
-INTERNAL_SCHEMA_VERSION = "5.0.0"
+INTERNAL_SCHEMA_VERSION = "6.0.0"
 AUTOTUNE_SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "5.0"
+TOOL_VERSION = "6.0"
 COEFFICIENT_NAMES = ("CL", "CD", "Cm", "CY", "Cl", "Cn")
 
 
@@ -141,9 +141,14 @@ def _analysis_payload(raw_run: AeroRunResult, controls: dict[str, str]) -> dict[
             rate_cases[variable] = {}
     payload = {
         "coefficients": map_stability_baseline(raw_run.raw_data),
-        "stability_derivatives": map_stability_derivatives(raw_run.raw_data),
-        "control_derivatives": map_control_derivatives(raw_run.raw_data, controls),
-        "native_rate_cases": rate_cases,
+        "native_derivative_diagnostics": {
+            "stability": map_stability_derivatives(raw_run.raw_data),
+            "controls": map_control_derivatives(raw_run.raw_data, controls),
+            "positive_rate_cases": rate_cases,
+            "diagnostic_only": True,
+            "enters_production_gate": False,
+            "enters_trim_jacobian": False,
+        },
     }
     payload["warnings"] = validate_analysis_payload(payload)
     payload["solver_run"] = {
@@ -197,19 +202,14 @@ def _grid_case(
         raise RuntimeError("GRID case has no alpha")
     condition = _condition(spec, spec.alpha_deg, config, reference)
     wake_iterations = int(config["solver"]["wake_iterations"])
-    tessellation = list(config["solver"].get("tessellation_overrides", []))
     schedule_query: dict[str, Any] = {"source": "configured_fallback"}
-    production_preset = "CONFIGURED_FALLBACK"
     if production_settings is not None:
         schedule_query = query_wake_schedule(production_settings["wake_schedule"], condition)
         wake_iterations = int(schedule_query["wake_iterations"])
-        production_tess = production_settings["production_tessellation"]
-        production_preset = str(production_tess["preset"])
-        tessellation = list(production_tess["overrides"])
     numerical = {
         "wake_iterations": wake_iterations,
         "wake_schedule_query": schedule_query,
-        "tessellation_preset": production_preset,
+        "mesh_source": "current_openvsp_model",
     }
     signature = stable_signature({
         **signature_context, "mode": spec.mode, "condition": condition, "numerical": numerical,
@@ -225,7 +225,7 @@ def _grid_case(
     try:
         raw = runner.run(
             condition, raw_dir, "stability", stability=True, include_thick=True,
-            wake_iterations=wake_iterations, tessellation_overrides=tessellation,
+            wake_iterations=wake_iterations,
         )
         outputs = _analysis_payload(raw, control_names)
         result = {
@@ -265,21 +265,13 @@ def _trim_case(
 ) -> tuple[dict[str, Any], bool]:
     trim_config = config["trim"]
     fallback_wake = int(config["solver"]["wake_iterations"])
-    fallback_tessellation = list(config["solver"].get("tessellation_overrides", []))
     if production_settings is None:
         schedule = None
         pretrim_wake = fallback_wake
-        pretrim_tessellation = fallback_tessellation
-        production_tessellation = fallback_tessellation
-        production_preset = "CONFIGURED_FALLBACK"
         max_upgrades = 1
     else:
-        numerical_config = config["numerical_convergence"]
         schedule = production_settings["wake_schedule"]
         pretrim_wake = int(production_settings["trim"]["pretrim_wake_iterations"])
-        pretrim_tessellation = list(numerical_config["tessellation"]["presets"]["COARSE"])
-        production_tessellation = list(production_settings["production_tessellation"]["overrides"])
-        production_preset = str(production_settings["production_tessellation"]["preset"])
         max_upgrades = int(production_settings["trim"]["max_wake_upgrades"])
     signature = stable_signature({
         **signature_context, "mode": spec.mode,
@@ -299,8 +291,7 @@ def _trim_case(
 
     try:
         def solve_stage(
-            stage: str, wake_iterations: int, tessellation: list[dict[str, Any]],
-            alpha_initial: float, elevator_initial: float,
+            stage: str, wake_iterations: int, alpha_initial: float, elevator_initial: float,
         ) -> tuple[Any, dict[str, float]]:
             stage_condition = _condition(spec, alpha_initial, config, reference)
             stage_config = deepcopy(trim_config)
@@ -317,7 +308,6 @@ def _trim_case(
                     stability=stability, include_thick=True,
                     control_deflections_deg={"elevator": elevator_deg},
                     wake_iterations=wake_iterations,
-                    tessellation_overrides=tessellation,
                 )
                 durations.append(raw.duration_sec)
                 if stability:
@@ -332,7 +322,7 @@ def _trim_case(
             return solved, stage_condition
 
         pretrim, _ = solve_stage(
-            "pretrim", pretrim_wake, pretrim_tessellation,
+            "pretrim", pretrim_wake,
             float(trim_config["alpha"]["initial_deg"]),
             float(trim_config["elevator"]["initial_deg"]),
         )
@@ -354,7 +344,7 @@ def _trim_case(
         trim = pretrim
         for upgrade_index in range(max_upgrades + 1):
             trim, last_condition = solve_stage(
-                f"production_{upgrade_index:02d}", production_wake, production_tessellation,
+                f"production_{upgrade_index:02d}", production_wake,
                 alpha_initial, elevator_initial,
             )
             production_history.append({
@@ -426,7 +416,7 @@ def _trim_case(
             "production_wake_iterations": production_wake,
             "derivative_bundle_wake_iterations": production_wake,
             "wake_upgrade_count": max(0, len(production_history) - 1),
-            "production_tessellation_preset": production_preset,
+            "mesh_source": "current_openvsp_model",
         }
         result: dict[str, Any] = {
             "schema_version": INTERNAL_SCHEMA_VERSION,
@@ -439,7 +429,13 @@ def _trim_case(
             "control_deflections_deg": controls,
             "outputs": outputs,
             "trim": trim_record,
-            "derivatives": {"records": {}, "run_count": 0, "solver_duration_sec": 0.0},
+            "derivatives": {
+                "production_fd_derivatives": {},
+                "native_derivative_diagnostics": {},
+                "required_derivatives_manifest": {"items": [], "summary": {}},
+                "run_count": 0,
+                "solver_duration_sec": 0.0,
+            },
             "solver": {
                 "status": "SUCCESS" if trim.converged else "TRIM_NOT_CONVERGED",
                 "duration_sec": sum(durations),
@@ -447,7 +443,7 @@ def _trim_case(
             "numerical_settings": {
                 "wake_iterations": production_wake,
                 "derivative_bundle_rule": "max Wake over the complete centered-difference bundle",
-                "tessellation_preset": production_preset,
+                "mesh_source": "current_openvsp_model",
                 "two_stage_trim": True,
             },
         }
@@ -459,30 +455,18 @@ def _trim_case(
                     condition, raw_dir, label, stability=False, include_thick=True,
                     control_deflections_deg=deflections,
                     wake_iterations=production_wake,
-                    tessellation_overrides=production_tessellation,
                 )
                 return {
                     "coefficients": map_polar_coefficients(raw.raw_data),
                     "solver_duration_sec": raw.duration_sec,
                 }
 
-            def run_stability(
-                condition: dict[str, float], label: str, deflections: dict[str, float]
-            ) -> dict[str, Any]:
-                raw = runner.run(
-                    condition, raw_dir, label, stability=True, include_thick=True,
-                    control_deflections_deg=deflections,
-                    wake_iterations=production_wake,
-                    tessellation_overrides=production_tessellation,
-                )
-                return _analysis_payload(raw, control_names)
-
             derivative_config = deepcopy(config["derivatives"])
             derivative_config["_controls"] = config["controls"]
             derivative_config["_bundle_wake_iterations"] = production_wake
             if production_settings is not None:
-                derivative_config["perturbations"].update(
-                    production_settings.get("recommended_control_perturbations_deg", {})
+                derivative_config["_preferred_fd_steps"] = dict(
+                    production_settings.get("selected_fd_steps_deg", {})
                 )
             derivative_package = calculate_trim_derivatives(
                 condition=last_condition,
@@ -490,10 +474,7 @@ def _trim_case(
                 base_controls=controls,
                 manifest=config["_manifest"],
                 derivative_config=derivative_config,
-                validation_config=config["validation"],
-                reference=reference,
                 run_polar=run_polar,
-                run_stability=run_stability,
             )
             result["derivatives"] = derivative_package
             result["solver"]["duration_sec"] += derivative_package["solver_duration_sec"]
@@ -513,7 +494,11 @@ def _trim_case(
             "timestamp": started,
             "inputs": last_condition,
             "outputs": {},
-            "derivatives": {"records": {}},
+            "derivatives": {
+                "production_fd_derivatives": {},
+                "native_derivative_diagnostics": {},
+                "required_derivatives_manifest": {"items": [], "summary": {}},
+            },
             "solver": {"status": "FAIL", "duration_sec": sum(durations)},
             "validation": {
                 "solver_status": "FAIL", "trim_status": "FAIL", "numerical_status": "FAIL",
@@ -564,11 +549,6 @@ def _fuselage_validation(
                 nominal.get("numerical_settings", {}).get(
                     "wake_iterations", config["solver"]["wake_iterations"]
                 )
-            ),
-            tessellation_overrides=(
-                list(production_settings["production_tessellation"]["overrides"])
-                if production_settings is not None
-                else list(config["solver"].get("tessellation_overrides", []))
             ),
         )
         thin_mapped = map_polar_coefficients(thin_run.raw_data)
@@ -622,6 +602,10 @@ def _summary_text(summary: dict[str, Any], output_dir: Path) -> str:
         f"Missing                  : {derivative['missing']}",
         f"Invalid                  : {derivative['invalid']}",
         f"Validation failed        : {derivative['validation_failed']}",
+        f"PASS                     : {derivative.get('PASS', 0)}",
+        f"WARN_NUMERICAL           : {derivative.get('WARN_NUMERICAL', 0)}",
+        f"METHOD_LIMITATION        : {derivative.get('METHOD_LIMITATION', 0)}",
+        f"FAIL                     : {derivative.get('FAIL', 0)}",
         f"DERIVATIVE_SET           : {derivative['derivative_set_status']}",
         f"Fuselage effect          : {summary['fuselage_effect_status']}",
         f"Portability              : {summary['portability_status']}",
@@ -689,10 +673,8 @@ def _run_openvsp_smoke(config: dict[str, Any], context: dict[str, Any]) -> dict[
     output_dir = config["_paths"]["results"] / "numerical_convergence" / "smoke"
     raw_dir = _reset_raw(output_dir)
     wake = int(config["numerical_convergence"]["wake"]["candidates"][0])
-    tessellation = list(config["numerical_convergence"]["tessellation"]["presets"]["COARSE"])
     raw = context["runner"].run(
         condition, raw_dir, "stability", stability=True, wake_iterations=wake,
-        tessellation_overrides=tessellation,
     )
     payload = _analysis_payload(raw, context["control_names"])
     values = {
@@ -704,7 +686,7 @@ def _run_openvsp_smoke(config: dict[str, Any], context: dict[str, Any]) -> dict[
         "schema_version": "1.0", "status": status, "timestamp": _now(),
         "openvsp_version": context["version"], "model_sha256": context["model_sha256"],
         "condition": condition, "wake_iterations": wake,
-        "tessellation_preset": "COARSE", "coefficients": values,
+        "mesh_source": "current_openvsp_model", "coefficients": values,
         "solver_duration_sec": raw.duration_sec,
     }
     _write_json(output_dir / "smoke_test.json", report)
@@ -789,7 +771,7 @@ def run_workflow(
         trim_results.append(result)
         trim_skipped += int(skipped)
         print(f"TRIM {index}/{len(trim_specs)} V={spec.speed_mps:g}: {'CACHED' if skipped else result['status']}")
-        if result.get("derivatives", {}).get("records"):
+        if result.get("derivatives", {}).get("required_derivatives_manifest", {}).get("items"):
             counts = result["validation"]["required_derivatives"]
             print(f"Derivative calculation: {counts['calculated']}/{counts['required']}")
             print(f"Convergence check: {result['validation']['numerical_status']}")
@@ -813,6 +795,7 @@ def run_workflow(
         "required_derivatives": len(config["_manifest"]["_required"]),
         "flight_points": 0, "required_instances": 0, "calculated": 0,
         "missing": 0, "invalid": 0, "validation_failed": 0,
+        "PASS": 0, "WARN_NUMERICAL": 0, "METHOD_LIMITATION": 0, "FAIL": 0,
         "derivative_set_status": "NOT_REQUESTED", "overall_status": "PASS",
     }
     grid_failed = [item for item in grid_results if item.get("status") != "PASS"]
@@ -845,7 +828,7 @@ def run_workflow(
         validation_rows.append({
             "speed_mps": "", "level": "DATASET", "check": "production numerical gate",
             "status": gate_status, "value": gate_status, "limit": "PASS/WARN",
-            "message": "Wake, boundary, and tessellation convergence gate",
+            "message": "Wake, boundary, FD-step, and required-derivative policy gate; mesh excluded",
         })
 
     summary = {
@@ -869,7 +852,7 @@ def run_workflow(
         "production_gate_status": gate_status,
         "final_status": final_status,
         "limitations": [
-            "OpenVSP 3.51.3 public Sweep API has no negative p/q/r single-point input; rate derivatives are native forward differences and are marked WARN.",
+            "OpenVSP/VSPAERO 3.51.3 cannot form true centered steady-rate derivatives; p/q/r items are METHOD_LIMITATION and native values remain diagnostic-only.",
             "Adaptive GRID exposes the mode and midpoint-error evaluator but does not yet perform automatic refinement.",
         ],
     }

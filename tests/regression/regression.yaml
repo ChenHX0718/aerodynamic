@@ -31,16 +31,11 @@ geometry_sets:
 solver:
   wake_iterations: 3
   ncpu: 4
-  tessellation_overrides:
-    - {name: Wing, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: Tail, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: TailV, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: Fuselage, type: Fuselage, tess_u: 8, tess_w: 17}
 
 numerical_convergence:
   wake:
     candidates: [3, 5, 8, 12]
-    study_tessellation_preset: MEDIUM
+    verification_only_level: 16
     representative_states:
       - {name: linear_low_alpha, speed_mps: 8, alpha_deg: 0, beta_deg: 0}
       - {name: cruise_trim, speed_mps: 8, beta_deg: 0, trim: true}
@@ -55,32 +50,11 @@ numerical_convergence:
     boundary_buffer_normalized: 0.12
     safety_margin_levels_for_untested: 1
     max_boundary_checks: 2
-  tessellation:
-    presets:
-      COARSE:
-        - {name: Wing, type: Wing, tess_u: 8, tess_w: 21}
-        - {name: Tail, type: Wing, tess_u: 6, tess_w: 17}
-        - {name: TailV, type: Wing, tess_u: 6, tess_w: 17}
-        - {name: Fuselage, type: Fuselage, tess_u: 13, tess_w: 17}
-      MEDIUM:
-        - {name: Wing, type: Wing, tess_u: 12, tess_w: 31}
-        - {name: Tail, type: Wing, tess_u: 8, tess_w: 25}
-        - {name: TailV, type: Wing, tess_u: 8, tess_w: 25}
-        - {name: Fuselage, type: Fuselage, tess_u: 21, tess_w: 25}
-      FINE:
-        - {name: Wing, type: Wing, tess_u: 18, tess_w: 45}
-        - {name: Tail, type: Wing, tess_u: 12, tess_w: 35}
-        - {name: TailV, type: Wing, tess_u: 12, tess_w: 35}
-        - {name: Fuselage, type: Fuselage, tess_u: 33, tess_w: 37}
-    representative_state_names: [cruise_trim]
-    tolerance: *numerical_tolerance
   trim:
     pretrim_wake_iterations: 3
     max_wake_upgrades: 3
-  diagnostics:
+  fd_step:
     representative_state_name: cruise_trim
-    rudder_steps_deg: [0.5, 1.0, 2.0, 4.0]
-    tolerance: *numerical_tolerance
   production_gate:
     enabled: false
 
@@ -109,16 +83,13 @@ trim:
 
 derivatives:
   manifest: "../../config/required_derivatives.yaml"
-  scales: [0.5, 1.0, 2.0]
-  perturbations:
-    alpha_deg: 0.5
-    beta_deg: 0.5
-    p_rad_s: 0.01
-    q_rad_s: 0.01
-    r_rad_s: 0.01
-    aileron_deg: 2.0
-    elevator_deg: 2.0
-    rudder_deg: 2.0
+  fd_step_candidates_deg:
+    alpha: [0.25, 0.5, 1.0]
+    beta: [0.25, 0.5, 1.0]
+    elevator: [0.5, 1.0, 2.0]
+    aileron: [0.5, 1.0, 2.0]
+    rudder: [0.5, 1.0, 2.0]
+  trim_jacobian_steps_deg: {alpha: 0.5, elevator: 2.0}
   convergence:
     near_zero_reference: 0.05
     pass_relative: 0.10
@@ -135,7 +106,6 @@ validation:
   physics:
     enabled: true
     derivative_absolute_limit: 100.0
-  rate_derivative_method_status: WARN
   autotune_allow_warn: true
 
 regression:

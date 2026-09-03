@@ -1,431 +1,1030 @@
-schema_version: '2.0'
-generated_at_local: '2026-09-03T00:36:07+08:00'
+schema_version: '3.0'
+generated_at_local: '2026-09-03T16:47:10+08:00'
 identity:
   model_sha256: 5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b
   openvsp_version: OpenVSP 3.51.3
-  convergence_configuration_sha256: e04e2dbee8203933aaf5ed8e72c646e69b190d49b1e38cf00fef676e36c46963
+  convergence_configuration_sha256: af3f1ff2babb71d36e30ea0dfa029dee5f341867882f1317445c8767d5d5c37c
 convergence_status: FAIL
-production_tessellation:
-  preset: FINE
-  overrides:
-  - name: Wing
-    type: Wing
-    tess_u: 18
-    tess_w: 45
-    le_cluster: 0.08
-    te_cluster: 0.06
-  - name: Tail
-    type: Wing
-    tess_u: 12
-    tess_w: 35
-    le_cluster: 0.09
-    te_cluster: 0.06
-  - name: TailV
-    type: Wing
-    tess_u: 12
-    tess_w: 35
-    le_cluster: 0.09
-    te_cluster: 0.06
-  - name: Fuselage
-    type: Fuselage
-    tess_u: 33
-    tess_w: 37
-  status: FAIL
-  reason: one or more tessellation cases failed, were dependency-skipped, or FINE
-    remains unverified
+validation_scope:
+  mode: targeted_affected_path_real_verification
+  complete: false
+  production_schedule_generated: false
+  tested_state_names:
+  - medium_alpha
+  omitted_by_request: full representative-state convergence matrix and full production
+    database
+  status: INCOMPLETE
+mesh:
+  source: current_openvsp_model
+  numerically_certified: false
+  responsibility: user
+  statement: Tessellation / mesh quality is user responsibility and is not numerically
+    certified by this workflow.
+wake_policy:
+  production_candidates:
+  - 3
+  - 5
+  - 8
+  - 12
+  verification_only_level: 16
+  rule: Run Wake 16 only when the Wake 8->12 production transition is not PASS; Wake
+    16 never becomes a production setting.
 wake_schedule:
-  algorithm: conservative_discrete_nearest_regions
+  status: NOT_GENERATED
+  reason: A production Wake schedule requires all configured representative states;
+    this run was intentionally minimal.
   candidates:
   - 3
   - 5
   - 8
   - 12
-  sample_points:
-  - name: linear_low_alpha
-    speed_mps: 8.0
-    alpha_deg: 0.0
-    beta_deg: 0.0
-    required_wake: 3
-    status: PASS
-    reason: all subsequent higher-level transitions satisfy PASS tolerance
-    source: solver_convergence
-    pretrim: null
-    base_coefficient_status: PASS
-    fd_derivative_status: PASS
-    native_derivative_diagnostic: WARN
-  - name: cruise_trim
-    speed_mps: 8.0
-    alpha_deg: 4.077569810668674
-    beta_deg: 0.0
-    required_wake: 12
-    status: WARN
-    reason: highest level is selected conservatively but remains unverified
-    source: solver_convergence
-    pretrim:
-      status: PASS
-      iterations: 4
-      alpha_deg: 4.077569810668674
-      elevator_deg: -4.2557666664753
-      force_residual_n: -0.02834886879992382
-      moment_residual_nm: -0.5344684200240002
-      history:
-      - iteration: 1
-        alpha_deg: 2.0
-        elevator_deg: 0.0
-        CL: 0.2608162
-        Cm: -0.068094
-        force_residual_n: -79.84425020319995
-        moment_residual_nm: -64.31187947184002
-        residual_norm: 79.84425020319995
-        native_derivatives:
-          CL_alpha: 7.3887971
-          Cm_alpha: -7.1959403
-          CL_delta_e: 0.7776435
-          Cm_delta_e: -2.0399659
-        fd_derivatives:
-          CL_alpha: 4.793876686441503
-          Cm_alpha: -1.1492652813834334
-          CL_delta_e: 0.5167335642798994
-          Cm_delta_e: -1.4836268490980478
-        jacobian:
-        - - 3038.6658519745574
-          - 327.5388039887142
-        - - -1085.4320535950549
-          - -1401.2222971242609
-        jacobian_condition_number: 2.8475141320832105
-        raw_newton_step_deg:
-          alpha: 1.9519491495776264
-          elevator: -4.141746425346083
-        limited_newton_step_deg:
-          alpha: 1.9519491495776264
-          elevator: -4.141746425346083
-        line_search_trials:
-        - lambda: 1.0
-          alpha_deg: 3.9519491495776267
-          elevator_deg: -4.141746425346083
-          force_residual_n: -5.570919071199938
-          moment_residual_nm: 0.7329933570960002
-          residual_norm: 5.570919071199938
-          improved: true
-        line_search_attempts: 1
-        line_search_lambda: 1.0
-        applied_step_deg:
-          alpha: 1.9519491495776267
-          elevator: -4.141746425346083
-        new_force_residual_n: -5.570919071199938
-        new_moment_residual_nm: 0.7329933570960002
-        new_residual_norm: 5.570919071199938
-        decision: ACCEPT_NEWTON_STEP
-      - iteration: 2
-        alpha_deg: 3.9519491495776267
-        elevator_deg: -4.141746425346083
-        CL: 0.3779917
-        Cm: 0.0007761
-        force_residual_n: -5.570919071199938
-        moment_residual_nm: 0.7329933570960002
-        residual_norm: 5.570919071199938
-        native_derivatives:
-          CL_alpha: 7.5169481
-          Cm_alpha: -16.3344397
-          CL_delta_e: 0.1351651
-          Cm_delta_e: -1.5447419
-        fd_derivatives:
-          CL_alpha: 4.749766166657323
-          Cm_alpha: -1.0429350622067692
-          CL_delta_e: 0.5190578025835688
-          Cm_delta_e: -1.4757628262729467
-        jacobian:
-        - - 3010.705781462078
-          - 329.01205497683134
-        - - -985.0076955032413
-          - -1393.7950628878862
-        jacobian_condition_number: 2.7585653493965423
-        raw_newton_step_deg:
-          alpha: 0.11132300535789699
-          elevator: -0.0485412762556132
-        limited_newton_step_deg:
-          alpha: 0.11132300535789699
-          elevator: -0.0485412762556132
-        line_search_trials:
-        - lambda: 1.0
-          alpha_deg: 4.0632721549355235
-          elevator_deg: -4.190287701601696
-          force_residual_n: -0.37703745519991116
-          moment_residual_nm: -1.3646464394640003
-          residual_norm: 1.3646464394640003
-          improved: true
-        line_search_attempts: 1
-        line_search_lambda: 1.0
-        applied_step_deg:
-          alpha: 0.11132300535789685
-          elevator: -0.04854127625561322
-        new_force_residual_n: -0.37703745519991116
-        new_moment_residual_nm: -1.3646464394640003
-        new_residual_norm: 1.3646464394640003
-        decision: ACCEPT_NEWTON_STEP
-      - iteration: 3
-        alpha_deg: 4.0632721549355235
-        elevator_deg: -4.190287701601696
-        CL: 0.3861857
-        Cm: -0.0014449
-        force_residual_n: -0.37703745519991116
-        moment_residual_nm: -1.3646464394640003
-        residual_norm: 1.3646464394640003
-        native_derivatives:
-          CL_alpha: 10.6061279
-          Cm_alpha: -2.630044
-          CL_delta_e: 1.1224366
-          Cm_delta_e: -1.6419525
-        fd_derivatives:
-          CL_alpha: 4.73974135501791
-          Cm_alpha: -0.9580402163599516
-          CL_delta_e: 0.5144597401888485
-          Cm_delta_e: -1.4735175059154715
-        jacobian:
-        - - 3004.351414257073
-          - 326.0975087550644
-        - - -904.8281335171489
-          - -1391.674453550711
-        jacobian_condition_number: 2.6869947578044453
-        raw_newton_step_deg:
-          alpha: 0.014297655733150165
-          elevator: -0.06547896487360415
-        limited_newton_step_deg:
-          alpha: 0.014297655733150165
-          elevator: -0.06547896487360415
-        line_search_trials:
-        - lambda: 1.0
-          alpha_deg: 4.077569810668674
-          elevator_deg: -4.2557666664753
-          force_residual_n: -0.02834886879992382
-          moment_residual_nm: -0.5344684200240002
-          residual_norm: 0.5344684200240002
-          improved: true
-        line_search_attempts: 1
-        line_search_lambda: 1.0
-        applied_step_deg:
-          alpha: 0.01429765573315045
-          elevator: -0.06547896487360383
-        new_force_residual_n: -0.02834886879992382
-        new_moment_residual_nm: -0.5344684200240002
-        new_residual_norm: 0.5344684200240002
-        decision: ACCEPT_NEWTON_STEP
-      - iteration: 4
-        alpha_deg: 4.077569810668674
-        elevator_deg: -4.2557666664753
-        CL: 0.3867358
-        Cm: -0.0005659
-        force_residual_n: -0.02834886879992382
-        moment_residual_nm: -0.5344684200240002
-        residual_norm: 0.5344684200240002
-        native_derivatives:
-          CL_alpha: 10.4573604
-          Cm_alpha: 2.3903038
-          CL_delta_e: 1.1305833
-          Cm_delta_e: -1.267717
-        decision: PASS_BOTH_RESIDUALS
-    base_coefficient_status: PASS
-    fd_derivative_status: WARN
-    native_derivative_diagnostic: WARN
-  - name: medium_alpha
-    speed_mps: 9.0
-    alpha_deg: 6.0
-    beta_deg: 0.0
-    required_wake: 12
-    status: WARN
-    reason: highest level is selected conservatively but remains unverified
-    source: solver_convergence
-    pretrim: null
-    base_coefficient_status: PASS
-    fd_derivative_status: WARN
-    native_derivative_diagnostic: WARN
-  - name: high_alpha_beta
-    speed_mps: 9.0
-    alpha_deg: 10.0
-    beta_deg: 2.0
-    required_wake: 12
-    status: WARN
-    reason: highest level is selected conservatively but remains unverified
-    source: solver_convergence
-    pretrim: null
-    base_coefficient_status: PASS
-    fd_derivative_status: WARN
-    native_derivative_diagnostic: WARN
-  axis_scales:
-    speed_mps: 1.0
-    alpha_deg: 10.0
-    beta_deg: 2.0
-  neighbor_count: 4
-  boundary_buffer_normalized: 0.12
-  safety_margin_levels_for_untested: 1
+  verification_only_level: 16
+  sample_points: []
 derivative_bundle:
-  rule: maximum required Wake over base and every +/- derivative state
+  rule: maximum required production Wake over base and every +/- derivative state
   enabled: true
+  verification_only_level: 16
 trim:
   rule: pre-trim then fixed-Wake production trim using a centered-difference Jacobian
     and backtracking
   pretrim_wake_iterations: 5
   max_wake_upgrades: 3
-recommended_control_perturbations_deg:
-  aileron_deg: 2.0
-  elevator_deg: 2.0
-  rudder_deg: 1.0
-recommendation_reasons:
-  wake_schedule: minimum level whose every later transition remains stable, then conservative
-    untested-point and boundary rules
-  tessellation: one or more tessellation cases failed, were dependency-skipped, or
-    FINE remains unverified
-  aileron_deg: retains the configured production delta and its per-Trim 0.5/1/2-scale
-    validation
-  elevator_deg: retains the configured production delta and its per-Trim 0.5/1/2-scale
-    validation
-  rudder_deg: the local small-step range is stable but the 2-to-4 degree transition
-    is not
+selected_fd_steps_deg:
+  CL_alpha: 0.5
+  CD_alpha: 0.5
+  Cm_alpha: 0.5
+  CY_beta: 0.5
+  Cl_beta: 0.5
+  Cn_beta: 0.5
+  CY_delta_a: 1.0
+  Cl_delta_a: 1.0
+  Cn_delta_a: 1.0
+  CL_delta_e: 1.0
+  CD_delta_e: 1.0
+  Cm_delta_e: 1.0
+  CY_delta_r: 1.0
+  Cl_delta_r: 1.0
+  Cn_delta_r: 1.0
+required_derivatives_manifest:
+  items:
+  - name: CL_alpha
+    category: longitudinal
+    coefficient: CL
+    perturbation: alpha
+    definition: dCL/dalpha at trim
+    required: true
+    value: 4.698834345742484
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CD_alpha
+    category: longitudinal
+    coefficient: CD
+    perturbation: alpha
+    definition: dCD/dalpha at trim
+    required: true
+    value: 0.4304327128199883
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cm_alpha
+    category: longitudinal
+    coefficient: Cm
+    perturbation: alpha
+    definition: dCm/dalpha at trim
+    required: true
+    value: -1.149616643454114
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CL_q
+    category: longitudinal
+    coefficient: CL
+    perturbation: q
+    definition: dCL/dq_hat; q_hat=q*cref/(2V)
+    required: true
+    value: 9.3224145
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/q_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: Cm_q
+    category: longitudinal
+    coefficient: Cm
+    perturbation: q
+    definition: dCm/dq_hat; q_hat=q*cref/(2V)
+    required: true
+    value: -13.5643899
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/q_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: CY_beta
+    category: lateral
+    coefficient: CY
+    perturbation: beta
+    definition: dCY/dbeta at trim
+    required: true
+    value: -0.3469367335178127
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cl_beta
+    category: lateral
+    coefficient: Cl
+    perturbation: beta
+    definition: dCl/dbeta at trim
+    required: true
+    value: -0.12037551668828764
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cn_beta
+    category: lateral
+    coefficient: Cn
+    perturbation: beta
+    definition: dCn/dbeta at trim
+    required: true
+    value: 0.04120137952070125
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 0.5
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CY_p
+    category: lateral
+    coefficient: CY
+    perturbation: p
+    definition: dCY/dp_hat; p_hat=p*bref/(2V)
+    required: true
+    value: -0.0696862
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/p_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: Cl_p
+    category: lateral
+    coefficient: Cl
+    perturbation: p
+    definition: dCl/dp_hat; p_hat=p*bref/(2V)
+    required: true
+    value: -0.4817503
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/p_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: Cn_p
+    category: lateral
+    coefficient: Cn
+    perturbation: p
+    definition: dCn/dp_hat; p_hat=p*bref/(2V)
+    required: true
+    value: -0.0746308
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/p_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: CY_r
+    category: lateral
+    coefficient: CY
+    perturbation: r
+    definition: dCY/dr_hat; r_hat=r*bref/(2V)
+    required: true
+    value: 0.265575
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/r_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: Cl_r
+    category: lateral
+    coefficient: Cl
+    perturbation: r
+    definition: dCl/dr_hat; r_hat=r*bref/(2V)
+    required: true
+    value: 0.1310296
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/r_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: Cn_r
+    category: lateral
+    coefficient: Cn
+    perturbation: r
+    definition: dCn/dr_hat; r_hat=r*bref/(2V)
+    required: true
+    value: -0.0925173
+    source: vspaero_native_diagnostic_reference
+    method: centered_finite_difference_unavailable
+    selected_fd_step: null
+    selected_fd_step_unit: null
+    units: 1/r_hat
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: METHOD_LIMITATION
+    production_included: false
+    gate_action: ACCEPT_WITH_WARNING
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+  - name: CL_delta_e
+    category: elevator
+    coefficient: CL
+    perturbation: elevator
+    definition: dCL/ddelta_e at trim
+    required: true
+    value: 0.47944074365558015
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CD_delta_e
+    category: elevator
+    coefficient: CD
+    perturbation: elevator
+    definition: dCD/ddelta_e at trim
+    required: true
+    value: 0.043007110700877545
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cm_delta_e
+    category: elevator
+    coefficient: Cm
+    perturbation: elevator
+    definition: dCm/ddelta_e at trim
+    required: true
+    value: -1.3482395222627281
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CY_delta_a
+    category: aileron
+    coefficient: CY
+    perturbation: aileron
+    definition: dCY/ddelta_a at trim
+    required: true
+    value: -0.012901391341645347
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cl_delta_a
+    category: aileron
+    coefficient: Cl
+    perturbation: aileron
+    definition: dCl/ddelta_a at trim
+    required: true
+    value: -0.28878866243951407
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cn_delta_a
+    category: aileron
+    coefficient: Cn
+    perturbation: aileron
+    definition: dCn/ddelta_a at trim
+    required: true
+    value: 0.009414271766329958
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: CY_delta_r
+    category: rudder
+    coefficient: CY
+    perturbation: rudder
+    definition: dCY/ddelta_r at trim
+    required: true
+    value: -0.1582600014205786
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cl_delta_r
+    category: rudder
+    coefficient: Cl
+    perturbation: rudder
+    definition: dCl/ddelta_r at trim
+    required: true
+    value: 0.0037239833931466794
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  - name: Cn_delta_r
+    category: rudder
+    coefficient: Cn
+    perturbation: rudder
+    definition: dCn/ddelta_r at trim
+    required: true
+    value: 0.06873035664355537
+    source: production_centered_fd
+    method: centered_finite_difference
+    selected_fd_step: 1.0
+    selected_fd_step_unit: deg
+    units: 1/rad
+    coordinate_sign_convention: +X forward, +Y right, +Z down; right-handed body axes;
+      +alpha gives positive incoming-flow Z component; +beta gives positive incoming-flow
+      Y component; +delta_a/+delta_e/+delta_r increase the matching OpenVSP Control
+      Surface Group DeflectionAngle; physical trailing-edge direction depends on model
+      gains and hinge orientation; CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm,
+      Cn=-CMz=CMn
+    wake_level: 12
+    validation_status: PASS
+    production_included: true
+    gate_action: ACCEPT
+    reason: selected the larger endpoint of the first local PASS-stable range
+  summary:
+    required: 23
+    PASS: 15
+    WARN_NUMERICAL: 0
+    METHOD_LIMITATION: 8
+    FAIL: 0
+    production_included: 15
+    gate_status: WARN
+    status_policy:
+      PASS: ACCEPT
+      WARN_NUMERICAL: ACCEPT_WITH_WARNING
+      METHOD_LIMITATION: ACCEPT_WITH_WARNING
+      FAIL: REJECT
+    pass_names:
+    - CL_alpha
+    - CD_alpha
+    - Cm_alpha
+    - CY_beta
+    - Cl_beta
+    - Cn_beta
+    - CL_delta_e
+    - CD_delta_e
+    - Cm_delta_e
+    - CY_delta_a
+    - Cl_delta_a
+    - Cn_delta_a
+    - CY_delta_r
+    - Cl_delta_r
+    - Cn_delta_r
+    warn_numerical_names: []
+    method_limitation_names:
+    - CL_q
+    - Cm_q
+    - CY_p
+    - Cl_p
+    - Cn_p
+    - CY_r
+    - Cl_r
+    - Cn_r
+    fail_names: []
 diagnostics:
-  CY_delta_r:
-    status: WARN
-    classification: LARGE_DEFLECTION_NONLINEAR
-    recommended_delta_r_deg: 1.0
-    reason: the local small-step range is stable but the 2-to-4 degree transition
-      is not
-    derivatives:
-      '0.5':
-        CY_delta_r: -0.14903104133663203
-        Cl_delta_r: 0.006900923986827863
-        Cn_delta_r: 0.06540261436033667
-      '1.0':
-        CY_delta_r: -0.1530961584724921
-        Cl_delta_r: 0.0042254370867692076
-        Cn_delta_r: 0.06315983931057047
-      '2.0':
-        CY_delta_r: -0.15197311048727083
-        Cl_delta_r: 0.002282522850887818
-        Cn_delta_r: 0.06499143149946388
-      '4.0':
-        CY_delta_r: -0.2493548328933949
-        Cl_delta_r: 0.014927739598548049
-        Cn_delta_r: 0.10703470722589306
-    comparisons:
-    - lower_step_deg: 0.5
-      higher_step_deg: 1.0
-      status: PASS
-      quantities:
-        CY_delta_r:
-          status: PASS
-          difference: 0.00406511713586008
-          relative_difference: 0.02655270502159915
-          pass_limit: 0.014592884754174763
-          warn_limit: 0.04224769267779937
-          reference_scale: 0.1530961584724921
-        Cl_delta_r:
-          status: PASS
-          difference: 0.0026754869000586556
-          relative_difference: 0.05350973800117311
-          pass_limit: 0.0115
-          warn_limit: 0.034
-          reference_scale: 0.05
-        Cn_delta_r:
-          status: PASS
-          difference: 0.0022427750497662075
-          relative_difference: 0.034291825666319775
-          pass_limit: 0.0119620784308101
-          warn_limit: 0.03523220914882693
-          reference_scale: 0.06540261436033667
-    - lower_step_deg: 1.0
-      higher_step_deg: 2.0
-      status: PASS
-      quantities:
-        CY_delta_r:
-          status: PASS
-          difference: 0.0011230479852212816
-          relative_difference: 0.007335572599772761
-          pass_limit: 0.014592884754174763
-          warn_limit: 0.04224769267779937
-          reference_scale: 0.1530961584724921
-        Cl_delta_r:
-          status: PASS
-          difference: 0.0019429142358813895
-          relative_difference: 0.03885828471762779
-          pass_limit: 0.0115
-          warn_limit: 0.034
-          reference_scale: 0.05
-        Cn_delta_r:
-          status: PASS
-          difference: 0.0018315921888934078
-          relative_difference: 0.028182056413213745
-          pass_limit: 0.011949742944983917
-          warn_limit: 0.03519931451995711
-          reference_scale: 0.06499143149946388
-    - lower_step_deg: 2.0
-      higher_step_deg: 4.0
-      status: FAIL
-      quantities:
-        CY_delta_r:
-          status: FAIL
-          difference: 0.09738172240612408
-          relative_difference: 0.3905347302723307
-          pass_limit: 0.017480644986801845
-          warn_limit: 0.049948386631471595
-          reference_scale: 0.2493548328933949
-        Cl_delta_r:
-          status: WARN
-          difference: 0.01264521674766023
-          relative_difference: 0.2529043349532046
-          pass_limit: 0.0115
-          warn_limit: 0.034
-          reference_scale: 0.05
-        Cn_delta_r:
-          status: FAIL
-          difference: 0.042043275726429186
-          relative_difference: 0.39280039919853565
-          pass_limit: 0.013211041216776792
-          warn_limit: 0.038562776578071445
-          reference_scale: 0.10703470722589306
+  native_derivatives:
+    status: DIAGNOSTIC_ONLY
+    enters_production_gate: false
   Cm_q:
-    status: WARN
-    numerical_status: FAIL
-    checks:
-    - source: wake
-      lower: 3
-      higher: 5
-      status: FAIL
-      difference: null
-      reason: non-finite value
-    - source: wake
-      lower: 5
-      higher: 8
-      status: FAIL
-      difference: null
-      reason: non-finite value
-    - source: wake
-      lower: 8
-      higher: 12
-      status: FAIL
-      difference: null
-      reason: non-finite value
-    - source: tessellation
-      lower: COARSE
-      higher: MEDIUM
-      status: WARN
-      difference: 0.6265648000000006
-      relative_difference: 0.046628272807152
-      pass_limit: 0.413123317
-      warn_limit: 1.1049955120000001
-      reference_scale: 13.4374439
-    - source: tessellation
-      lower: MEDIUM
-      higher: FINE
-      status: WARN
-      difference: 0.45117920000000034
-      relative_difference: 0.03402029985043878
-      pass_limit: 0.407861749
-      warn_limit: 1.090964664
-      reference_scale: 13.2620583
-    api_limitation: OpenVSP 3.51.3 does not expose a negative steady q input; Cm_q
-      remains a native positive-rate derivative and cannot be represented as a fabricated
-      centered difference.
+    status: METHOD_LIMITATION
+    numerical_diagnostic_status: NOT_APPLICABLE
+    diagnostic_value: -13.5643899
+    reason: OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input,
+      so a standard centered finite difference cannot be formed without fabricating
+      data.
+    enters_production_gate: false
 production_gate:
   status: FAIL
-  reason: combined base-coefficient + key centered-FD Wake convergence, boundary continuity,
-    and tessellation convergence
+  reason: Targeted real verification is incomplete for production release; the full
+    representative-state Wake schedule and boundary checks were intentionally not
+    run.
   force_option: --force
+targeted_real_verification:
+  state:
+    name: medium_alpha
+    speed_mps: 9.0
+    alpha_deg: 6.0
+    beta_deg: 0.0
+  status: WARN
+  production_wake: 12
+  verification_only_wake: 16
+  production_level_unchanged: true
+  values_by_wake:
+    '12':
+      CL: 0.606044868339
+      CD: 0.04252072108
+      CY: 0.003958724468
+      Cl: -0.000751092592
+      Cm: -0.154363767806
+      Cn: -0.000441416808
+      CL_alpha: 4.698834345742484
+      CD_alpha: 0.4304327128199883
+      Cm_alpha: -1.149616643454114
+      CL_delta_e: 0.47944074365558015
+      CD_delta_e: 0.043007110700877545
+      Cm_delta_e: -1.3482395222627281
+      CY_beta: -0.3469367335178127
+      Cl_beta: -0.12037551668828764
+      Cn_beta: 0.04120137952070125
+      CY_delta_a: -0.012901391341645347
+      Cl_delta_a: -0.28878866243951407
+      Cn_delta_a: 0.009414271766329958
+      CY_delta_r: -0.1582600014205786
+      Cl_delta_r: 0.0037239833931466794
+      Cn_delta_r: 0.06873035664355537
+    '16':
+      CL: 0.605791904119
+      CD: 0.042461700069
+      CY: 0.004613788595
+      Cl: -0.000809039854
+      Cm: -0.154099578099
+      Cn: -0.000550066401
+      CL_alpha: 4.750970624496781
+      CD_alpha: 0.4395943297938222
+      Cm_alpha: -1.1756528383715337
+      CL_delta_e: 0.4855871443634949
+      CD_delta_e: 0.04527420969980786
+      Cm_delta_e: -1.3546513388510386
+      CY_beta: -0.3746269996064469
+      Cl_beta: -0.11703072309514218
+      Cn_beta: 0.04607832877842655
+      CY_delta_a: 0.0037152120682047004
+      Cl_delta_a: -0.2933834874794522
+      Cn_delta_a: 0.008165190254913747
+      CY_delta_r: -0.15066217652029265
+      Cl_delta_r: 0.0119488379778028
+      Cn_delta_r: 0.06890820371719222
+  all_required:
+    status: WARN
+    quantities:
+      CL:
+        status: PASS
+        difference: 0.00025296421999998486
+        relative_difference: 0.00041740180177300945
+        pass_limit: 0.028181346050169996
+        warn_limit: 0.07848358946712
+        reference_scale: 0.606044868339
+      CD:
+        status: PASS
+        difference: 5.90210109999989e-05
+        relative_difference: 0.001180420219999978
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY:
+        status: PASS
+        difference: 0.0006550641270000003
+        relative_difference: 0.013101282540000005
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cl:
+        status: PASS
+        difference: 5.794726199999996e-05
+        relative_difference: 0.0011589452399999992
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cm:
+        status: PASS
+        difference: 0.0002641897070000121
+        relative_difference: 0.001711474854203081
+        pass_limit: 0.01463091303418
+        warn_limit: 0.04234910142448
+        reference_scale: 0.154363767806
+      Cn:
+        status: PASS
+        difference: 0.00010864959300000001
+        relative_difference: 0.00217299186
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CL_alpha:
+        status: PASS
+        difference: 0.05213627875429694
+        relative_difference: 0.01097381627355761
+        pass_limit: 0.15252911873490343
+        warn_limit: 0.4100776499597425
+        reference_scale: 4.750970624496781
+      CD_alpha:
+        status: PASS
+        difference: 0.009161616973833886
+        relative_difference: 0.02084107176298396
+        pass_limit: 0.023187829893814665
+        warn_limit: 0.06516754638350578
+        reference_scale: 0.4395943297938222
+      Cm_alpha:
+        status: PASS
+        difference: 0.026036194917419708
+        relative_difference: 0.022146159195672067
+        pass_limit: 0.04526958515114601
+        warn_limit: 0.1240522270697227
+        reference_scale: 1.1756528383715337
+      CL_delta_e:
+        status: PASS
+        difference: 0.006146400707914779
+        relative_difference: 0.012657667690052726
+        pass_limit: 0.024567614330904847
+        warn_limit: 0.0688469715490796
+        reference_scale: 0.4855871443634949
+      CD_delta_e:
+        status: PASS
+        difference: 0.0022670989989303156
+        relative_difference: 0.04534197997860631
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cm_delta_e:
+        status: PASS
+        difference: 0.0064118165883104705
+        relative_difference: 0.004733185879215768
+        pass_limit: 0.05063954016553116
+        warn_limit: 0.1383721071080831
+        reference_scale: 1.3546513388510386
+      CY_beta:
+        status: WARN
+        difference: 0.02769026608863423
+        relative_difference: 0.07391422966770522
+        pass_limit: 0.021238809988193406
+        warn_limit: 0.05997015996851575
+        reference_scale: 0.3746269996064469
+      Cl_beta:
+        status: PASS
+        difference: 0.003344793593145462
+        relative_difference: 0.027786328027208422
+        pass_limit: 0.01361126550064863
+        warn_limit: 0.03963004133506301
+        reference_scale: 0.12037551668828764
+      Cn_beta:
+        status: PASS
+        difference: 0.004876949257725298
+        relative_difference: 0.09753898515450596
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY_delta_a:
+        status: WARN
+        difference: 0.016616603409850047
+        relative_difference: 0.3323320681970009
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cl_delta_a:
+        status: PASS
+        difference: 0.004594825039938133
+        relative_difference: 0.015661498468825523
+        pass_limit: 0.018801504624383566
+        warn_limit: 0.053470678998356176
+        reference_scale: 0.2933834874794522
+      Cn_delta_a:
+        status: PASS
+        difference: 0.0012490815114162106
+        relative_difference: 0.02498163022832421
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY_delta_r:
+        status: PASS
+        difference: 0.00759782490028596
+        relative_difference: 0.048008497612069476
+        pass_limit: 0.01474780004261736
+        warn_limit: 0.042660800113646286
+        reference_scale: 0.1582600014205786
+      Cl_delta_r:
+        status: PASS
+        difference: 0.008224854584656119
+        relative_difference: 0.16449709169312238
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cn_delta_r:
+        status: PASS
+        difference: 0.00017784707363685537
+        relative_difference: 0.0025809274374174913
+        pass_limit: 0.012067246111515767
+        warn_limit: 0.03551265629737538
+        reference_scale: 0.06890820371719222
+  base_coefficients:
+    status: PASS
+    quantities:
+      CL:
+        status: PASS
+        difference: 0.00025296421999998486
+        relative_difference: 0.00041740180177300945
+        pass_limit: 0.028181346050169996
+        warn_limit: 0.07848358946712
+        reference_scale: 0.606044868339
+      CD:
+        status: PASS
+        difference: 5.90210109999989e-05
+        relative_difference: 0.001180420219999978
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY:
+        status: PASS
+        difference: 0.0006550641270000003
+        relative_difference: 0.013101282540000005
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cl:
+        status: PASS
+        difference: 5.794726199999996e-05
+        relative_difference: 0.0011589452399999992
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cm:
+        status: PASS
+        difference: 0.0002641897070000121
+        relative_difference: 0.001711474854203081
+        pass_limit: 0.01463091303418
+        warn_limit: 0.04234910142448
+        reference_scale: 0.154363767806
+      Cn:
+        status: PASS
+        difference: 0.00010864959300000001
+        relative_difference: 0.00217299186
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+  required_fd_derivatives:
+    status: WARN
+    quantities:
+      CL_alpha:
+        status: PASS
+        difference: 0.05213627875429694
+        relative_difference: 0.01097381627355761
+        pass_limit: 0.15252911873490343
+        warn_limit: 0.4100776499597425
+        reference_scale: 4.750970624496781
+      CD_alpha:
+        status: PASS
+        difference: 0.009161616973833886
+        relative_difference: 0.02084107176298396
+        pass_limit: 0.023187829893814665
+        warn_limit: 0.06516754638350578
+        reference_scale: 0.4395943297938222
+      Cm_alpha:
+        status: PASS
+        difference: 0.026036194917419708
+        relative_difference: 0.022146159195672067
+        pass_limit: 0.04526958515114601
+        warn_limit: 0.1240522270697227
+        reference_scale: 1.1756528383715337
+      CL_delta_e:
+        status: PASS
+        difference: 0.006146400707914779
+        relative_difference: 0.012657667690052726
+        pass_limit: 0.024567614330904847
+        warn_limit: 0.0688469715490796
+        reference_scale: 0.4855871443634949
+      CD_delta_e:
+        status: PASS
+        difference: 0.0022670989989303156
+        relative_difference: 0.04534197997860631
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cm_delta_e:
+        status: PASS
+        difference: 0.0064118165883104705
+        relative_difference: 0.004733185879215768
+        pass_limit: 0.05063954016553116
+        warn_limit: 0.1383721071080831
+        reference_scale: 1.3546513388510386
+      CY_beta:
+        status: WARN
+        difference: 0.02769026608863423
+        relative_difference: 0.07391422966770522
+        pass_limit: 0.021238809988193406
+        warn_limit: 0.05997015996851575
+        reference_scale: 0.3746269996064469
+      Cl_beta:
+        status: PASS
+        difference: 0.003344793593145462
+        relative_difference: 0.027786328027208422
+        pass_limit: 0.01361126550064863
+        warn_limit: 0.03963004133506301
+        reference_scale: 0.12037551668828764
+      Cn_beta:
+        status: PASS
+        difference: 0.004876949257725298
+        relative_difference: 0.09753898515450596
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY_delta_a:
+        status: WARN
+        difference: 0.016616603409850047
+        relative_difference: 0.3323320681970009
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cl_delta_a:
+        status: PASS
+        difference: 0.004594825039938133
+        relative_difference: 0.015661498468825523
+        pass_limit: 0.018801504624383566
+        warn_limit: 0.053470678998356176
+        reference_scale: 0.2933834874794522
+      Cn_delta_a:
+        status: PASS
+        difference: 0.0012490815114162106
+        relative_difference: 0.02498163022832421
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      CY_delta_r:
+        status: PASS
+        difference: 0.00759782490028596
+        relative_difference: 0.048008497612069476
+        pass_limit: 0.01474780004261736
+        warn_limit: 0.042660800113646286
+        reference_scale: 0.1582600014205786
+      Cl_delta_r:
+        status: PASS
+        difference: 0.008224854584656119
+        relative_difference: 0.16449709169312238
+        pass_limit: 0.0115
+        warn_limit: 0.034
+        reference_scale: 0.05
+      Cn_delta_r:
+        status: PASS
+        difference: 0.00017784707363685537
+        relative_difference: 0.0025809274374174913
+        pass_limit: 0.012067246111515767
+        warn_limit: 0.03551265629737538
+        reference_scale: 0.06890820371719222

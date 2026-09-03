@@ -15,8 +15,10 @@ def _current_values(result: dict[str, Any]) -> dict[str, float]:
         "alpha_trim_deg": float(trim["alpha_trim_deg"]),
         "elevator_trim_deg": float(trim["elevator_trim_deg"]),
     }
-    for name, record in result.get("derivatives", {}).get("records", {}).items():
-        values[name] = float(record["value"])
+    for item in result.get("derivatives", {}).get("required_derivatives_manifest", {}).get("items", []):
+        value = item.get("value")
+        if value is not None:
+            values[str(item["name"])] = float(value)
     return values
 
 

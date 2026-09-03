@@ -1,305 +1,236 @@
-# OpenVSP/VSPAERO 气动数据工具——详细说明
+# OpenVSP/VSPAERO 气动数据库工作流：详细说明
 
-## 1. 目标与数值策略
+## 1. 目标和责任边界
 
-工程从 `.vsp3` 生成 GRID 气动数据库、纵向 TRIM、required stability/control derivatives、分级验证和 MATLAB `AERO` 数据。Production 数值策略由三部分组成：
+本项目从 OpenVSP `.vsp3` 模型生成 GRID 气动数据、纵向 TRIM 工况、经数值稳定性检查的 centered finite-difference derivatives，并导出 JSON、CSV 和 MATLAB `.mat`。
 
-1. 全飞行包线共用一套已验证的 tessellation preset；
-2. Wake Iteration 由实测代表工况形成的 `required_wake=f(V, alpha, beta)` 离散 Schedule 决定；
-3. 每个 Trim 基准点和全部导数扰动组成 derivative bundle，bundle 内统一采用所需 Wake 的最大值。
+工作流认证的是 Wake Iteration、FD 步长稳定性、TRIM、数据完整性和 required derivative 方法状态。它不认证 OpenVSP Tessellation 或网格质量。
 
-数值收敛只在少量气动代表状态运行，不把 3/5/8/12 或 COARSE/MEDIUM/FINE 铺到整个 GRID。Adaptive GRID 本版只保留受门禁保护的接口和 midpoint error evaluator。
+> Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.
 
-## 2. 完整工作流
+用户必须在 OpenVSP 建模阶段设置足够的 Tess_U/Tess_W、截面离散、前后缘聚类和舵面铰链分辨率。脚本始终使用当前保存在 `.vsp3` 中的网格，不修改网格参数、不比较 COARSE/MEDIUM/FINE、不把网格收敛放入 Production Gate。
 
-```text
-配置与 .vsp3 检查
-        |
-一点式真实 smoke
-        |
-Wake 代表状态 × [3,5,8,12]：六系数 + 关键真实中心差分导数
-        |
-最小连续稳定等级 + native derivative 诊断 + Wake Map + 边界连续性修正
-        |
-代表状态 × [COARSE,MEDIUM,FINE]
-        |
-CY_delta_r / Cm_q 专项诊断
-        |
-production_numerical_settings.yaml + Production Gate
-        |
-正式 GRID + Pre-Trim -> Production Trim
-        |
-统一 bundle Wake 的 0.5Δ/Δ/2Δ 导数
-        |
-validation + regression + CSV/JSON/MAT
-```
+仍保留的网格相关有效性检查只有：VSPAEROComputeGeometry 能成功、VSPAEROSweep 能完成、`.vspgeom/.vspaero/.history/.adb` 等必要文件存在，以及所需系数为有限数。这些检查不等于网格独立性证明。
 
-Numerical Convergence 的每个真实 VSPAERO case 独立签名、独立保存和独立失败。某一代表点失败时，其他固定状态继续；仅真正依赖失败状态的后续步骤标为 `SKIPPED_DEPENDENCY`。无论 Overall 是否 FAIL 都生成正式 JSON/Markdown 报告。
-
-唯一 Python 入口是 `run.py`。正式命令是 `grid`、`trim`、`all`；收敛命令是 `numerical-convergence`；`smoke` 只运行一个真实 VSPAERO 状态。
-
-## 3. 配置职责
-
-`config/aircraft.yaml` 是飞机与数值研究的统一配置；`config/openvsp.yaml` 是唯一允许保存 OpenVSP 根路径的位置；`config/required_derivatives.yaml` 是唯一权威导数清单。
-
-主要配置区：
-
-- `operating_conditions`：GRID 的 V/alpha/beta，可用显式 `values` 表示人工非均匀 GRID，也可用 `start/step/end`。
-- `grid.mode`：`uniform` 或预留的 `adaptive`。
-- `trim`：质量、重力、V/beta、alpha/elevator 初值、边界、残差容限和迭代限制。
-- `derivatives`：0.5Δ/Δ/2Δ、各变量基准步长及导数步长收敛容差。
-- `numerical_convergence.wake`：唯一 Wake 候选、代表状态、双容差、邻域、边界缓冲和安全裕度。
-- `numerical_convergence.tessellation`：三档按几何职责设计的剖分和代表状态。
-- `numerical_convergence.trim`：Pre-Trim Wake 与跨区升级上限。
-- `numerical_convergence.diagnostics`：少量诊断状态、rudder 步长和容差。
-- `numerical_convergence.production_gate`：是否要求正式运行先通过数值门禁。
-
-`solver.wake_iterations` 和 `solver.tessellation_overrides` 是 smoke/强制回退设置。Production 计算优先读取收敛输出，不能把它们误认为全包线统一的正式设置。
-
-## 4. GRID
-
-GRID 对配置轴做笛卡尔积，每点执行 VSPAERO stability sweep，保存六个基准气动力/力矩系数、OpenVSP 原生稳定导数、控制导数和求解证据。每个点使用统一 Production tessellation，但单独查询 Wake Schedule。
-
-人工非均匀 GRID 保持不变：任何轴都可写 `values: [...]`。当前 `adaptive` 接口只提供：
-
-- `grid.mode=uniform/adaptive`；
-- Production Convergence 必须为 PASS 的硬约束；
-- `midpoint_interpolation_error()`，比较两端线性插值与真实中点 VSPAERO 值，并使用统一双容差。
-
-本版没有按 alpha 人工加密，也没有自动递归扩展 GRID。
-
-## 5. TRIM 与两阶段算法
-
-纵向水平直飞配平目标为：
+## 2. 整体流程
 
 ```text
-qbar*S*CL - mass*g = 0
-qbar*S*cref*Cm      = 0
+读取配置与 .vsp3
+  -> 验证几何集、参考量、舵面映射和当前模型网格可求解性
+  -> 解析 Wake 代表状态（必要时真实 Pre-Trim）
+  -> 在代表点选择逐导数 FD step
+  -> Wake 3/5/8/12 的六系数 + required FD derivative Gate
+  -> 仅对 8->12 未 PASS 的代表点运行 Wake=16 verification
+  -> 离散 Wake Schedule 和边界连续性检查
+  -> Required Derivatives Manifest + Production Gate
+  -> GRID / 两阶段 TRIM / Production centered FD derivatives
+  -> 验证、CSV/JSON/MAT 导出
 ```
 
-`trim_solver.py` 不再用 VSPAERO native derivative 作为正式 Newton Jacobian。每轮在当前点执行 alpha `±Δalpha` 和 elevator `±Δelevator` 的真实气动计算，调用 `finite_difference.py` 的统一 degree→radian 中心差分，构造：
+Numerical Validation 只在少量代表状态上运行。FD step 诊断不扩展到全 GRID。逐 case signature cache 使已成功的真实求解可以断点续跑。
+
+## 3. 配置结构
+
+`config/aircraft.yaml` 是主配置，`config/required_derivatives.yaml` 是唯一 required derivative manifest。
+
+### 3.1 飞机与几何
+
+- `aircraft.model`：`.vsp3` 文件。
+- `geometry_sets.thin`：主翼、平尾、垂尾等 VLM 薄面。
+- `geometry_sets.thick`：机身等厚体。
+- `thin_set_index/thick_set_index`：写入临时 case 模型的 OpenVSP Set。
+- `reference.source/cg_source`：决定参考量和重心从模型还是 YAML 读取。
+
+### 3.2 状态、舵面与 TRIM
+
+- `operating_conditions`：GRID 的 V/alpha/beta。
+- `controls`：OpenVSP Control Surface Group 名、中立值和限位。
+- `trim.mass_kg/gravity_m_s2`：用于 Lift=Weight。
+- `trim.alpha/elevator`：初值和搜索界限。
+- `trim.force_tolerance_n=1` 和 `moment_tolerance_nm=1`：必须同时满足。
+- `trim.max_iterations=15`：仅是停止上限，不是收敛判据。
+
+### 3.3 Wake
+
+- `wake.candidates=[3,5,8,12]`：唯一正式候选。
+- `wake.verification_only_level=16`：只用于 12→16 外推验证。
+- `representative_states`：应覆盖线性低迎角、巡航 Trim、中迎角、较高迎角和必要 beta。
+- `tolerance`：六系数和 required FD derivatives 共用的绝对+相对判据。
+- `neighbor_count/boundary_buffer_normalized/safety_margin_levels_for_untested`：非实测点的保守离散查询。
+
+### 3.4 FD step
+
+`derivatives.fd_step_candidates_deg` 对 alpha、beta、elevator、aileron、rudder 分别配置候选。当前默认为：
+
+- alpha/beta：0.25°、0.5°、1°；
+- elevator/aileron/rudder：0.5°、1°、2°。
+
+`trim_jacobian_steps_deg` 是 TRIM 专用步长，保持 alpha=0.5°、elevator=2°。它与生产导数的逐导数自动选择目的不同。
+
+## 4. TRIM 和 FD Jacobian
+
+TRIM 解两个方程：
 
 ```text
-J = [dF/dalpha     dF/delevator
-     dM/dalpha     dM/delevator]
+qbar * Sref * CL - mass * g = 0
+qbar * Sref * cref * Cm = 0
 ```
 
-native `CL_alpha/Cm_alpha/CL_delta_e/Cm_delta_e` 仍从基准 stability 结果读取，并与 FD 值一起写入迭代历史，但只作诊断。Newton 原始步先经过原有最大角度限制，再按 `lambda=1, 0.5, 0.25, 0.125` 做真实回溯：完整步改善就立即接受，只有未改善才缩步。历史记录原始步、受限步、每次尝试、最终 lambda、实际步长和新旧归一化残差；所有候选均不改善时保留当前状态并明确 FAIL。
+每轮在当前 alpha/elevator 周围运行真实正负扰动，调用 `finite_difference.py` 的统一 degree-to-radian 中心差分，构造 CL/Cm 对 alpha/elevator 的 Jacobian。VSPAERO native derivatives 可写入迭代历史供人工比较，但不进入 Jacobian。
 
-Pre-Trim 与正式 TRIM 的 `max_iterations` 均为 15。成功条件始终是同一次迭代同时满足 `|Force residual|<=1 N` 和 `|Moment residual|<=1 N·m`；第 15 次只是停止点，未同时满足时必须 FAIL，不能因达到上限而成功。
+Newton 步先受 `max_step_deg` 限制，再按 `1 / 0.5 / 0.25 / 0.125` 做真实回溯。选择第一个降低归一化残差的候选；所有候选均不改善时保留原状态并 FAIL。
 
-Production TRIM 分两阶段：
+两阶段流程是：
 
-1. Pre-Trim 使用配置的低成本安全 Wake 和 COARSE tessellation，目标仅是得到近似 `alpha_trim/elevator_trim`。
-2. 根据 Pre-Trim 的 `(V,alpha,beta)` 以及整个 derivative bundle 查询 Schedule，选择固定 Production Wake，在统一 Production tessellation 下从头完成正式 TRIM。
+1. Pre-Trim 用配置的低成本 Wake 找到近似 alpha/elevator。
+2. 查询 Pre-Trim 基点和完整导数 bundle 的 Wake，以最大值作为固定 production Wake，从近似解重新 TRIM。
+3. 正式 TRIM 后再查询 bundle；如果进入更高区域，只在完整 TRIM 之间升级 Wake 并重新配平。
 
-正式 TRIM 完成后再次查询 bundle Wake。若进入更高区域，则只在完整 TRIM 之间升级 Wake，并用上次解作新初值重新正式配平；不在单轮 Newton 迭代中来回切换。达到升级上限仍不一致时明确 FAIL。最终导数只围绕最后一次 Production Trim 计算。
+Bundle 中 base、alpha±、beta±、三组舵面±全部使用同一 production Wake，避免差分两侧使用不同数值设置。
 
-## 6. Required derivatives
+## 5. Wake 收敛与 Wake=16 verification-only
 
-`config/required_derivatives.yaml` 定义每项导数的名称、类别、系数、扰动变量、单位、定义和可选预期符号。当前 23 项覆盖：
+每个代表状态在 3/5/8/12 运行：
 
-- 纵向：`CL_alpha, CD_alpha, Cm_alpha, CL_q, Cm_q`；
-- 侧向：`CY/Cl/Cn_beta`、`CY/Cl/Cn_p`、`CY/Cl/Cn_r`；
-- 升降舵：`CL/CD/Cm_delta_e`；
-- 副翼：`CY/Cl/Cn_delta_a`；
-- 方向舵：`CY/Cl/Cn_delta_r`。
+- 六个基础系数 `CL, CD, CY, Cl, Cm, Cn`；
+- 全部 15 项正式 centered FD：alpha 的 `CL/CD/Cm`，beta 的 `CY/Cl/Cn`，以及 elevator、aileron、rudder 各自对应的三项 required control derivatives。
 
-正式 23 项导数输出和 tessellation 监控仍由该 manifest 驱动。Wake 的二级气动 Gate 按本版明确要求监控八项关键真实 FD 导数：`CL_alpha, Cm_alpha, Cm_delta_e, CY_beta, Cl_beta, Cl_delta_a, Cn_beta, Cn_delta_r`；manifest 本身没有删改。
+所有后续相邻转换均 PASS 时，才可选择较低 Wake。Native derivatives 只在代表基准 stability case 中保存供诊断，不扩展成 Wake 等级研究，也不参与正式 Wake Gate。
 
-## 7. 中心差分与 derivative bundle
+如果最后的 8→12 不是 PASS，工作流仅对该 representative state 运行 Wake=16：
 
-alpha、beta、aileron、elevator、rudder 使用真实中心差分：
+- 12→16 PASS：该状态判为已验证，`required_wake=12`；
+- 12→16 仍不 PASS：保持 WARN，`required_wake=12`；
+- 16 输出缺失或非有限：这是真实数据缺失，状态 FAIL；
+- 8→12 已 PASS 的状态不运行 16。
 
-```text
-dC/dx = [C(x0+h)-C(x0-h)]/(2h)
-```
+Wake=16 不在 `wake_schedule.candidates`中，不在 GRID/TRIM 查询中返回，不会把 production Wake 提高到 16。
 
-角度输入为 deg，分母转换为 rad，导数单位为 `1/rad`。每个变量计算 `h=0.5Δ, Δ, 2Δ`。基准点、所有正负扰动和 rate 敏感性运行构成同一个 derivative bundle。
+## 6. Wake Schedule 和边界连续性
 
-Schedule 首先对 bundle 中 base、`alpha±2Δalpha`、`beta±2Δbeta` 查询。控制偏转不改变 Schedule 的三个自变量，但其所有 ± 样本仍被固定到同一个 `bundle_wake=max(required_wake_of_all_bundle_states)`。因此不会出现中心差分两侧分别使用 Wake 5 和 8 的情况。
+Schedule 保存每个实测 `(V,alpha,beta,required_wake,status)`。实测点直接使用该点 Wake；其他点使用归一化 V/alpha/beta 距离的有限邻域，在边界缓冲区取较高离散等级，并按配置增加安全等级。没有 alpha 阈值硬编码，也不对 Wake 做线性插值。
 
-结果的 `derivatives.bundle_wake_iterations` 和 `bundle_rule` 明确记录该约束。
+当相邻代表区域 Wake 不同时，在中点比较低/高 Wake 的同一套六系数和 required FD derivatives。如果不连续，低 Wake 端点升级到高 Wake，并保留 WARN 审计信息。
 
-TRIM Jacobian、Wake 关键导数 Gate 和正式 0.5Δ/Δ/2Δ 导数都复用 `finite_difference.py` 中同一套状态扰动、舵面限位、degree/radian 分母与符号映射，不存在第二套角度或符号实现。
+## 7. FD step 自动选择
 
-## 8. 0.5Δ/Δ/2Δ 收敛
+所有角度和舵面导数共用 `finite_difference.py` 的公共扰动、限位、单位换算和中心差分功能。同一变量的正负 case 可被多个系数导数共享，但每个导数独立判断稳定区和选择步长。
 
-公共判据为 absolute tolerance + relative tolerance：
+选择逻辑为：
 
-```text
-scale      = max(|a|, |b|, near_zero_reference)
-limit      = absolute + relative*scale
-difference = |a-b|
-```
+1. 按步长从小到大比较相邻导数，使用配置中不变的绝对+相对容差。
+2. 找到第一个 PASS 稳定区，选择该区的较大端点，避免使用最小、最易受求解器噪声影响的步长。
+3. 无 PASS 但有 WARN 稳定区时，状态为 `WARN_NUMERICAL`。
+4. 没有任何相邻区达到 WARN 时为 `FAIL`。
+5. Numerical Validation 的推荐步长在正式 TRIM 点仍要通过本地候选步长稳定性检查；如果局部行为不同，可独立改选。
 
-PASS 和 WARN 各有一组 limit，超过 WARN 为 FAIL。`near_zero_reference` 防止接近零的量因相对变化比例过大而误判。导数记录保留三组中心差分原始正负样本、导数值、变化、limit 和状态。
+因此 `CY_delta_r` 可自动选择约 1°的局部线性步长，不受 2°/4° 较大偏角非线性强制。诊断仅在必要代表点上执行，不将多步长扩展到 GRID。
 
-## 9. Wake Iteration 收敛
+每个正式 FD record 至少包含 `selected_fd_step`、`convergence_status`、`derivative_value`、`method`、完整正负 samples、Wake 和坐标/符号约定。
 
-候选 `[3,5,8,12]` 只来自配置。每个代表状态、每个 Wake 执行一级六系数检查，并以配置的正式扰动步长执行二级真实中心差分检查，至少包含 `CL_alpha, Cm_alpha, Cm_delta_e, CY_beta, Cl_beta, Cl_delta_a, Cn_beta, Cn_delta_r`。一级和二级从同一候选开始的全部后续相邻转换都 PASS，Wake aerodynamic convergence 才 PASS。
+## 8. Production FD 与 Native diagnostic
 
-同一基准 stability case 的 VSPAERO native derivatives 继续完整保存在单 case 缓存，报告对关键 native derivatives 做相邻 Wake 比较，但该结果是 `Native derivative diagnostic`，不再进入 Wake aerodynamic Gate。FD PASS 而 native FAIL 时，Wake 仍可 PASS，native diagnostic 降为 WARN；不会为了 native 跳动增加 Wake 16/20。
+输出严格分为：
 
-最小值选择不是只看一次相邻变化。选择某等级的条件是：从该等级开始的所有后续相邻转换都必须为 PASS。例如 3→5 PASS、5→8 FAIL、8→12 PASS 时只能推荐 8，不能推荐 5。若 8→12 为 WARN，只能把 12 标为“保守但未经验证”的 WARN；若为 FAIL，状态为 FAIL。最高候选从不自动等于正确答案。
+- `production_fd_derivatives`：真实正负 centered FD，使用选定步长，经数值稳定性检查；
+- `native_derivative_diagnostics`：VSPAERO stability/control native 值，`diagnostic_only=true`，不进入 Production Gate，不作 TRIM Jacobian，不覆盖正式 FD；
+- `required_derivatives_manifest`：统一的 required 逐项状态和 Gate 处理。
 
-代表状态覆盖低迎角线性区、真实巡航 Trim、中迎角、较大迎角和必要 beta。状态本身可以由用户按飞机任务选择，但 `required_wake` 必须由真实求解结果生成，不能按 alpha 阈值手写。
+GRID 的 stability sweep 仍保存 native 值供诊断，但 CSV 字段使用 `native_diagnostic_` 前缀。TRIM 正式数据字段使用 `production_fd_` 前缀。MAT 中 production 结构只放正式 FD，原生值放在独立 `native_derivative_diagnostics`。
 
-## 10. Wake Convergence Map / Schedule
+## 9. Required Derivatives Manifest
 
-输出 Schedule 保存每个实测 `(V,alpha,beta,required_wake,status)`。查询规则是：
+`config/required_derivatives.yaml` 定义 23 项 required 导数。每个输出 item 至少包含：
 
-1. 实测点直接使用其实测 required Wake；
-2. 未实测点在归一化 V/alpha/beta 空间寻找局部邻域；
-3. 位于区域边界缓冲范围时合并相邻区域并取较高离散 Wake；
-4. 对未实测点再施加配置的离散 safety margin；
-5. 结果始终属于候选集合，绝不线性插值。
+- `name`、`required`、`value`；
+- `source`、`method`、`selected_fd_step`、`units`；
+- `coordinate_sign_convention`、`wake_level`；
+- `validation_status`、`production_included`、`gate_action`、`reason`。
 
-轴归一化尺度从实测状态跨度生成，避免速度量纲支配 alpha/beta。
+状态只有：
 
-## 11. Wake 边界连续性
+- `PASS`：正式 centered FD 通过；
+- `WARN_NUMERICAL`：有可接受但需审阅的步长敏感性；
+- `METHOD_LIMITATION`：所需方法在当前 API 不可实现；
+- `FAIL`：真正缺失、非有限或数值/方法不可接受。
 
-若相邻代表区域 required Wake 不同，程序按归一化距离选择有限个最近的异等级区域对，在二者中点分别运行低/高 Wake，并比较同一套六系数和八项关键真实 FD derivatives。
+Manifest 顶层 `status_policy` 显式定义 Gate action，当前 `PASS=ACCEPT`、`WARN_NUMERICAL/METHOD_LIMITATION=ACCEPT_WITH_WARNING`、`FAIL=REJECT`。这些规则不在代码中隐藏绕过。
 
-边界比较超出 PASS 时，低 Wake 端点自动升级到高 Wake，并在报告中记录 action。修正后的边界状态至少为 WARN，提醒审阅发生过区域收缩/升级；没有跨等级边界时状态为 PASS。该机制避免 Schedule 本身引入数据库折点。
+OpenVSP/VSPAERO 3.51.3 公开 Sweep API 不能提供真实负 steady p/q/r，因此不能构造标准中心差分。`CL_q, Cm_q, CY_p, Cl_p, Cn_p, CY_r, Cl_r, Cn_r` 按 manifest 的 `steady_rate_centered_difference` 规则标为 `METHOD_LIMITATION`，`production_included=false`。VSPAERO native 值可作 reference，但不被冒充为 centered FD。
 
-## 12. Tessellation convergence
+汇总固定报告 `Required / PASS / WARN_NUMERICAL / METHOD_LIMITATION / FAIL / production_included`。Production Gate 只因 manifest 规则中的 `REJECT`、缺失求解数据或其他真实失败而 FAIL。
 
-流程严格位于 Wake 收敛之后。COARSE/MEDIUM/FINE 对主翼、平尾、垂尾、机身分别配置 `Tess_U/Tess_W`；升力面还可配置 OpenVSP `WingGeom/LECluster` 和 `TECluster`。主翼/尾翼控制面附近通过弦向离散和前后缘聚类获得更高分辨率，机身则分别控制长度和周向离散。三个 preset 不是统一倍增。
+## 10. Cache / Resume
 
-在配置的少量代表状态、Schedule 和 bundle Wake 下比较全部监控量。只有所有后续转换稳定才推荐更低档：
+Numerical Validation 缓存位于 `results/numerical_convergence/raw/<signature>/`。Signature 包含：
 
-- COARSE→MEDIUM 与 MEDIUM→FINE 均 PASS：可推荐 COARSE；
-- COARSE→MEDIUM 较大、MEDIUM→FINE PASS：推荐 MEDIUM；
-- MEDIUM→FINE 非 PASS：状态 FAIL，FINE 仅表示最高已算网格，不能宣称收敛。
+- `.vsp3` 哈希（因此包含用户当前网格身份）；
+- OpenVSP 版本和验证算法版本；
+- V/alpha/beta 及所有舵偏；
+- Wake，包括 verification-only 16；
+- polar/stability 分析类型和厚体参与。
 
-所有 Production 状态统一使用最终推荐 preset，本版不做分区 tessellation。
+诊断用途名不影响求解器输出，因此条件完全相同的 Wake Gate/FD step case 共享缓存。只有 `status=SUCCESS`且必要系数/诊断结构完整的 case 才可命中；损坏、失败或不完整 case 重算。启动 Numerical Validation 不删除整个 raw。
 
-## 13. CY_delta_r 专项诊断
+正式 GRID/TRIM 也使用签名恢复已完成 case；签名覆盖模型、配置、manifest、Wake Schedule 和 selected FD steps。
 
-只在配置的少量代表 Trim 状态运行方向舵 `±0.5°/±1°/±2°/±4°`，保存原始 `CY/Cl/Cn` 和三项中心导数。分类逻辑为：
+## 11. Production Gate
 
-- `LOCAL_LINEAR_VALID`：小/中步长连续稳定；
-- `NUMERICAL_NOISE`：最小步长不稳定，但较大一组相邻步长稳定；
-- `LARGE_DEFLECTION_NONLINEAR`：小步长稳定而较大步长偏离；
-- `NONLINEAR_OR_NUMERICALLY_UNRESOLVED`：无法找到明确稳定的局部区间。
+Gate 组合：
 
-只有前三种存在明确稳定区间时才输出 `recommended_delta_r_deg`。额外舵偏仅用于诊断，不扩展到整个 GRID。
+- Wake 六系数收敛；
+- required centered-FD Wake derivatives 收敛；
+- 必要的 Wake=16 验证；
+- Wake Schedule 边界连续性；
+- FD step 稳定性与 required manifest status policy。
 
-## 14. Cm_q 限制与数值敏感性
+Gate 不包含 Tessellation convergence，native derivatives 不参与 Gate。
 
-OpenVSP 3.51.3 公开 `VSPAEROSweep` API 没有负 p/q/r 稳态单点输入。工程不会伪造 `-q`；p/q/r 保留 VSPAERO 原生正向归一化差分，负样本为 `null`，方法状态保持 WARN。
+`PASS` 允许正式运行；`WARN` 按 manifest 中显式的带警告接受规则允许普通 GRID/TRIM；`FAIL` 默认阻止。Adaptive GRID 要求 Gate PASS。`--force` 只许录审计用试跑，不修改真实 Gate 状态。
 
-Numerical Convergence 从 Wake 和 tessellation 两组已有 stability 结果提取 `Cm_q`，逐级应用双容差。即使数值敏感性为 PASS，总方法仍为 WARN；若提高 Wake/网格后仍变化明显，`numerical_status` 继续 WARN/FAIL，供人工决定是否接受。该 native rate 限制是诊断信息，不替代能够真实计算的 alpha/beta/control 中心差分 Gate。
+## 12. 输出结构
 
-## 15. Production Numerical Settings 与 Gate
+### 12.1 Numerical Validation
 
-`results/numerical_convergence/production_numerical_settings.yaml` 是正式计算唯一数值产物，包含：
+- `numerical_convergence_report.md/.json`：Wake/Wake16、FD step、manifest、Gate、cache 汇总。
+- `production_numerical_settings.yaml`：模型身份、网格责任声明、Wake Schedule、selected FD steps、manifest 和 Gate。
+- `wake_convergence_map.csv/.png`：代表点 production Wake 及 Wake16 状态。
+- `fd_step_selection.csv`、`fd_step_convergence.png`：逐导数步长选择。
+- `required_derivatives_manifest.csv`：逐项状态。
+- `raw/<signature>/case_result.json`：缓存请求、映射输出和运行时间。
 
-- Production tessellation 名称、完整 overrides、推荐理由和状态；
-- Wake Schedule、候选、归一化尺度、边界缓冲、安全裕度和实测点；
-- derivative bundle 最大 Wake 规则；
-- 两阶段 Trim 与最大跨区升级次数；
-- 稳定时才给出的控制扰动建议；
-- CY_delta_r、Cm_q 诊断；
-- Production Gate 状态和原因。
+### 12.2 正式数据库
 
-文件通过模型 SHA-256、OpenVSP 版本和收敛配置 SHA-256 绑定生成环境；身份包含 TRIM、solver、derivative、geometry、atmosphere、control 和 numerical-convergence 关键设置，任一相关内容不匹配都会使 Gate 变为 FAIL，防止新飞机或新算法误用旧 Schedule。
+- `results/latest/aero_database.json`：保留完整嵌套数据。
+- `results/latest/aero_database.csv`：GRID/TRIM 平铺表，使用 `production_fd_` 和 `native_diagnostic_` 前缀。
+- `results/latest/trim_derivatives.csv`：每项 required 导数的 value/source/method/step/status/wake/production flag。
+- `results/validation/validation_report.csv`：Solver/TRIM/Numerical/Derivative/Physics/Dataset 多层检查。
+- `results/autotune/aircraft_aero.mat`：`AERO.longitudinal/lateral/controls` 只包含正式 FD；`AERO.native_derivative_diagnostics` 为独立参考区。
 
-Gate 组合 Wake、Wake boundary 和 tessellation：PASS 允许；WARN 允许但进入最终数据库状态；FAIL 默认在任何正式 case 前阻止。`--force` 只允许显式试跑并写 `production_force_override.json`，不会洗掉 FAIL。Adaptive GRID 不接受强制绕过，必须真实 PASS。
+JSON 中 `derivatives.production_fd_derivatives` 与 `derivatives.native_derivative_diagnostics` 永不共用同一个模糊 `value` 字段：前者是 `derivative_value`，后者是 `diagnostic_value`。Manifest 中的 `value` 必须结合 `source` 和 `production_included` 解读。
 
-## 16. Validation
+## 13. 主要代码文件
 
-正式结果仍执行原有多层验证：
-
-- `SOLVER`：结果存在且有限；
-- `TRIM`：残差、范围和收敛；
-- `NUMERICAL`：0.5Δ/Δ/2Δ；
-- `DERIVATIVE`：manifest 完整性与方法状态；
-- `PHYSICS`：常规固定翼符号、对称性和幅值；
-- `DATASET`：机身参与、路径可移植性和 Production Gate。
-
-状态按最严重项传播。WARN 可按配置决定是否允许 MAT；FAIL 不会生成完整可接受的调参数据。
-
-## 17. 坐标系与单位
-
-内部机体系：`+X` 向前、`+Y` 向右、`+Z` 向下；`Cl/Cm/Cn` 为绕相应正轴的右手力矩。转换集中在 `coordinate_system.py`：
-
-```text
-CX=-CFx, CY=CFy, CZ=-CFz
-Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn
-```
-
-无量纲角速度：
-
-```text
-p_hat=p*bref/(2V)
-q_hat=q*cref/(2V)
-r_hat=r*bref/(2V)
-```
-
-配置/状态角为 deg；角度与舵偏导数分母为 rad。
-
-## 18. 输出文件
-
-数值收敛目录只保留统一报告、三张核心表、Production YAML、少量图及必要 raw：
-
-- `numerical_convergence_report.md/.json`；
-- `wake_convergence_map.csv/.png`；
-- `tessellation_convergence.csv/.png`；
-- `derivative_diagnostics.csv`；
-- `CY_vs_delta_r.png`；
-- 有异等级边界时的 `wake_boundary_check.png`；
-- `production_numerical_settings.yaml`。
-
-`raw/<signature>/` 是简单文件缓存而不是数据库。signature 至少覆盖模型哈希、V/alpha/beta、全部舵偏、Wake、tessellation、analysis type、perturbation、OpenVSP 版本和影响结果的配置。`case_result.json` 只有 `status=SUCCESS` 且六系数/映射结果完整时才可命中；FAIL、损坏或不完整记录会重算。启动 numerical-convergence 不再删除全部 raw，配置或模型变化只会产生新 signature；失败目录同时保留失败原因和已有 VSPAERO 控制台日志。
-
-正式数据库位于 `results/latest/`；验证在 `results/validation/`；固定回归在 `results/regression/`；最终 MATLAB 文件为 `results/autotune/aircraft_aero.mat`。
-
-## 19. MAT Schema
-
-`.mat` 唯一顶层变量为 `AERO`，schema 1.0：
-
-- `AERO.meta`：飞机、模型哈希、OpenVSP、坐标约定、导数元数据和 Production Gate/tessellation/Wake rule 摘要；
-- `AERO.reference`：Sref/bref/cref 与 CG；
-- `AERO.flight_points`：V、rho、qbar、Mach、Re、Trim 状态；
-- `AERO.trim`：六系数和残差；
-- `AERO.longitudinal/lateral`：稳定导数数组；
-- `AERO.controls.aileron/elevator/rudder`：控制导数数组；
-- `AERO.validation`：逐点状态和 rate limitation。
-
-导出后立即用 SciPy 回读并检查关键字段，避免生成不可读 MAT。
-
-## 20. Cache、失败隔离与 regression test
-
-正式 case 的 `result.json` 签名覆盖模型哈希、OpenVSP 版本、参考量、geometry、solver、manifest、导数配置、validation、Numerical Convergence 配置和实际 Production Numerical Settings。签名不一致不会误用旧缓存。
-
-Numerical Convergence 使用上述逐 VSPAERO case 缓存。代表点、各 Wake、各 FD 正负扰动、各 tessellation 和诊断 case 分别捕获异常并写入报告；一个 case FAIL 不会抛弃其他独立任务。Tessellation 或专项诊断若确实需要失败的 cruise trim，则明确写 `SKIPPED_DEPENDENCY`。最终报告的 `cache.hits/misses/failed_cases/solver_duration_sec/wall_duration_sec` 可用于确认断点续算是否生效。
-
-`python run.py regression` 默认固定使用 `tests/regression/regression.yaml` 与 `tests/regression/baseline.json`，不受主配置变化影响。回归先比较模型 SHA/OpenVSP 身份，再对 Trim 与全部 23 项 required derivatives 使用固定双容差。
-
-普通 `unittest` 使用 synthetic/mock 数据，不调用长时间 VSPAERO，覆盖 Wake 候选、关键 FD Gate、连续稳定、双容差、安全裕度、Map/边界查询、bundle、15 次 TRIM 上限、中心差分 Jacobian、回溯、失败隔离、逐 case cache/resume、tessellation、CY_delta_r、Cm_q、Gate 和 midpoint evaluator。真实 OpenVSP smoke 由 `python run.py smoke` 单独运行。
-
-## 21. 主要模块职责
-
-| 模块 | 职责 |
+| 文件 | 作用 |
 |---|---|
-| `run.py` | 唯一启动入口 |
-| `src/main.py` | 命令编排、GRID、两阶段 TRIM、门禁和导出协调 |
-| `src/numerical_convergence.py` | 双容差、Wake Map/查询/bundle/边界、tessellation、诊断、Gate、报告和少量图 |
-| `src/vspaero_runner.py` | 单次求解，接收显式 Wake 与 tessellation override |
-| `src/openvsp_interface.py` | 模型、几何 set、控制组、Tess_U/W 和聚类参数 |
-| `src/trim_solver.py` | 15 次上限、中心差分 Jacobian、有界 Newton 与回溯 line search |
-| `src/finite_difference.py` | 统一状态扰动、degree/radian 中心差分和 manifest 三尺度导数引擎 |
-| `src/coordinate_system.py` | 唯一坐标、符号和 rate 定义 |
-| `src/validation.py` | case/导数/物理/数据集验证 |
-| `src/export_results.py` | CSV、JSON、MAT schema 与回读验证 |
-| `src/case_generator.py` | GRID/TRIM case 生成和稳定 ID |
-| `src/regression.py` | 固定基线数值比较 |
-| `src/config_loader.py` | 配置、路径和完整性校验 |
+| `src/main.py` | CLI、启动验证、GRID/TRIM 编排、Gate 和导出 |
+| `src/config_loader.py` | YAML/manifest 读取和强约束校验 |
+| `src/openvsp_interface.py` | 模型、几何集、参考量和舵面接口；不修改网格 |
+| `src/vspaero_runner.py` | 使用当前 `.vsp3` 网格生成并验证单个 VSPAERO case |
+| `src/numerical_convergence.py` | Wake/Wake16、Schedule、边界、FD 代表点、Gate、cache 和报告 |
+| `src/finite_difference.py` | 公共扰动、centered FD、步长选择、production/native 分离和 manifest 组装 |
+| `src/trim_solver.py` | 15 次上限、真实 FD Jacobian、有界 Newton 和回溯 |
+| `src/coordinate_system.py` | 坐标、力/力矩符号、角度和速率导数单位的唯一映射 |
+| `src/validation.py` | 输出完整性、TRIM、manifest、数值和物理验证 |
+| `src/export_results.py` | JSON/CSV/MAT 结构化导出和回读校验 |
+| `src/case_generator.py` | GRID/TRIM case ID、范围展开和完成 case 恢复 |
+| `src/regression.py` | 固定飞机回归基线比较 |
 
-## 22. 后续 Adaptive GRID 设计
+## 14. 失败排查
 
-后续自动加密必须在 Numerical Convergence PASS 后进行。对现有相邻 GRID 单元：先用端点数据库插值得到中点预测，再运行真实 VSPAERO 中点；把六系数及所需导数交给公共 midpoint error evaluator。只有误差超过容差才插入中点并继续局部检查。
-
-该策略由真实插值误差驱动，不按 alpha 大小或手写区域加密；新点仍使用 Production tessellation、Wake Schedule 和 derivative bundle 规则。
+1. 先运行 `run_aero.bat check`。
+2. 查看 `numerical_convergence_report.md` 的 Wake16、FD step 和 manifest 汇总。
+3. 对真实 solver FAIL，按 signature 查看 `raw/<signature>/case_result.json` 和 `vspaero_console.txt`。
+4. `WARN_NUMERICAL` 不应通过放宽容差直接消除；先检查步长区间、模型网格、几何和舵面。
+5. `METHOD_LIMITATION` 要按 manifest 策略审阅，不应改名为 PASS 或用 native 值覆盖 production。
+6. 更换模型或修改 OpenVSP 网格后，模型哈希改变，旧 case 不会误命中。

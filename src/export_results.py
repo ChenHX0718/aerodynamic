@@ -10,9 +10,6 @@ import numpy as np
 from scipy.io import loadmat, savemat
 
 
-SUCCESS_STATUSES = {"PASS", "WARN"}
-
-
 def _standard_values(items: dict[str, dict[str, Any]]) -> dict[str, float]:
     return {name: float(item["standard_value"]) for name, item in items.items()}
 
@@ -33,10 +30,11 @@ def flatten_case(result: dict[str, Any]) -> dict[str, Any]:
     outputs = result.get("outputs", {})
     if outputs.get("coefficients"):
         row.update(_standard_values(outputs["coefficients"]))
-    if result.get("mode") == "GRID_DATABASE":
-        row.update(_standard_values(outputs.get("stability_derivatives", {})))
-        for control in outputs.get("control_derivatives", {}).values():
-            row.update(_standard_values(control.get("derivatives", {})))
+    diagnostics = outputs.get("native_derivative_diagnostics", {})
+    native_values = _standard_values(diagnostics.get("stability", {}))
+    for control in diagnostics.get("controls", {}).values():
+        native_values.update(_standard_values(control.get("derivatives", {})))
+    row.update({f"native_diagnostic_{name}": value for name, value in native_values.items()})
     if result.get("mode") == "TRIM_DATABASE":
         trim = result.get("trim", {})
         for name in (
@@ -45,8 +43,11 @@ def flatten_case(result: dict[str, Any]) -> dict[str, Any]:
             "trim_force_residual_n", "trim_moment_residual_nm", "trim_iterations",
         ):
             row[name] = trim.get(name)
-        for name, record in result.get("derivatives", {}).get("records", {}).items():
-            row[name] = record.get("value")
+        derivative_package = result.get("derivatives", {})
+        for name, record in derivative_package.get("production_fd_derivatives", {}).items():
+            row[f"production_fd_{name}"] = record.get("derivative_value")
+        for name, record in derivative_package.get("native_derivative_diagnostics", {}).items():
+            row[f"native_diagnostic_{name}"] = record.get("diagnostic_value")
         validation = result.get("validation", {})
         for name in (
             "overall_status", "trim_status", "numerical_status", "derivative_status", "physics_status",
@@ -62,36 +63,41 @@ def _derivative_rows(
     rows: list[dict[str, Any]] = []
     for result in trim_results:
         speed = result.get("inputs", {}).get("speed_mps")
-        for name, record in result.get("derivatives", {}).get("records", {}).items():
+        derivative_package = result.get("derivatives", {})
+        production = derivative_package.get("production_fd_derivatives", {})
+        native = derivative_package.get("native_derivative_diagnostics", {})
+        items = derivative_package.get("required_derivatives_manifest", {}).get("items", [])
+        for item in items:
+            name = str(item["name"])
+            record = production.get(name, {})
+            diagnostic = native.get(name, {})
             samples = record.get("samples", {})
             row = {
                 "case_id": result.get("case_id"),
                 "speed_mps": speed,
-                "derivative": name,
-                "category": record.get("category"),
-                "coefficient": record.get("coefficient"),
-                "perturbation": record.get("perturbation"),
-                "required": record.get("required"),
-                "value": record.get("value"),
-                "unit": record.get("unit"),
-                "definition": record.get("definition"),
-                "method": record.get("method"),
-                "method_status": record.get("method_status"),
-                "d_0_5_delta": samples.get("0.5", {}).get("derivative"),
-                "d_1_delta": samples.get("1", {}).get("derivative"),
-                "d_2_delta": samples.get("2", {}).get("derivative"),
-                "variation_pct": record.get("convergence", {}).get("relative_variation_pct"),
-                "convergence_status": record.get("convergence", {}).get("status"),
-                "validation_status": record.get("validation_status"),
+                "name": name,
+                "category": item.get("category"),
+                "coefficient": item.get("coefficient"),
+                "perturbation": item.get("perturbation"),
+                "required": item.get("required"),
+                "derivative_value": item.get("value"),
+                "source": item.get("source"),
+                "units": item.get("units"),
+                "definition": item.get("definition"),
+                "method": item.get("method"),
+                "selected_fd_step": item.get("selected_fd_step"),
+                "selected_fd_step_unit": item.get("selected_fd_step_unit"),
+                "convergence_status": record.get("convergence_status"),
+                "validation_status": item.get("validation_status"),
+                "wake_level": item.get("wake_level"),
+                "production_included": item.get("production_included"),
+                "gate_action": item.get("gate_action"),
                 "minus_sample_available": all(
                     sample.get("minus") is not None for sample in samples.values()
                 ) if samples else False,
-                "native_vspaero_value": record.get("native_vspaero_value"),
-                "limitation": record.get("method_limitation", ""),
-                "coordinate_axes": coordinate_system.get("internal_axes"),
-                "moment_conversion": coordinate_system.get("conversion"),
-                "positive_control": coordinate_system.get("controls"),
-                "state_angle_unit": coordinate_system.get("angle_unit"),
+                "native_diagnostic_value": diagnostic.get("diagnostic_value"),
+                "reason": item.get("reason"),
+                "coordinate_sign_convention": item.get("coordinate_sign_convention"),
             }
             rows.append(row)
     return rows
@@ -174,10 +180,29 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
     def derivative_arrays(categories: set[str]) -> dict[str, np.ndarray]:
         return {
             str(row["name"]): _row_array([
-                item["derivatives"]["records"][str(row["name"])]["value"] for item in accepted
+                item["derivatives"]["production_fd_derivatives"][str(row["name"])]["derivative_value"]
+                for item in accepted
             ])
-            for row in manifest_rows if str(row["category"]) in categories
+            for row in manifest_rows
+            if str(row["category"]) in categories
+            and all(
+                str(row["name"]) in item["derivatives"]["production_fd_derivatives"]
+                for item in accepted
+            )
         }
+
+    native_diagnostics = {
+        str(row["name"]): _row_array([
+            item["derivatives"]["native_derivative_diagnostics"][str(row["name"])].get(
+                "diagnostic_value", math.nan
+            )
+            if item["derivatives"]["native_derivative_diagnostics"][str(row["name"])].get(
+                "diagnostic_value"
+            ) is not None else math.nan
+            for item in accepted
+        ])
+        for row in manifest_rows
+    }
 
     flight_points = {
         "V_mps": _row_array([item["inputs"]["speed_mps"] for item in accepted]),
@@ -203,9 +228,19 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
         "derivative_status": _row_array([item["validation"]["derivative_status"] for item in accepted], numeric=False),
         "physics_status": _row_array([item["validation"]["physics_status"] for item in accepted], numeric=False),
         "accepted": _row_array([1 for _ in accepted]),
+        "required_derivative_status": {
+            str(row["name"]): _row_array([
+                next(
+                    item for item in result["derivatives"]["required_derivatives_manifest"]["items"]
+                    if item["name"] == str(row["name"])
+                )["validation_status"]
+                for result in accepted
+            ], numeric=False)
+            for row in manifest_rows
+        },
         "rate_derivative_limitation": (
-            "p/q/r use VSPAERO native positive-rate finite differences because OpenVSP 3.51.3 "
-            "does not expose a negative steady-rate Sweep input"
+            "p/q/r centered steady-rate finite differences are unavailable in OpenVSP/VSPAERO 3.51.3; "
+            "native values are diagnostic-only and excluded from production derivative arrays"
         ),
     }
     return {
@@ -222,9 +257,8 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
                 "gate_status": (
                     database["metadata"].get("production_numerical_settings") or {}
                 ).get("production_gate", {}).get("status", "NOT_REQUESTED"),
-                "tessellation_preset": (
-                    database["metadata"].get("production_numerical_settings") or {}
-                ).get("production_tessellation", {}).get("preset", "CONFIGURED_FALLBACK"),
+                "mesh_source": "current_openvsp_model",
+                "mesh_numerically_certified": False,
                 "wake_rule": "discrete state schedule plus derivative-bundle maximum",
             },
         },
@@ -238,6 +272,7 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             "elevator": derivative_arrays({"elevator"}),
             "rudder": derivative_arrays({"rudder"}),
         },
+        "native_derivative_diagnostics": native_diagnostics,
         "validation": validation,
     }
 

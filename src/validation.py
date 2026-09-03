@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from finite_difference import combine_status
+from finite_difference import combine_status, required_derivative_summary
 
 
 class ValidationError(RuntimeError):
@@ -55,10 +55,11 @@ def validate_analysis_payload(payload: dict[str, Any]) -> list[str]:
         raise ValidationError(f"Coefficient(s) missing: {', '.join(missing)}")
     for name, item in coefficients.items():
         require_finite(f"coefficient.{name}", item["standard_value"])
-    stability = payload.get("stability_derivatives", {})
+    diagnostics = payload.get("native_derivative_diagnostics", {})
+    stability = diagnostics.get("stability", {})
     for name, item in stability.items():
         require_finite(f"stability.{name}", item["standard_value"])
-    controls = payload.get("control_derivatives", {})
+    controls = diagnostics.get("controls", {})
     for role in ("aileron", "elevator", "rudder"):
         derivatives = controls.get(role, {}).get("derivatives", {})
         if not derivatives:
@@ -82,34 +83,31 @@ def _row(
 
 def _sample_integrity(record: dict[str, Any]) -> tuple[str, str]:
     samples = record.get("samples")
-    if not isinstance(samples, dict) or any(key not in samples for key in ("0.5", "1", "2")):
-        return "FAIL", "0.5/1/2 finite-difference samples are not complete"
+    if not isinstance(samples, dict) or len(samples) < 2:
+        return "FAIL", "fewer than two finite-difference steps are available"
     method = str(record.get("method", ""))
-    for key in ("0.5", "1", "2"):
-        sample = samples[key]
-        if not isinstance(sample, dict) or not isinstance(sample.get("plus"), dict):
+    for key, sample in samples.items():
+        if (
+            not isinstance(sample, dict)
+            or not isinstance(sample.get("plus"), dict)
+            or not isinstance(sample.get("minus"), dict)
+        ):
             return "FAIL", f"scale {key} has no real plus sample"
         try:
             valid_numbers = (
-                math.isfinite(float(sample["derivative"]))
-                and math.isfinite(float(sample["derivative_denominator"]))
-                and float(sample["derivative_denominator"]) > 0
+                math.isfinite(float(sample["derivative_value"]))
+                and math.isfinite(float(sample["derivative_denominator_rad"]))
+                and float(sample["derivative_denominator_rad"]) > 0
             )
         except (KeyError, TypeError, ValueError):
             valid_numbers = False
         if not valid_numbers:
             return "FAIL", f"scale {key} has an invalid derivative or denominator"
-        if method == "centered_finite_difference" and not isinstance(sample.get("minus"), dict):
-            return "FAIL", f"centered scale {key} has no real minus sample"
-        if method == "vspaero_native_forward_rate" and not isinstance(sample.get("scale_base"), dict):
-            return "FAIL", f"native rate scale {key} has no matching solver baseline"
     if method == "centered_finite_difference":
-        return "PASS", "all three scales contain real plus and minus samples"
-    if method == "vspaero_native_forward_rate":
-        status = str(record.get("method_status", "WARN")).upper()
-        if status not in {"WARN", "FAIL"}:
-            status = "FAIL"
-        return status, "three real positive-rate samples and baselines exist; negative rate is unavailable"
+        selected = record.get("selected_fd_step")
+        if selected is None or f"{float(selected):g}" not in samples:
+            return "FAIL", "selected_fd_step does not identify a real centered pair"
+        return "PASS", "all candidate steps contain real plus/minus samples and the selected pair exists"
     return "FAIL", f"unsupported derivative method: {method or 'missing'}"
 
 
@@ -166,73 +164,94 @@ def validate_trim_result(
              message="trim elevator is inside the configured search range"),
     ])
 
-    records = result.get("derivatives", {}).get("records", {})
+    derivative_package = result.get("derivatives", {})
+    records = derivative_package.get("production_fd_derivatives", {})
+    manifest_output = derivative_package.get("required_derivatives_manifest", {})
+    manifest_items = manifest_output.get("items", [])
     required_rows = list(manifest["_required"])
-    missing: list[str] = []
-    invalid: list[str] = []
-    failed: list[str] = []
-    warned: list[str] = []
+    items_by_name = {
+        str(item.get("name")): item for item in manifest_items if isinstance(item, dict)
+    }
     for definition in required_rows:
         name = str(definition["name"])
+        item = items_by_name.get(name)
+        if not isinstance(item, dict):
+            item = {
+                "name": name, "required": True, "value": None, "source": "missing",
+                "method": "centered_finite_difference", "selected_fd_step": None,
+                "units": definition["unit"], "coordinate_sign_convention": "missing",
+                "wake_level": None, "validation_status": "FAIL",
+                "production_included": False, "gate_action": "REJECT",
+                "reason": "required manifest output item is missing",
+            }
+            manifest_items.append(item)
+            items_by_name[name] = item
         record = records.get(name)
-        if not isinstance(record, dict):
-            missing.append(name)
-            continue
-        value = record.get("value")
-        try:
-            finite = math.isfinite(float(value))
-        except (TypeError, ValueError):
-            finite = False
-        if not finite:
-            invalid.append(name)
-        status = str(record.get("validation_status", "FAIL")).upper()
-        integrity_status, integrity_message = _sample_integrity(record)
-        status = combine_status([status, integrity_status, "PASS" if finite else "FAIL"])
-        record["validation_status"] = status
-        if status == "FAIL":
-            failed.append(name)
-        elif status == "WARN":
-            warned.append(name)
-        convergence = record.get("convergence", {})
+        status = str(item.get("validation_status", "FAIL")).upper()
+        integrity_message = str(item.get("reason", ""))
+        if item.get("source") == "production_centered_fd":
+            if not isinstance(record, dict):
+                status = "FAIL"
+                integrity_message = "production centered-FD record is missing"
+            else:
+                value = record.get("derivative_value")
+                try:
+                    finite = math.isfinite(float(value))
+                except (TypeError, ValueError):
+                    finite = False
+                integrity_status, integrity_message = _sample_integrity(record)
+                raw_status = str(record.get("convergence_status", "FAIL")).upper()
+                status = combine_status([
+                    raw_status, integrity_status, "PASS" if finite else "FAIL"
+                ])
+                if status == "WARN":
+                    status = "WARN_NUMERICAL"
+                record["validation_status"] = status
+                item["validation_status"] = status
+                item["production_included"] = status != "FAIL"
+                item["gate_action"] = str(manifest["status_policy"][status]).upper()
+        elif status == "METHOD_LIMITATION":
+            integrity_message = str(item.get("reason", "declared method limitation"))
+        else:
+            status = "FAIL"
+            item["validation_status"] = status
+            item["production_included"] = False
+            item["gate_action"] = "REJECT"
         rows.append(_row(
-            speed=speed, level="NUMERICAL", check=name,
-            status=status, value=value,
-            limit=f"PASS {convergence.get('pass_limit', '')}; WARN {convergence.get('warn_limit', '')}",
-            message=(
-                f"{record.get('method')}: {convergence.get('reason', '')}; "
-                f"sample integrity: {integrity_message}"
-            ),
+            speed=speed, level="NUMERICAL", check=name, status=status,
+            value=item.get("value"), limit=item.get("gate_action"),
+            message=f"{item.get('method')}: {integrity_message}",
         ))
-    calculated = len(required_rows) - len(missing) - len(invalid)
-    if missing or invalid or failed:
-        derivative_status = "FAIL"
-    elif warned:
-        derivative_status = "WARN"
-    else:
-        derivative_status = "PASS"
-    manifest_summary = {
-        "required": len(required_rows),
-        "calculated": calculated,
-        "missing": len(missing),
-        "invalid": len(invalid),
-        "validation_failed": len(failed),
-        "validation_warned": len(warned),
-        "missing_names": missing,
-        "invalid_names": invalid,
-        "failed_names": failed,
-        "warned_names": warned,
-        "status": derivative_status,
-    }
+    manifest_summary = required_derivative_summary(manifest_items, manifest)
+    manifest_summary.update({
+        "calculated": manifest_summary["PASS"] + manifest_summary["WARN_NUMERICAL"],
+        "missing": manifest_summary["FAIL"],
+        "invalid": 0,
+        "validation_failed": manifest_summary["FAIL"],
+        "validation_warned": (
+            manifest_summary["WARN_NUMERICAL"] + manifest_summary["METHOD_LIMITATION"]
+        ),
+        "status": manifest_summary["gate_status"],
+    })
+    manifest_output["items"] = manifest_items
+    manifest_output["summary"] = manifest_summary
+    derivative_status = manifest_summary["gate_status"]
     rows.append(_row(
         speed=speed, level="DERIVATIVE", check="required derivative set", status=derivative_status,
-        value=f"{calculated}/{len(required_rows)}",
-        limit="no missing, invalid, or failed required derivative",
-        message=f"missing={len(missing)}, invalid={len(invalid)}, failed={len(failed)}, warned={len(warned)}",
+        value=f"{manifest_summary['required'] - manifest_summary['FAIL']}/{manifest_summary['required']}",
+        limit="manifest status_policy",
+        message=(
+            f"PASS={manifest_summary['PASS']}, WARN_NUMERICAL={manifest_summary['WARN_NUMERICAL']}, "
+            f"METHOD_LIMITATION={manifest_summary['METHOD_LIMITATION']}, FAIL={manifest_summary['FAIL']}"
+        ),
     ))
 
-    numerical_status = combine_status([
+    production_statuses = [
         str(record.get("validation_status", "FAIL")) for record in records.values()
-    ]) if records else "FAIL"
+    ]
+    numerical_status = combine_status(production_statuses) if production_statuses else "FAIL"
+    if numerical_status == "WARN_NUMERICAL":
+        numerical_status = "WARN"
 
     physics_status, physics_rows = _physics_checks(
         speed=speed, result=result, records=records,
@@ -272,7 +291,7 @@ def _physics_checks(
         record = records.get(name)
         if not record:
             continue
-        value = float(record["value"])
+        value = float(record["derivative_value"])
         status = "PASS"
         message = "finite and below configured magnitude limit"
         if abs(value) > limit:
@@ -314,7 +333,11 @@ def _physics_checks(
         for variable, record_name in (
             ("beta", "CY_beta"), ("aileron", "CY_delta_a"), ("rudder", "CY_delta_r")
         ):
-            sample = records.get(record_name, {}).get("samples", {}).get("1", {})
+            derivative_record = records.get(record_name, {})
+            selected = derivative_record.get("selected_fd_step")
+            sample = derivative_record.get("samples", {}).get(
+                f"{float(selected):g}" if selected is not None else "", {}
+            )
             plus = sample.get("plus", {}).get("coefficients", {})
             minus = sample.get("minus", {}).get("coefficients", {})
             if not all(name in plus and name in minus for name in base):
@@ -344,6 +367,10 @@ def summarize_dataset(trim_results: list[dict[str, Any]], manifest: dict[str, An
     missing = sum(int(item.get("required_derivatives", {}).get("missing", 0)) for item in validations)
     invalid = sum(int(item.get("required_derivatives", {}).get("invalid", 0)) for item in validations)
     failed = sum(int(item.get("required_derivatives", {}).get("validation_failed", 0)) for item in validations)
+    status_counts = {
+        status: sum(int(item.get("required_derivatives", {}).get(status, 0)) for item in validations)
+        for status in ("PASS", "WARN_NUMERICAL", "METHOD_LIMITATION", "FAIL")
+    }
     derivative_status = combine_status([
         str(item.get("derivative_status", "FAIL")) for item in validations
     ]) if validations else "FAIL"
@@ -355,6 +382,7 @@ def summarize_dataset(trim_results: list[dict[str, Any]], manifest: dict[str, An
         "missing": missing,
         "invalid": invalid,
         "validation_failed": failed,
+        **status_counts,
         "derivative_set_status": "FAIL" if missing or invalid or failed else derivative_status,
         "overall_status": overall,
     }

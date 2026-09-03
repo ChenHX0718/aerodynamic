@@ -101,9 +101,7 @@ class VSPAERORunner:
             self._set_double(analysis, f"{stem}Start", value)
             self._set_double(analysis, f"{stem}End", value)
             self._set_int(analysis, f"{stem}Npts", 1)
-        # A private override is used only to vary VSPAERO's normalized p/q/r
-        # perturbation size while Mach and Reynolds remain at the same trim point.
-        speed = condition.get("_vspaero_vinf_mps", condition["speed_mps"])
+        speed = condition["speed_mps"]
         self._set_double(analysis, "Vinf", speed)
         self._set_double(analysis, "Vref", speed)
         self._set_int(analysis, "ManualVrefFlag", 1)
@@ -135,18 +133,10 @@ class VSPAERORunner:
         self,
         case_dir: Path,
         control_deflections_deg: dict[str, float] | None,
-        tessellation_overrides: list[dict[str, Any]] | None,
     ) -> None:
         case_dir.mkdir(parents=True, exist_ok=False)
         self.model.load()
         self.model.apply_geometry_sets(self.geometry_selection)
-        self.model.apply_tessellation_overrides(
-            list(
-                tessellation_overrides
-                if tessellation_overrides is not None
-                else self.config["solver"].get("tessellation_overrides", [])
-            )
-        )
         requested = control_deflections_deg or {}
         for role in ("aileron", "elevator", "rudder"):
             control_config = self.config["controls"][role]
@@ -190,11 +180,10 @@ class VSPAERORunner:
         include_thick: bool = True,
         control_deflections_deg: dict[str, float] | None = None,
         wake_iterations: int | None = None,
-        tessellation_overrides: list[dict[str, Any]] | None = None,
     ) -> AeroRunResult:
         start = time.perf_counter()
         case_dir = parent_dir.resolve() / label
-        self._prepare_case(case_dir, control_deflections_deg, tessellation_overrides)
+        self._prepare_case(case_dir, control_deflections_deg)
         old_cwd = Path.cwd()
         try:
             os.chdir(case_dir)

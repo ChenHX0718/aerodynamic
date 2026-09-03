@@ -44,6 +44,20 @@ def load_openvsp_config(root: Path | None = None) -> dict[str, Any]:
 
 def load_derivative_manifest(path: Path) -> dict[str, Any]:
     manifest = _read_yaml(path)
+    policy = manifest.get("status_policy")
+    if not isinstance(policy, dict) or set(policy) != {
+        "PASS", "WARN_NUMERICAL", "METHOD_LIMITATION", "FAIL"
+    }:
+        raise ConfigError(
+            "Derivative manifest status_policy must explicitly define PASS, "
+            "WARN_NUMERICAL, METHOD_LIMITATION, and FAIL"
+        )
+    if any(str(policy[name]).upper() not in {"ACCEPT", "ACCEPT_WITH_WARNING", "REJECT"}
+           for name in policy):
+        raise ConfigError("Derivative manifest status_policy contains an invalid gate action")
+    limitations = manifest.get("method_limitations")
+    if not isinstance(limitations, dict):
+        raise ConfigError("Derivative manifest method_limitations must be a mapping")
     rows = manifest.get("derivatives")
     if not isinstance(rows, list) or not rows:
         raise ConfigError(f"Derivative manifest has no derivatives: {path}")
@@ -68,6 +82,11 @@ def load_derivative_manifest(path: Path) -> dict[str, Any]:
         expected_sign = row.get("expected_sign")
         if expected_sign not in {None, "positive", "negative"}:
             raise ConfigError(f"expected_sign for {name} must be positive or negative")
+        limitation = row.get("method_limitation")
+        if limitation is not None and str(limitation) not in limitations:
+            raise ConfigError(f"Unknown method limitation for {name}: {limitation}")
+        if str(row["perturbation"]) in {"p", "q", "r"} and limitation is None:
+            raise ConfigError(f"Rate derivative {name} must declare its method limitation")
     manifest["_path"] = path.resolve()
     manifest["_by_name"] = {str(row["name"]): row for row in rows}
     manifest["_required"] = [row for row in rows if bool(row["required"])]
@@ -147,6 +166,11 @@ def _validate_numerical_convergence(data: dict[str, Any]) -> None:
             raise ConfigError(f"wake.representative_states[{index}].alpha_deg is required unless trim=true")
         float(state.get("beta_deg", 0.0))
     _validate_tolerance(wake.get("tolerance"), "numerical_convergence.wake.tolerance")
+    verification = int(wake.get("verification_only_level", 0))
+    if verification <= candidates[-1] or verification in candidates:
+        raise ConfigError(
+            "wake.verification_only_level must be greater than, and separate from, production candidates"
+        )
     if float(wake.get("boundary_buffer_normalized", 0.0)) <= 0:
         raise ConfigError("wake.boundary_buffer_normalized must be positive")
     if int(wake.get("safety_margin_levels_for_untested", -1)) < 0:
@@ -154,43 +178,14 @@ def _validate_numerical_convergence(data: dict[str, Any]) -> None:
     if int(wake.get("max_boundary_checks", 0)) <= 0:
         raise ConfigError("wake.max_boundary_checks must be positive")
 
-    tessellation = _require_mapping(numerical, "tessellation")
-    presets = _require_mapping(tessellation, "presets")
-    for preset in ("COARSE", "MEDIUM", "FINE"):
-        rows = presets.get(preset)
-        if not isinstance(rows, list) or not rows:
-            raise ConfigError(f"tessellation.presets.{preset} must be a non-empty list")
-        for row in rows:
-            if not isinstance(row, dict) or not any(row.get(key) for key in ("id", "name", "type")):
-                raise ConfigError(f"tessellation.presets.{preset} contains an invalid geometry selector")
-            for key in ("tess_u", "tess_w"):
-                if key in row and int(row[key]) <= 0:
-                    raise ConfigError(f"tessellation.presets.{preset}.{key} must be positive")
-            for key in ("le_cluster", "te_cluster"):
-                if key in row and float(row[key]) <= 0:
-                    raise ConfigError(f"tessellation.presets.{preset}.{key} must be positive")
-    representative_names = tessellation.get("representative_state_names")
-    if not isinstance(representative_names, list) or not representative_names:
-        raise ConfigError("tessellation.representative_state_names must be a non-empty list")
-    unknown = sorted(set(map(str, representative_names)) - names)
-    if unknown:
-        raise ConfigError(f"Unknown tessellation representative state(s): {', '.join(unknown)}")
-    _validate_tolerance(tessellation.get("tolerance"), "numerical_convergence.tessellation.tolerance")
-
     trim = _require_mapping(numerical, "trim")
     if int(trim.get("pretrim_wake_iterations", 0)) not in candidates:
         raise ConfigError("numerical_convergence.trim.pretrim_wake_iterations must be a Wake candidate")
     if int(trim.get("max_wake_upgrades", 0)) <= 0:
         raise ConfigError("numerical_convergence.trim.max_wake_upgrades must be positive")
-    diagnostics = _require_mapping(numerical, "diagnostics")
-    if str(diagnostics.get("representative_state_name", "")) not in names:
-        raise ConfigError("diagnostics.representative_state_name must identify a Wake representative")
-    if str(diagnostics.get("representative_state_name", "")) not in set(map(str, representative_names)):
-        raise ConfigError("diagnostics.representative_state_name must also be a tessellation representative")
-    steps = [float(item) for item in diagnostics.get("rudder_steps_deg", [])]
-    if steps != [0.5, 1.0, 2.0, 4.0]:
-        raise ConfigError("diagnostics.rudder_steps_deg must be [0.5, 1.0, 2.0, 4.0]")
-    _validate_tolerance(diagnostics.get("tolerance"), "numerical_convergence.diagnostics.tolerance")
+    fd_step = _require_mapping(numerical, "fd_step")
+    if str(fd_step.get("representative_state_name", "")) not in names:
+        raise ConfigError("fd_step.representative_state_name must identify a Wake representative")
     gate = _require_mapping(numerical, "production_gate")
     if not isinstance(gate.get("enabled"), bool):
         raise ConfigError("numerical_convergence.production_gate.enabled must be boolean")
@@ -321,22 +316,19 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
         raise ConfigError("derivatives.manifest is required")
     manifest_path = (path.parent / str(manifest_value)).resolve()
     manifest = load_derivative_manifest(manifest_path)
-    scales = [float(item) for item in derivatives.get("scales", [])]
-    if scales != [0.5, 1.0, 2.0]:
-        raise ConfigError("derivatives.scales must be exactly [0.5, 1.0, 2.0]")
-    perturbations = _require_mapping(derivatives, "perturbations")
-    for name in (
-        "alpha_deg", "beta_deg", "p_rad_s", "q_rad_s", "r_rad_s",
-        "aileron_deg", "elevator_deg", "rudder_deg",
-    ):
-        _require_positive(perturbations, name, "derivatives.perturbations")
+    candidates = _require_mapping(derivatives, "fd_step_candidates_deg")
+    for variable in ("alpha", "beta", "aileron", "elevator", "rudder"):
+        steps = [float(item) for item in candidates.get(variable, [])]
+        if len(steps) < 3 or steps != sorted(set(steps)) or any(step <= 0 for step in steps):
+            raise ConfigError(
+                f"derivatives.fd_step_candidates_deg.{variable} must contain at least "
+                "three unique increasing positive values"
+            )
+    jacobian_steps = _require_mapping(derivatives, "trim_jacobian_steps_deg")
+    for variable in ("alpha", "elevator"):
+        _require_positive(jacobian_steps, variable, "derivatives.trim_jacobian_steps_deg")
     convergence = _require_mapping(derivatives, "convergence")
     _validate_tolerance(convergence, "derivatives.convergence")
-
-    if "rate_derivative_method_status" not in validation:
-        raise ConfigError("validation.rate_derivative_method_status must be explicitly configured")
-    if str(validation["rate_derivative_method_status"]).upper() not in {"WARN", "FAIL"}:
-        raise ConfigError("validation.rate_derivative_method_status must be WARN or FAIL")
 
     baseline_value = regression.get("baseline")
     if not baseline_value:

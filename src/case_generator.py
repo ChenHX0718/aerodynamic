@@ -105,11 +105,13 @@ def load_completed_result(path: Path, signature: str) -> dict[str, Any] | None:
     outputs = data.get("outputs")
     if not isinstance(outputs, dict):
         return None
-    required = ("coefficients", "stability_derivatives", "control_derivatives")
-    if any(not isinstance(outputs.get(name), dict) or not outputs[name] for name in required):
+    if not isinstance(outputs.get("coefficients"), dict) or not outputs["coefficients"]:
+        return None
+    diagnostics = outputs.get("native_derivative_diagnostics")
+    if not isinstance(diagnostics, dict):
         return None
     if data.get("mode") == "TRIM_DATABASE":
-        records = data.get("derivatives", {}).get("records")
-        if not isinstance(records, dict) or not records:
+        required_manifest = data.get("derivatives", {}).get("required_derivatives_manifest", {})
+        if not isinstance(required_manifest.get("items"), list) or not required_manifest["items"]:
             return None
     return data

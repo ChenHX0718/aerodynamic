@@ -32,19 +32,15 @@ geometry_sets:
     - {name: Fuselage, type: Fuselage}
 
 solver:
-  # 仅供 check/smoke/显式 --force 回退。Production 由收敛产物逐状态选择 Wake。
+  # 仅供 check/smoke/显式 --force 回退。Production 由验证产物逐状态选择 Wake。
+  # 网格完全使用 .vsp3 当前设置，脚本不覆盖 Tess_U/Tess_W/聚类参数。
   wake_iterations: 3
   ncpu: 4
-  tessellation_overrides:
-    - {name: Wing, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: Tail, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: TailV, type: Wing, tess_u: 8, tess_w: 17}
-    - {name: Fuselage, type: Fuselage, tess_u: 8, tess_w: 17}
 
 numerical_convergence:
   wake:
     candidates: [3, 5, 8, 12]
-    study_tessellation_preset: MEDIUM
+    verification_only_level: 16
     # 代表点覆盖线性区、真实 Trim、中迎角和带 beta 的较大迎角；Wake 结果由求解器决定。
     representative_states:
       - {name: linear_low_alpha, speed_mps: 8, alpha_deg: 0, beta_deg: 0}
@@ -61,33 +57,11 @@ numerical_convergence:
     boundary_buffer_normalized: 0.12
     safety_margin_levels_for_untested: 1
     max_boundary_checks: 3
-  tessellation:
-    # 各几何按气动职责分别加密，并在升力面前/后缘聚类；不是统一倍增。
-    presets:
-      COARSE:
-        - {name: Wing, type: Wing, tess_u: 8, tess_w: 21, le_cluster: 0.18, te_cluster: 0.18}
-        - {name: Tail, type: Wing, tess_u: 6, tess_w: 17, le_cluster: 0.20, te_cluster: 0.16}
-        - {name: TailV, type: Wing, tess_u: 6, tess_w: 17, le_cluster: 0.20, te_cluster: 0.16}
-        - {name: Fuselage, type: Fuselage, tess_u: 13, tess_w: 17}
-      MEDIUM:
-        - {name: Wing, type: Wing, tess_u: 12, tess_w: 31, le_cluster: 0.12, te_cluster: 0.10}
-        - {name: Tail, type: Wing, tess_u: 8, tess_w: 25, le_cluster: 0.14, te_cluster: 0.10}
-        - {name: TailV, type: Wing, tess_u: 8, tess_w: 25, le_cluster: 0.14, te_cluster: 0.10}
-        - {name: Fuselage, type: Fuselage, tess_u: 21, tess_w: 25}
-      FINE:
-        - {name: Wing, type: Wing, tess_u: 18, tess_w: 45, le_cluster: 0.08, te_cluster: 0.06}
-        - {name: Tail, type: Wing, tess_u: 12, tess_w: 35, le_cluster: 0.09, te_cluster: 0.06}
-        - {name: TailV, type: Wing, tess_u: 12, tess_w: 35, le_cluster: 0.09, te_cluster: 0.06}
-        - {name: Fuselage, type: Fuselage, tess_u: 33, tess_w: 37}
-    representative_state_names: [cruise_trim, high_alpha_beta]
-    tolerance: *numerical_tolerance
   trim:
     pretrim_wake_iterations: 5
     max_wake_upgrades: 3
-  diagnostics:
+  fd_step:
     representative_state_name: cruise_trim
-    rudder_steps_deg: [0.5, 1.0, 2.0, 4.0]
-    tolerance: *numerical_tolerance
   production_gate:
     enabled: true
 
@@ -121,16 +95,15 @@ trim:
 
 derivatives:
   manifest: "required_derivatives.yaml"
-  scales: [0.5, 1.0, 2.0]
-  perturbations:
-    alpha_deg: 0.5
-    beta_deg: 0.5
-    p_rad_s: 0.01
-    q_rad_s: 0.01
-    r_rad_s: 0.01
-    aileron_deg: 2.0
-    elevator_deg: 2.0
-    rudder_deg: 2.0
+  # 候选值只在必要的代表点和正式 TRIM 点上检查，不扩展全 GRID。
+  fd_step_candidates_deg:
+    alpha: [0.25, 0.5, 1.0]
+    beta: [0.25, 0.5, 1.0]
+    elevator: [0.5, 1.0, 2.0]
+    aileron: [0.5, 1.0, 2.0]
+    rudder: [0.5, 1.0, 2.0]
+  # TRIM Jacobian 保持已验证的真实中心差分步长。
+  trim_jacobian_steps_deg: {alpha: 0.5, elevator: 2.0}
   convergence:
     near_zero_reference: 0.05
     pass_relative: 0.10
@@ -147,8 +120,6 @@ validation:
   physics:
     enabled: true
     derivative_absolute_limit: 100.0
-  # OpenVSP 3.51.3 公开 API 无负 p/q/r 单点输入，此项必须保持显式。
-  rate_derivative_method_status: WARN
   autotune_allow_warn: true
 
 regression:

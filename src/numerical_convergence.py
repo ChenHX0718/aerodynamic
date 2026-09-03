@@ -17,24 +17,32 @@ import yaml
 
 from coordinate_system import map_polar_coefficients
 from finite_difference import (
+    build_required_manifest_items,
+    calculate_trim_derivatives,
     centered_derivative,
     combine_status,
     dual_tolerance_result,
     perturb_state,
+    required_derivative_summary,
 )
 from trim_solver import solve_longitudinal_trim
 from validation import calculate_condition
 
 
 COEFFICIENTS = ("CL", "CD", "CY", "Cl", "Cm", "Cn")
-PRESET_ORDER = ("COARSE", "MEDIUM", "FINE")
-NUMERICAL_ALGORITHM_VERSION = "2.0"
+NUMERICAL_ALGORITHM_VERSION = "3.0"
 WAKE_FD_DERIVATIVES = {
-    "alpha": (("CL", "CL_alpha"), ("Cm", "Cm_alpha")),
-    "elevator": (("Cm", "Cm_delta_e"),),
+    "alpha": (("CL", "CL_alpha"), ("CD", "CD_alpha"), ("Cm", "Cm_alpha")),
+    "elevator": (
+        ("CL", "CL_delta_e"), ("CD", "CD_delta_e"), ("Cm", "Cm_delta_e"),
+    ),
     "beta": (("CY", "CY_beta"), ("Cl", "Cl_beta"), ("Cn", "Cn_beta")),
-    "aileron": (("Cl", "Cl_delta_a"),),
-    "rudder": (("Cn", "Cn_delta_r"),),
+    "aileron": (
+        ("CY", "CY_delta_a"), ("Cl", "Cl_delta_a"), ("Cn", "Cn_delta_a"),
+    ),
+    "rudder": (
+        ("CY", "CY_delta_r"), ("Cl", "Cl_delta_r"), ("Cn", "Cn_delta_r"),
+    ),
 }
 WAKE_FD_NAMES = tuple(
     derivative for rows in WAKE_FD_DERIVATIVES.values() for _, derivative in rows
@@ -50,9 +58,12 @@ def convergence_identity(config: dict[str, Any], openvsp_version: str) -> dict[s
             key: value for key, value in config["_manifest"].items()
             if not str(key).startswith("_")
         },
-        "controls": config["controls"], "reference": config["reference"],
-        "atmosphere": config["atmosphere"], "solver": config["solver"],
-        "derivatives": config["derivatives"], "geometry_sets": config["geometry_sets"],
+        "controls": config["controls"],
+        "reference": config["reference"],
+        "atmosphere": config["atmosphere"],
+        "solver": config["solver"],
+        "derivatives": config["derivatives"],
+        "geometry_sets": config["geometry_sets"],
         "trim": config["trim"],
     }
     configuration_sha256 = hashlib.sha256(
@@ -73,7 +84,7 @@ def minimum_converged_level(
     *,
     allow_unverified_highest: bool,
 ) -> dict[str, Any]:
-    """Choose the first level for which every later adjacent transition remains stable."""
+    """Choose the first level for which every later production transition is PASS."""
     if len(levels) < 2:
         raise ValueError("At least two ordered convergence levels are required")
     transitions: list[dict[str, Any]] = []
@@ -100,7 +111,7 @@ def minimum_converged_level(
             return {
                 "status": "PASS",
                 "required_level": level,
-                "reason": "all subsequent higher-level transitions satisfy PASS tolerance",
+                "reason": "all subsequent production-level transitions satisfy PASS tolerance",
                 "transitions": transitions,
             }
     last_status = transitions[-1]["status"]
@@ -109,11 +120,87 @@ def minimum_converged_level(
         "status": status,
         "required_level": levels[-1],
         "reason": (
-            "highest level is selected conservatively but remains unverified"
+            "highest production level is selected conservatively but needs verification"
             if status == "WARN"
-            else "the highest adjacent transition is not converged; the highest level is not accepted as correct"
+            else "the highest production transition is not acceptable without verification"
         ),
         "transitions": transitions,
+    }
+
+
+def terminal_wake_verification(
+    *,
+    production_levels: list[int],
+    production_values: dict[int, dict[str, float]],
+    quantities: Iterable[str],
+    settings: dict[str, Any],
+    verification_level: int,
+    verification_values: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    """Apply a verification-only level without making it a production Wake candidate."""
+    decision = minimum_converged_level(
+        production_levels,
+        production_values,
+        quantities,
+        settings,
+        allow_unverified_highest=True,
+    )
+    terminal = decision["transitions"][-1]
+    if terminal["status"] == "PASS":
+        return {
+            **decision,
+            "verification": {
+                "triggered": False,
+                "verification_level": verification_level,
+                "status": "NOT_NEEDED",
+                "reason": "the final production transition already satisfies PASS",
+            },
+        }
+    if verification_values is None:
+        return {
+            **decision,
+            "verification": {
+                "triggered": True,
+                "verification_level": verification_level,
+                "status": "PENDING",
+                "reason": "the final production transition is not PASS",
+            },
+        }
+    highest = int(production_levels[-1])
+    check = boundary_continuity_result(
+        production_values.get(highest, {}), verification_values, quantities, settings
+    )
+    missing = any(
+        name not in production_values.get(highest, {}) or name not in verification_values
+        for name in quantities
+    )
+    if missing:
+        status = "FAIL"
+        reason = "Wake verification case is incomplete; required aerodynamic data are missing"
+    elif check["status"] == "PASS":
+        status = "PASS"
+        reason = (
+            f"Wake {highest}->{verification_level} satisfies PASS; production Wake remains {highest}"
+        )
+    else:
+        status = "WARN"
+        reason = (
+            f"Wake {highest}->{verification_level} remains outside PASS tolerance; "
+            f"production Wake remains {highest} with a numerical warning"
+        )
+    return {
+        **decision,
+        "status": status,
+        "required_level": highest,
+        "reason": reason,
+        "verification": {
+            "triggered": True,
+            "production_level": highest,
+            "verification_level": verification_level,
+            "status": check["status"] if not missing else "FAIL",
+            "quantities": check["quantities"],
+            "production_level_unchanged": True,
+        },
     }
 
 
@@ -132,7 +219,7 @@ def _schedule_scales(points: list[dict[str, Any]]) -> dict[str, float]:
 
 
 def query_wake_schedule(schedule: dict[str, Any], state: dict[str, float]) -> dict[str, Any]:
-    """Conservative discrete nearest-region lookup; wake values are never interpolated."""
+    """Conservative discrete nearest-region lookup; Wake values are never interpolated."""
     points = list(schedule.get("sample_points", []))
     candidates = [int(item) for item in schedule["candidates"]]
     if not points:
@@ -172,11 +259,10 @@ def query_wake_schedule(schedule: dict[str, Any], state: dict[str, float]) -> di
 def derivative_bundle_states(
     base_state: dict[str, float], derivative_config: dict[str, Any]
 ) -> list[dict[str, float]]:
-    max_scale = max(float(item) for item in derivative_config["scales"])
-    alpha_step = max_scale * float(derivative_config["perturbations"]["alpha_deg"])
-    beta_step = max_scale * float(derivative_config["perturbations"]["beta_deg"])
+    candidates = derivative_config["fd_step_candidates_deg"]
     states = [dict(base_state)]
-    for name, step in (("alpha_deg", alpha_step), ("beta_deg", beta_step)):
+    for name, variable in (("alpha_deg", "alpha"), ("beta_deg", "beta")):
+        step = max(float(item) for item in candidates[variable])
         for sign in (-1.0, 1.0):
             state = dict(base_state)
             state[name] = float(state[name]) + sign * step
@@ -194,7 +280,9 @@ def derivative_bundle_wake(
 
 
 def trim_wake_decision(
-    schedule: dict[str, Any], state: dict[str, float], derivative_config: dict[str, Any],
+    schedule: dict[str, Any],
+    state: dict[str, float],
+    derivative_config: dict[str, Any],
     current_wake: int | None = None,
 ) -> dict[str, Any]:
     required = derivative_bundle_wake(schedule, state, derivative_config)
@@ -206,12 +294,16 @@ def trim_wake_decision(
 
 
 def boundary_continuity_result(
-    low_values: dict[str, float], high_values: dict[str, float], quantities: Iterable[str],
+    low_values: dict[str, float],
+    high_values: dict[str, float],
+    quantities: Iterable[str],
     settings: dict[str, Any],
 ) -> dict[str, Any]:
     checks = {
         name: dual_tolerance_result(
-            float(low_values.get(name, math.nan)), float(high_values.get(name, math.nan)), settings
+            float(low_values.get(name, math.nan)),
+            float(high_values.get(name, math.nan)),
+            settings,
         )
         for name in quantities
     }
@@ -219,7 +311,10 @@ def boundary_continuity_result(
 
 
 def production_gate(
-    settings: dict[str, Any] | None, *, force: bool = False, adaptive: bool = False,
+    settings: dict[str, Any] | None,
+    *,
+    force: bool = False,
+    adaptive: bool = False,
     expected_identity: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     if settings is None:
@@ -227,98 +322,36 @@ def production_gate(
     else:
         gate = settings.get("production_gate", {})
         status = str(gate.get("status", settings.get("convergence_status", "FAIL"))).upper()
-        reason = str(gate.get("reason", "numerical convergence result"))
+        reason = str(gate.get("reason", "numerical validation result"))
         if expected_identity is not None and settings.get("identity") != expected_identity:
             status = "FAIL"
-            reason = "Production Numerical Settings do not match the current model/OpenVSP/convergence configuration"
+            reason = "Production Numerical Settings do not match the current model/OpenVSP/validation configuration"
         if adaptive and status != "PASS":
             return {
-                "allowed": False, "status": "FAIL", "forced": False,
-                "reason": "adaptive GRID requires a PASS numerical convergence gate",
+                "allowed": False,
+                "status": "FAIL",
+                "forced": False,
+                "reason": "adaptive GRID requires a PASS production validation gate",
             }
     allowed = status in {"PASS", "WARN"} or bool(force)
     return {"allowed": allowed, "status": status, "forced": bool(force and status == "FAIL"), "reason": reason}
 
 
-def diagnose_cy_delta_r(
-    samples: dict[float, dict[str, dict[str, float]]], settings: dict[str, Any]
-) -> dict[str, Any]:
-    steps = sorted(float(item) for item in samples)
-    if len(steps) < 4:
-        return {"status": "FAIL", "classification": "NONLINEAR_OR_NUMERICALLY_UNRESOLVED", "recommended_delta_r_deg": None}
-    derivatives: dict[float, dict[str, float]] = {}
-    for step in steps:
-        pair = samples[step]
-        denominator = 2.0 * math.radians(step)
-        derivatives[step] = {
-            f"{coefficient}_delta_r":
-            (float(pair["plus"][coefficient]) - float(pair["minus"][coefficient])) / denominator
-            for coefficient in ("CY", "Cl", "Cn")
-        }
-    pair_statuses: list[str] = []
-    comparisons: list[dict[str, Any]] = []
-    for lower, higher in zip(steps, steps[1:]):
-        checks = {
-            name: dual_tolerance_result(derivatives[lower][name], derivatives[higher][name], settings)
-            for name in derivatives[lower]
-        }
-        status = combine_status([item["status"] for item in checks.values()])
-        pair_statuses.append(status)
-        comparisons.append({"lower_step_deg": lower, "higher_step_deg": higher, "status": status, "quantities": checks})
-    if pair_statuses[0] == "PASS" and pair_statuses[1] == "PASS":
-        classification, recommended, status = "LOCAL_LINEAR_VALID", steps[1], "PASS"
-        reason = "0.5-to-1 and 1-to-2 degree derivative changes satisfy PASS tolerance"
-        if pair_statuses[2] != "PASS":
-            classification, status = "LARGE_DEFLECTION_NONLINEAR", "WARN"
-            reason = "the local small-step range is stable but the 2-to-4 degree transition is not"
-    elif pair_statuses[0] != "PASS" and pair_statuses[1] == "PASS":
-        classification, recommended, status = "NUMERICAL_NOISE", steps[1], "WARN"
-        reason = "the 0.5-degree result is unstable while the 1-to-2 degree transition is stable"
-    elif pair_statuses[0] == "PASS" and pair_statuses[1] != "PASS":
-        classification, recommended, status = "LARGE_DEFLECTION_NONLINEAR", steps[1], "WARN"
-        reason = "the 0.5-to-1 degree range is stable but the next transition is nonlinear"
-    else:
-        classification, recommended, status = "NONLINEAR_OR_NUMERICALLY_UNRESOLVED", None, "WARN"
-        reason = "no consecutive local rudder-step range is clearly stable"
-    return {
-        "status": status,
-        "classification": classification,
-        "recommended_delta_r_deg": recommended,
-        "reason": reason,
-        "derivatives": derivatives,
-        "comparisons": comparisons,
-    }
-
-
-def diagnose_cm_q(
-    wake_values: dict[Any, float], tessellation_values: dict[Any, float], settings: dict[str, Any]
-) -> dict[str, Any]:
-    checks: list[dict[str, Any]] = []
-    for source, values in (("wake", wake_values), ("tessellation", tessellation_values)):
-        keys = list(values)
-        for lower, higher in zip(keys, keys[1:]):
-            result = dual_tolerance_result(float(values[lower]), float(values[higher]), settings)
-            checks.append({"source": source, "lower": lower, "higher": higher, **result})
-    numerical_status = combine_status([item["status"] for item in checks]) if checks else "FAIL"
-    return {
-        "status": "WARN",
-        "numerical_status": numerical_status,
-        "checks": checks,
-        "api_limitation": (
-            "OpenVSP 3.51.3 does not expose a negative steady q input; Cm_q remains a native "
-            "positive-rate derivative and cannot be represented as a fabricated centered difference."
-        ),
-    }
-
-
 def midpoint_interpolation_error(
-    lower: dict[str, float], upper: dict[str, float], actual_midpoint: dict[str, float],
-    quantities: Iterable[str], settings: dict[str, Any],
+    lower: dict[str, float],
+    upper: dict[str, float],
+    actual_midpoint: dict[str, float],
+    quantities: Iterable[str],
+    settings: dict[str, Any],
 ) -> dict[str, Any]:
     checks = {}
     for name in quantities:
         interpolated = 0.5 * (float(lower[name]) + float(upper[name]))
-        checks[name] = {"interpolated": interpolated, "actual": float(actual_midpoint[name]), **dual_tolerance_result(interpolated, float(actual_midpoint[name]), settings)}
+        checks[name] = {
+            "interpolated": interpolated,
+            "actual": float(actual_midpoint[name]),
+            **dual_tolerance_result(interpolated, float(actual_midpoint[name]), settings),
+        }
     return {"status": combine_status([item["status"] for item in checks.values()]), "quantities": checks}
 
 
@@ -327,26 +360,6 @@ def load_production_settings(path: Path) -> dict[str, Any] | None:
         return None
     data = yaml.safe_load(path.read_text(encoding="utf-8-sig")) or {}
     return data if isinstance(data, dict) else None
-
-
-def _plain_values(payload: dict[str, Any], manifest: dict[str, Any]) -> dict[str, float]:
-    values = {
-        name: float(payload["coefficients"][name]["standard_value"])
-        for name in COEFFICIENTS
-    }
-    stability = payload.get("stability_derivatives", {})
-    controls = payload.get("control_derivatives", {})
-    for row in manifest["_required"]:
-        name = str(row["name"])
-        if name in stability:
-            values[name] = float(stability[name]["standard_value"])
-            continue
-        for control in controls.values():
-            derivative = control.get("derivatives", {}).get(name)
-            if derivative is not None:
-                values[name] = float(derivative["standard_value"])
-                break
-    return values
 
 
 def _value_from_payload(payload: dict[str, Any], coefficient: str) -> float:
@@ -373,8 +386,11 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
-def _write_line_png(path: Path, series: list[tuple[list[float], list[float], tuple[int, int, int]]]) -> None:
-    """Write a small dependency-free convergence plot."""
+def _write_line_png(
+    path: Path,
+    series: list[tuple[list[float], list[float], tuple[int, int, int]]],
+) -> None:
+    """Write a small dependency-free diagnostic plot."""
     width, height, pad = 720, 420, 48
     pixels = bytearray([255] * width * height * 3)
     all_x = [x for xs, _, _ in series for x in xs]
@@ -420,16 +436,30 @@ def _write_line_png(path: Path, series: list[tuple[list[float], list[float], tup
                 for dy in range(-3, 4):
                     if dx * dx + dy * dy <= 9:
                         set_pixel(px + dx, py + dy, color)
-    raw = b"".join(b"\x00" + bytes(pixels[row * width * 3:(row + 1) * width * 3]) for row in range(height))
+    raw = b"".join(
+        b"\x00" + bytes(pixels[row * width * 3:(row + 1) * width * 3])
+        for row in range(height)
+    )
     chunks = []
-    for name, data in ((b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)), (b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")):
-        chunks.append(struct.pack(">I", len(data)) + name + data + struct.pack(">I", zlib.crc32(name + data) & 0xFFFFFFFF))
+    for name, data in (
+        (b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)),
+        (b"IDAT", zlib.compress(raw, 9)),
+        (b"IEND", b""),
+    ):
+        chunks.append(
+            struct.pack(">I", len(data)) + name + data
+            + struct.pack(">I", zlib.crc32(name + data) & 0xFFFFFFFF)
+        )
     path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"".join(chunks))
 
 
 class _ConvergenceCache:
     def __init__(
-        self, *, config: dict[str, Any], runner: Any, raw_root: Path,
+        self,
+        *,
+        config: dict[str, Any],
+        runner: Any,
+        raw_root: Path,
         analysis_mapper: Callable[[Any], dict[str, Any]],
     ) -> None:
         self.runner = runner
@@ -454,31 +484,35 @@ class _ConvergenceCache:
                 return False
         except (KeyError, TypeError, ValueError):
             return False
-        return not stability or all(
-            isinstance(payload.get(name), dict)
-            for name in ("stability_derivatives", "control_derivatives")
-        )
+        return not stability or isinstance(payload.get("native_derivative_diagnostics"), dict)
 
     def run(
-        self, *, condition: dict[str, float], controls: dict[str, float], wake: int,
-        tessellation: list[dict[str, Any]], stability: bool, perturbation: dict[str, Any],
+        self,
+        *,
+        condition: dict[str, float],
+        controls: dict[str, float],
+        wake: int,
+        stability: bool,
+        perturbation: dict[str, Any],
     ) -> dict[str, Any]:
-        request = {
+        # The signature contains every solver-affecting input. The human-readable
+        # diagnostic purpose is recorded but deliberately does not split identical cases.
+        signed_request = {
             "identity": self.identity,
             "condition": condition,
             "control_deflections_deg": controls,
             "wake_iterations": int(wake),
-            "tessellation": tessellation,
+            "mesh_source": "current_openvsp_model",
             "analysis_type": "stability" if stability else "polar",
-            "perturbation": perturbation,
             "include_thick": True,
         }
         signature = hashlib.sha256(
-            json.dumps(request, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+            json.dumps(signed_request, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
         ).hexdigest()
+        request = {**signed_request, "usage": perturbation}
         case_dir = (self.raw_root / signature).resolve()
         if not case_dir.is_relative_to(self.raw_root.resolve()):
-            raise RuntimeError(f"Unsafe numerical convergence case path: {case_dir}")
+            raise RuntimeError(f"Unsafe numerical validation case path: {case_dir}")
         result_path = case_dir / "case_result.json"
         if self.enabled and result_path.is_file():
             try:
@@ -498,9 +532,12 @@ class _ConvergenceCache:
             shutil.rmtree(case_dir)
         try:
             raw = self.runner.run(
-                condition, self.raw_root, signature, stability=stability,
-                control_deflections_deg=controls, wake_iterations=wake,
-                tessellation_overrides=tessellation,
+                condition,
+                self.raw_root,
+                signature,
+                stability=stability,
+                control_deflections_deg=controls,
+                wake_iterations=wake,
             )
             payload = (
                 self.analysis_mapper(raw)
@@ -512,15 +549,22 @@ class _ConvergenceCache:
             duration = float(getattr(raw, "duration_sec", 0.0))
             self.solver_duration_sec += duration
             record = {
-                "schema_version": "1.0", "signature": signature, "status": "SUCCESS",
-                "request": request, "payload": payload, "solver_duration_sec": duration,
+                "schema_version": "2.0",
+                "signature": signature,
+                "status": "SUCCESS",
+                "request": request,
+                "payload": payload,
+                "solver_duration_sec": duration,
             }
         except Exception as exc:
             self.failures += 1
             case_dir.mkdir(parents=True, exist_ok=True)
             record = {
-                "schema_version": "1.0", "signature": signature, "status": "FAIL",
-                "request": request, "error": f"{type(exc).__name__}: {exc}",
+                "schema_version": "2.0",
+                "signature": signature,
+                "status": "FAIL",
+                "request": request,
+                "error": f"{type(exc).__name__}: {exc}",
             }
             result_path.write_text(
                 json.dumps(_json_safe(record), ensure_ascii=False, indent=2, allow_nan=False),
@@ -538,31 +582,39 @@ class _ConvergenceCache:
 
     def summary(self, wall_duration_sec: float) -> dict[str, Any]:
         return {
-            "enabled": self.enabled, "hits": self.hits, "misses": self.misses,
-            "failed_cases": self.failures, "solver_duration_sec": self.solver_duration_sec,
+            "enabled": self.enabled,
+            "hits": self.hits,
+            "misses": self.misses,
+            "solver_runs": self.misses,
+            "failed_cases": self.failures,
+            "solver_duration_sec": self.solver_duration_sec,
             "wall_duration_sec": wall_duration_sec,
         }
 
 
 def _trim_representative(
-    point: dict[str, Any], config: dict[str, Any], reference: dict[str, float],
+    point: dict[str, Any],
+    config: dict[str, Any],
+    reference: dict[str, float],
     cache: _ConvergenceCache,
-    wake: int, tessellation: list[dict[str, Any]],
+    wake: int,
 ) -> tuple[float, float, dict[str, Any]]:
     trim_config = deepcopy(config["trim"])
     last_condition = calculate_condition(
-        speed_mps=float(point["speed_mps"]), alpha_deg=float(trim_config["alpha"]["initial_deg"]),
-        beta_deg=float(point.get("beta_deg", 0.0)), atmosphere=config["atmosphere"],
+        speed_mps=float(point["speed_mps"]),
+        alpha_deg=float(trim_config["alpha"]["initial_deg"]),
+        beta_deg=float(point.get("beta_deg", 0.0)),
+        atmosphere=config["atmosphere"],
         cref_m=reference["cref_m"],
     )
 
-    def evaluate(
-        alpha_deg: float, elevator_deg: float, label: str, stability: bool,
-    ) -> dict[str, Any]:
+    def evaluate(alpha_deg: float, elevator_deg: float, label: str, stability: bool) -> dict[str, Any]:
         nonlocal last_condition
         last_condition = calculate_condition(
-            speed_mps=float(point["speed_mps"]), alpha_deg=alpha_deg,
-            beta_deg=float(point.get("beta_deg", 0.0)), atmosphere=config["atmosphere"],
+            speed_mps=float(point["speed_mps"]),
+            alpha_deg=alpha_deg,
+            beta_deg=float(point.get("beta_deg", 0.0)),
+            atmosphere=config["atmosphere"],
             cref_m=reference["cref_m"],
         )
         controls = {
@@ -571,29 +623,29 @@ def _trim_representative(
         }
         controls["elevator"] = elevator_deg
         return cache.run(
-            condition=last_condition, controls=controls, wake=wake,
-            tessellation=tessellation, stability=stability,
+            condition=last_condition,
+            controls=controls,
+            wake=wake,
+            stability=stability,
             perturbation={"purpose": "pretrim", "state": str(point["name"]), "label": label},
         )
 
     result = solve_longitudinal_trim(
-        evaluate=evaluate, trim_config=trim_config,
+        evaluate=evaluate,
+        trim_config=trim_config,
         derivative_config=config["derivatives"],
-        dynamic_pressure_pa=last_condition["dynamic_pressure_pa"], reference=reference,
+        dynamic_pressure_pa=last_condition["dynamic_pressure_pa"],
+        reference=reference,
     )
-    if not result.converged:
-        return result.alpha_deg, result.elevator_deg, {
-            "status": "FAIL", "iterations": result.iterations,
-            "alpha_deg": result.alpha_deg, "elevator_deg": result.elevator_deg,
-            "force_residual_n": result.force_residual_n,
-            "moment_residual_nm": result.moment_residual_nm,
-            "reason": result.failure_reason, "history": list(result.history),
-        }
+    status = "PASS" if result.converged else "FAIL"
     return result.alpha_deg, result.elevator_deg, {
-        "status": "PASS", "iterations": result.iterations,
-        "alpha_deg": result.alpha_deg, "elevator_deg": result.elevator_deg,
+        "status": status,
+        "iterations": result.iterations,
+        "alpha_deg": result.alpha_deg,
+        "elevator_deg": result.elevator_deg,
         "force_residual_n": result.force_residual_n,
         "moment_residual_nm": result.moment_residual_nm,
+        "reason": result.failure_reason,
         "history": list(result.history),
     }
 
@@ -602,122 +654,289 @@ def _report_markdown(report: dict[str, Any]) -> str:
     def formatted(value: Any) -> str:
         return f"{value:g}" if isinstance(value, (int, float)) and value is not None else str(value)
 
+    summary = report["required_derivatives_manifest"]["summary"]
     lines = [
-        "# Numerical Convergence Report", "",
-        f"Generated: {report['generated_at_local']}", "",
-        f"Production gate: **{report['production_gate_status']}**", "",
-        "## Wake convergence map", "",
-        "| State | V (m/s) | alpha (deg) | beta (deg) | Required Wake | Base | FD derivatives | Native diagnostic | Status | Why |",
-        "|---|---:|---:|---:|---:|---|---|---|---|---|",
+        "# Numerical Convergence / Validation Report",
+        "",
+        f"Generated: {report['generated_at_local']}",
+        "",
+        f"Production gate: **{report['production_gate_status']}**",
+        "",
+        "Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.",
+        "",
+        "The workflow uses the mesh currently saved in the OpenVSP model and only checks that required VSPAERO cases and outputs are valid.",
+        "",
+        "## Wake convergence map",
+        "",
+        "| State | V (m/s) | alpha (deg) | beta (deg) | Production Wake | Base | FD derivatives | Wake 16 verification | Native diagnostic | Status | Why |",
+        "|---|---:|---:|---:|---:|---|---|---|---|---|---|",
     ]
     for point in report["wake"]["sample_points"]:
+        verification = point.get("wake16_verification", {})
+        verify_text = (
+            verification.get("status", "NOT_NEEDED")
+            if verification.get("triggered") else "NOT_NEEDED"
+        )
         lines.append(
             f"| {point['name']} | {formatted(point.get('speed_mps'))} | "
             f"{formatted(point.get('alpha_deg'))} | {formatted(point.get('beta_deg'))} | "
             f"{formatted(point.get('required_wake'))} | {point.get('base_coefficient_status', 'SKIPPED')} | "
-            f"{point.get('fd_derivative_status', 'SKIPPED')} | "
+            f"{point.get('fd_derivative_status', 'SKIPPED')} | {verify_text} | "
             f"{point.get('native_derivative_diagnostic', 'SKIPPED')} | "
             f"{point['status']} | {point['reason']} |"
         )
     lines.extend([
-        "", "The map is generated from solver comparisons at the representative states. Untested "
-        "states use a conservative discrete nearest-region lookup, a boundary buffer, and a configured "
-        "one-level safety margin; no alpha threshold or linear Wake interpolation is used.", "",
-        "## Boundary continuity", "",
-        f"Status: **{report['wake']['boundary_status']}**. "
-        f"Checks performed: {len(report['wake']['boundary_checks'])}. "
-        "Any discontinuous low-Wake endpoint is automatically upgraded in the final map.", "",
-        "## Tessellation", "",
-        f"Recommended preset: **{report['tessellation']['recommended_preset']}** "
-        f"({report['tessellation']['status']}). {report['tessellation']['reason']}", "",
-        "## CY_delta_r diagnostic", "",
-        f"Status: **{report['cy_delta_r']['status']}**; classification: "
-        f"**{report['cy_delta_r']['classification']}**; recommended delta_r: "
-        f"{report['cy_delta_r'].get('recommended_delta_r_deg')} deg. "
-        f"{report['cy_delta_r'].get('reason', '')} The extra rudder points are diagnostic-only "
-        "and are not expanded over the GRID.", "",
-        "## Cm_q diagnostic", "",
-        f"Status: **{report['cm_q']['status']}**; numerical sensitivity: "
-        f"**{report['cm_q']['numerical_status']}**. {report['cm_q']['api_limitation']}", "",
-        "## Production numerical settings", "",
-        f"Uniform tessellation: **{report['tessellation']['recommended_preset']}**. Wake is selected "
-        "per flight state, then promoted to the maximum required by the complete derivative bundle. "
-        "TRIM uses a low-cost pre-trim followed by a production trim and only upgrades Wake between "
-        "complete trim solves.", "",
-        f"Final convergence status: **{report['convergence_status']}**; production gate: "
-        f"**{report['production_gate_status']}**.", "",
-        "## Cache / resume", "",
-        f"Enabled: **{report['cache']['enabled']}**; hits: **{report['cache']['hits']}**; "
-        f"misses: **{report['cache']['misses']}**; failed real cases: "
-        f"**{report['cache']['failed_cases']}**; wall time: "
-        f"**{report['cache']['wall_duration_sec']:.1f} s**.", "",
+        "",
+        "Wake 16 is verification-only. It is run only when the 8->12 transition is not PASS, never enters the production candidate list, and never changes a production Wake above 12.",
+        "",
+        "## FD step selection",
+        "",
+        "| Derivative | Selected step (deg) | Status | Value | Method |",
+        "|---|---:|---|---:|---|",
+    ])
+    for name, record in report["fd_step_selection"].items():
+        lines.append(
+            f"| {name} | {formatted(record.get('selected_fd_step'))} | "
+            f"{record.get('convergence_status')} | {formatted(record.get('derivative_value'))} | "
+            f"{record.get('method')} |"
+        )
+    lines.extend([
+        "",
+        "Each derivative selects its own centered-FD step from the configured local candidates. Native derivatives are diagnostic references only and do not enter the Wake gate, production derivative set, or TRIM Jacobian.",
+        "",
+        "## Required derivatives manifest",
+        "",
+        f"Required: **{summary['required']}**; PASS: **{summary['PASS']}**; "
+        f"WARN_NUMERICAL: **{summary['WARN_NUMERICAL']}**; "
+        f"METHOD_LIMITATION: **{summary['METHOD_LIMITATION']}**; FAIL: **{summary['FAIL']}**.",
+        "",
+        "METHOD_LIMITATION follows the explicit policy in config/required_derivatives.yaml. In particular, OpenVSP/VSPAERO 3.51.3 cannot provide a true negative steady-q input, so Cm_q is not represented as a centered FD and its native value remains diagnostic-only.",
+        "",
+        "## Boundary continuity",
+        "",
+        f"Status: **{report['wake']['boundary_status']}**. Checks performed: "
+        f"{len(report['wake']['boundary_checks'])}.",
+        "",
+        "## Cache / resume",
+        "",
+        f"Enabled: **{report['cache']['enabled']}**; cache hits: **{report['cache']['hits']}**; "
+        f"new solver runs: **{report['cache']['solver_runs']}**; failed real cases: "
+        f"**{report['cache']['failed_cases']}**; solver time: "
+        f"**{report['cache']['solver_duration_sec']:.1f} s**; wall time: "
+        f"**{report['cache']['wall_duration_sec']:.1f} s**.",
+        "",
     ])
     return "\n".join(lines)
 
 
 def run_numerical_convergence(
-    *, config: dict[str, Any], runner: Any, reference: dict[str, float],
-    manifest: dict[str, Any], analysis_mapper: Callable[[Any], dict[str, Any]],
+    *,
+    config: dict[str, Any],
+    runner: Any,
+    reference: dict[str, float],
+    manifest: dict[str, Any],
+    analysis_mapper: Callable[[Any], dict[str, Any]],
 ) -> dict[str, Any]:
     started = time.perf_counter()
     settings = config["numerical_convergence"]
     wake_config = settings["wake"]
-    tess_config = settings["tessellation"]
     output = config["_paths"]["results"] / "numerical_convergence"
     raw_root = (output / "raw").resolve()
     output.mkdir(parents=True, exist_ok=True)
     if not raw_root.is_relative_to(output.resolve()):
-        raise RuntimeError(f"Unsafe numerical convergence raw path: {raw_root}")
+        raise RuntimeError(f"Unsafe numerical validation raw path: {raw_root}")
     raw_root.mkdir(parents=True, exist_ok=True)
     cache = _ConvergenceCache(
-        config=config, runner=runner, raw_root=raw_root, analysis_mapper=analysis_mapper
+        config=config,
+        runner=runner,
+        raw_root=raw_root,
+        analysis_mapper=analysis_mapper,
     )
 
     candidates = [int(item) for item in wake_config["candidates"]]
+    verification_level = int(wake_config["verification_only_level"])
     tolerance = wake_config["tolerance"]
-    preset_map = {str(name).upper(): list(rows) for name, rows in tess_config["presets"].items()}
-    study_preset = str(wake_config.get("study_tessellation_preset", "MEDIUM")).upper()
     monitored = [*COEFFICIENTS, *WAKE_FD_NAMES]
     controls_neutral = {
         role: float(config["controls"][role].get("neutral_deg", 0.0))
         for role in ("aileron", "elevator", "rudder")
     }
 
+    point_context: dict[str, dict[str, Any]] = {}
+    unresolved_points: list[dict[str, Any]] = []
+    for point_config in wake_config["representative_states"]:
+        point = dict(point_config)
+        name = str(point["name"])
+        controls = dict(controls_neutral)
+        pretrim = None
+        try:
+            if bool(point.get("trim", False)):
+                alpha, elevator, pretrim = _trim_representative(
+                    point,
+                    config,
+                    reference,
+                    cache,
+                    int(settings["trim"]["pretrim_wake_iterations"]),
+                )
+                if pretrim["status"] != "PASS":
+                    raise RuntimeError(f"Representative pre-trim failed: {pretrim.get('reason')}")
+                point["alpha_deg"] = alpha
+                controls["elevator"] = elevator
+            condition = calculate_condition(
+                speed_mps=float(point["speed_mps"]),
+                alpha_deg=float(point["alpha_deg"]),
+                beta_deg=float(point.get("beta_deg", 0.0)),
+                atmosphere=config["atmosphere"],
+                cref_m=reference["cref_m"],
+            )
+            point_context[name] = {
+                "point": point,
+                "condition": condition,
+                "controls": controls,
+                "pretrim": pretrim,
+            }
+        except Exception as exc:
+            unresolved_points.append({
+                "name": name,
+                "speed_mps": float(point["speed_mps"]),
+                "alpha_deg": point.get("alpha_deg"),
+                "beta_deg": float(point.get("beta_deg", 0.0)),
+                "required_wake": None,
+                "status": "FAIL",
+                "reason": f"{type(exc).__name__}: {exc}",
+                "source": "failed_case",
+                "pretrim": pretrim,
+            })
+
+    diagnostic_name = str(settings["fd_step"]["representative_state_name"])
+    diagnostic_package: dict[str, Any]
+    diagnostic_error = ""
+    if diagnostic_name in point_context:
+        context = point_context[diagnostic_name]
+        diagnostic_wake = candidates[-1]
+        try:
+            base = cache.run(
+                condition=context["condition"],
+                controls=context["controls"],
+                wake=diagnostic_wake,
+                stability=True,
+                perturbation={"purpose": "fd_step_selection", "variable": "base"},
+            )
+
+            def diagnostic_polar(
+                condition: dict[str, float], label: str, controls: dict[str, float]
+            ) -> dict[str, Any]:
+                payload = cache.run(
+                    condition=condition,
+                    controls=controls,
+                    wake=diagnostic_wake,
+                    stability=False,
+                    perturbation={"purpose": "fd_step_selection", "label": label},
+                )
+                return {"coefficients": payload["coefficients"], "solver_duration_sec": 0.0}
+
+            derivative_config = deepcopy(config["derivatives"])
+            derivative_config["_controls"] = config["controls"]
+            derivative_config["_bundle_wake_iterations"] = diagnostic_wake
+            diagnostic_package = calculate_trim_derivatives(
+                condition=context["condition"],
+                base_outputs=base,
+                base_controls=context["controls"],
+                manifest=manifest,
+                derivative_config=derivative_config,
+                run_polar=diagnostic_polar,
+            )
+        except Exception as exc:
+            diagnostic_error = f"{type(exc).__name__}: {exc}"
+            native_records: dict[str, dict[str, Any]] = {}
+            items = build_required_manifest_items(
+                manifest=manifest,
+                production_records={},
+                native_records=native_records,
+                wake_level=candidates[-1],
+            )
+            diagnostic_package = {
+                "production_fd_derivatives": {},
+                "native_derivative_diagnostics": native_records,
+                "required_derivatives_manifest": {
+                    "items": items,
+                    "summary": required_derivative_summary(items, manifest),
+                },
+            }
+    else:
+        diagnostic_error = "FD-step representative state is unavailable"
+        items = build_required_manifest_items(
+            manifest=manifest,
+            production_records={},
+            native_records={},
+            wake_level=candidates[-1],
+        )
+        diagnostic_package = {
+            "production_fd_derivatives": {},
+            "native_derivative_diagnostics": {},
+            "required_derivatives_manifest": {
+                "items": items,
+                "summary": required_derivative_summary(items, manifest),
+            },
+        }
+
+    fd_selection = diagnostic_package["production_fd_derivatives"]
+    selected_steps: dict[str, float] = {}
+    for rows in WAKE_FD_DERIVATIVES.values():
+        for _, derivative in rows:
+            record = fd_selection.get(derivative, {})
+            if record.get("selected_fd_step") is not None:
+                selected_steps[derivative] = float(record["selected_fd_step"])
+            else:
+                variable = str(manifest["_by_name"][derivative]["perturbation"])
+                selected_steps[derivative] = float(
+                    config["derivatives"]["fd_step_candidates_deg"][variable][1]
+                )
+
     def wake_bundle(
-        condition: dict[str, float], controls: dict[str, float], wake: int,
+        condition: dict[str, float], controls: dict[str, float], wake: int
     ) -> dict[str, Any]:
         coefficients: dict[str, float] = {}
-        native: dict[str, float] = {}
         fd: dict[str, float] = {}
         errors: list[str] = []
         try:
             base = cache.run(
-                condition=condition, controls=controls, wake=wake,
-                tessellation=preset_map[study_preset], stability=True,
-                perturbation={"purpose": "wake_gate", "variable": "base", "offset_deg": 0.0},
+                condition=condition,
+                controls=controls,
+                wake=wake,
+                stability=False,
+                perturbation={"purpose": "wake_gate", "variable": "base"},
             )
-            plain = _plain_values(base, manifest)
-            coefficients = {name: plain[name] for name in COEFFICIENTS if name in plain}
-            native = {name: plain[name] for name in WAKE_FD_NAMES if name in plain}
+            coefficients = {
+                name: _value_from_payload(base, name) for name in COEFFICIENTS
+            }
         except Exception as exc:
-            errors.append(f"base stability: {type(exc).__name__}: {exc}")
+            errors.append(f"base polar: {type(exc).__name__}: {exc}")
 
-        steps = config["derivatives"]["perturbations"]
+        groups: dict[tuple[str, float], list[tuple[str, str]]] = {}
         for variable, derivative_rows in WAKE_FD_DERIVATIVES.items():
-            step_deg = float(steps[f"{variable}_deg"])
-            control_cfg = config["controls"].get(variable)
+            for coefficient, derivative in derivative_rows:
+                groups.setdefault((variable, selected_steps[derivative]), []).append(
+                    (coefficient, derivative)
+                )
+        for (variable, step_deg), derivative_rows in groups.items():
             pair: dict[str, dict[str, Any]] = {}
+            control_cfg = config["controls"].get(variable)
             for direction, sign in (("minus", -1.0), ("plus", 1.0)):
                 try:
                     varied_condition, varied_controls = perturb_state(
                         condition, controls, variable, sign * step_deg, control_cfg
                     )
                     pair[direction] = cache.run(
-                        condition=varied_condition, controls=varied_controls, wake=wake,
-                        tessellation=preset_map[study_preset], stability=False,
+                        condition=varied_condition,
+                        controls=varied_controls,
+                        wake=wake,
+                        stability=False,
                         perturbation={
-                            "purpose": "wake_gate", "variable": variable,
-                            "direction": direction, "step_deg": step_deg,
+                            "purpose": "wake_gate",
+                            "variable": variable,
+                            "direction": direction,
+                            "step_deg": step_deg,
                         },
                     )
                 except Exception as exc:
@@ -733,114 +952,104 @@ def run_numerical_convergence(
         return {
             "gate_values": {**coefficients, **fd},
             "coefficients": coefficients,
-            "fd_derivatives": fd,
-            "native_derivatives": native,
+            "production_fd_derivatives": fd,
             "errors": errors,
         }
 
     wake_details: list[dict[str, Any]] = []
-    sample_points: list[dict[str, Any]] = []
-    point_context: dict[str, dict[str, Any]] = {}
-
-    for point_config in wake_config["representative_states"]:
-        point = dict(point_config)
-        name = str(point["name"])
-        controls = dict(controls_neutral)
-        pretrim = None
-        try:
-            if bool(point.get("trim", False)):
-                alpha, elevator, pretrim = _trim_representative(
-                    point, config, reference, cache,
-                    int(settings["trim"]["pretrim_wake_iterations"]), preset_map["COARSE"],
-                )
-                if pretrim["status"] != "PASS":
-                    sample = {
-                        "name": name, "speed_mps": float(point["speed_mps"]),
-                        "alpha_deg": None, "beta_deg": float(point.get("beta_deg", 0.0)),
-                        "required_wake": None, "status": "FAIL",
-                        "reason": f"Representative pre-trim failed: {pretrim.get('reason')}",
-                        "source": "failed_case", "pretrim": pretrim,
-                    }
-                    sample_points.append(sample)
-                    wake_details.append({
-                        "point": sample, "values": {}, "status": "FAIL",
-                        "error": sample["reason"],
-                    })
-                    continue
-                point["alpha_deg"] = alpha
-                controls["elevator"] = elevator
-            condition = calculate_condition(
-                speed_mps=float(point["speed_mps"]), alpha_deg=float(point["alpha_deg"]),
-                beta_deg=float(point.get("beta_deg", 0.0)), atmosphere=config["atmosphere"],
-                cref_m=reference["cref_m"],
-            )
-        except Exception as exc:
-            reason = f"{type(exc).__name__}: {exc}"
-            sample = {
-                "name": name, "speed_mps": float(point["speed_mps"]),
-                "alpha_deg": point.get("alpha_deg"),
-                "beta_deg": float(point.get("beta_deg", 0.0)),
-                "required_wake": None, "status": "FAIL", "reason": reason,
-                "source": "failed_case", "pretrim": {
-                    "status": "FAIL", "reason": reason,
-                } if bool(point.get("trim", False)) else None,
-            }
-            sample_points.append(sample)
-            wake_details.append({"point": sample, "values": {}, "status": "FAIL", "error": reason})
-            continue
-
+    sample_points: list[dict[str, Any]] = list(unresolved_points)
+    for name, context in point_context.items():
+        condition = context["condition"]
+        controls = context["controls"]
         bundles: dict[int, dict[str, Any]] = {}
         values_by_wake: dict[int, dict[str, float]] = {}
-        native_by_wake: dict[int, dict[str, float]] = {}
         for wake in candidates:
             bundle = wake_bundle(condition, controls, wake)
             bundles[wake] = bundle
             values_by_wake[wake] = bundle["gate_values"]
-            native_by_wake[wake] = bundle["native_derivatives"]
-        base_decision = minimum_converged_level(
-            candidates, values_by_wake, COEFFICIENTS, tolerance, allow_unverified_highest=True
+        pending = terminal_wake_verification(
+            production_levels=candidates,
+            production_values=values_by_wake,
+            quantities=monitored,
+            settings=tolerance,
+            verification_level=verification_level,
         )
-        fd_decision = minimum_converged_level(
-            candidates, values_by_wake, WAKE_FD_NAMES, tolerance, allow_unverified_highest=True
+        verification_bundle = None
+        verification_values = None
+        if pending["verification"]["triggered"]:
+            verification_bundle = wake_bundle(condition, controls, verification_level)
+            verification_values = verification_bundle["gate_values"]
+        decision = terminal_wake_verification(
+            production_levels=candidates,
+            production_values=values_by_wake,
+            quantities=monitored,
+            settings=tolerance,
+            verification_level=verification_level,
+            verification_values=verification_values,
         )
-        decision = minimum_converged_level(
-            candidates, values_by_wake, monitored, tolerance, allow_unverified_highest=True
+        base_decision = terminal_wake_verification(
+            production_levels=candidates,
+            production_values=values_by_wake,
+            quantities=COEFFICIENTS,
+            settings=tolerance,
+            verification_level=verification_level,
+            verification_values=verification_values,
         )
-        native_decision = minimum_converged_level(
-            candidates, native_by_wake, WAKE_FD_NAMES, tolerance, allow_unverified_highest=True
+        fd_decision = terminal_wake_verification(
+            production_levels=candidates,
+            production_values=values_by_wake,
+            quantities=WAKE_FD_NAMES,
+            settings=tolerance,
+            verification_level=verification_level,
+            verification_values=verification_values,
         )
-        native_status = "PASS" if native_decision["status"] == "PASS" else "WARN"
+        native_status = "DIAGNOSTIC_ONLY"
+        point = context["point"]
+        required_wake = int(decision["required_level"])
         sample = {
-            "name": name, "speed_mps": float(point["speed_mps"]),
-            "alpha_deg": float(point["alpha_deg"]), "beta_deg": float(point.get("beta_deg", 0.0)),
-            "required_wake": int(decision["required_level"]), "status": decision["status"],
-            "reason": decision["reason"], "source": "solver_convergence", "pretrim": pretrim,
+            "name": name,
+            "speed_mps": float(point["speed_mps"]),
+            "alpha_deg": float(point["alpha_deg"]),
+            "beta_deg": float(point.get("beta_deg", 0.0)),
+            "required_wake": required_wake,
+            "status": decision["status"],
+            "reason": decision["reason"],
+            "source": "solver_convergence",
+            "pretrim": context["pretrim"],
             "base_coefficient_status": base_decision["status"],
             "fd_derivative_status": fd_decision["status"],
             "native_derivative_diagnostic": native_status,
+            "wake16_verification": decision["verification"],
         }
         sample_points.append(sample)
         wake_details.append({
-            "point": sample, "values": values_by_wake, "bundles": bundles,
-            "decision": decision, "base_coefficient_decision": base_decision,
+            "point": sample,
+            "production_values": values_by_wake,
+            "production_bundles": bundles,
+            "verification_only_bundle": verification_bundle,
+            "decision": decision,
+            "base_coefficient_decision": base_decision,
             "fd_derivative_decision": fd_decision,
             "native_derivative_diagnostic": {
-                "status": native_status, "numerical_status": native_decision["status"],
-                "decision": native_decision,
+                "status": native_status,
+                "enters_production_gate": False,
             },
         })
-        point_context[name] = {
-            "condition": condition, "controls": controls,
-            "wake_values": native_by_wake, "gate_values": values_by_wake,
-        }
+        context["gate_values"] = values_by_wake
 
-    schedule_points = [point for point in sample_points if point.get("required_wake") is not None]
+    schedule_points = [
+        point for point in sample_points
+        if point.get("required_wake") is not None and point.get("status") != "FAIL"
+    ]
     schedule = {
         "algorithm": "conservative_discrete_nearest_regions",
         "candidates": candidates,
+        "verification_only_level": verification_level,
         "sample_points": schedule_points,
         "axis_scales": _schedule_scales(schedule_points) if schedule_points else {
-            "speed_mps": 1.0, "alpha_deg": 1.0, "beta_deg": 1.0,
+            "speed_mps": 1.0,
+            "alpha_deg": 1.0,
+            "beta_deg": 1.0,
         },
         "neighbor_count": int(wake_config.get("neighbor_count", 4)),
         "boundary_buffer_normalized": float(wake_config["boundary_buffer_normalized"]),
@@ -864,17 +1073,18 @@ def run_numerical_convergence(
             for key in ("speed_mps", "alpha_deg", "beta_deg")
         }
         condition = calculate_condition(
-            speed_mps=midpoint["speed_mps"], alpha_deg=midpoint["alpha_deg"],
-            beta_deg=midpoint["beta_deg"], atmosphere=config["atmosphere"], cref_m=reference["cref_m"],
+            speed_mps=midpoint["speed_mps"],
+            alpha_deg=midpoint["alpha_deg"],
+            beta_deg=midpoint["beta_deg"],
+            atmosphere=config["atmosphere"],
+            cref_m=reference["cref_m"],
         )
         low, high = sorted((int(first["required_wake"]), int(second["required_wake"])))
-        if low == high:
-            continue
-        values = {}
-        for wake in (low, high):
-            values[wake] = wake_bundle(condition, controls_neutral, wake)["gate_values"]
+        values = {
+            wake: wake_bundle(condition, controls_neutral, wake)["gate_values"]
+            for wake in (low, high)
+        }
         continuity = boundary_continuity_result(values[low], values[high], monitored, tolerance)
-        checks = continuity["quantities"]
         status = continuity["status"]
         action = "none"
         if status != "PASS":
@@ -882,257 +1092,156 @@ def run_numerical_convergence(
                 if int(endpoint["required_wake"]) == low:
                     endpoint["required_wake"] = high
                     endpoint["source"] = "solver_convergence+boundary_upgrade"
-                    endpoint["reason"] = (
-                        f"boundary continuity required upgrade from Wake {low} to Wake {high}"
-                    )
+                    endpoint["reason"] = f"boundary continuity required upgrade from Wake {low} to Wake {high}"
             action = f"upgraded low-Wake endpoint from {low} to {high}"
-        boundary_checks.append({"first": first["name"], "second": second["name"], "midpoint": midpoint, "low_wake": low, "high_wake": high, "status": status, "action": action, "quantities": checks})
+        boundary_checks.append({
+            "first": first["name"],
+            "second": second["name"],
+            "midpoint": midpoint,
+            "low_wake": low,
+            "high_wake": high,
+            "status": status,
+            "action": action,
+            "quantities": continuity["quantities"],
+        })
     boundary_status = combine_status([item["status"] for item in boundary_checks]) if boundary_checks else "PASS"
-    if boundary_status == "FAIL" and all(item["action"] != "none" for item in boundary_checks if item["status"] == "FAIL"):
+    if boundary_status == "FAIL" and all(
+        item["action"] != "none" for item in boundary_checks if item["status"] == "FAIL"
+    ):
         boundary_status = "WARN"
     wake_status = combine_status([point["status"] for point in sample_points] + [boundary_status])
 
-    tess_points = [str(item) for item in tess_config["representative_state_names"]]
-    tess_details: list[dict[str, Any]] = []
-    tess_monitored = [*COEFFICIENTS, *[str(row["name"]) for row in manifest["_required"]]]
-    for name in tess_points:
-        if name not in point_context or not schedule_points:
-            tess_details.append({
-                "point": name, "wake_iterations": None, "values": {},
-                "decision": {
-                    "status": "SKIPPED_DEPENDENCY", "required_level": None,
-                    "reason": "representative aerodynamic state or Wake schedule is unavailable",
-                    "transitions": [],
-                },
-            })
-            continue
-        context = point_context[name]
-        condition = context["condition"]
-        wake = derivative_bundle_wake(schedule, condition, config["derivatives"])
-        values_by_preset: dict[str, dict[str, float]] = {}
-        errors: dict[str, str] = {}
-        for preset in PRESET_ORDER:
-            try:
-                payload = cache.run(
-                    condition=condition, controls=context["controls"], wake=wake,
-                    tessellation=preset_map[preset], stability=True,
-                    perturbation={"purpose": "tessellation", "state": name, "preset": preset},
-                )
-                values_by_preset[preset] = _plain_values(payload, manifest)
-            except Exception as exc:
-                values_by_preset[preset] = {}
-                errors[preset] = f"{type(exc).__name__}: {exc}"
-        decision = minimum_converged_level(
-            list(PRESET_ORDER), values_by_preset, tess_monitored, tess_config["tolerance"],
-            allow_unverified_highest=False,
-        )
-        tess_details.append({
-            "point": name, "wake_iterations": wake, "values": values_by_preset,
-            "decision": decision, "errors": errors,
-        })
-    tess_statuses = [str(item["decision"]["status"]) for item in tess_details]
-    tess_status = (
-        "FAIL" if "SKIPPED_DEPENDENCY" in tess_statuses else combine_status(tess_statuses)
-    )
-    resolved_tess = [
-        str(item["decision"]["required_level"]) for item in tess_details
-        if item["decision"].get("required_level") in PRESET_ORDER
-    ]
-    recommended_preset = (
-        PRESET_ORDER[max(PRESET_ORDER.index(item) for item in resolved_tess)]
-        if resolved_tess else None
-    )
-    tess_reason = (
-        "lowest uniform preset satisfying all later transitions at every representative state"
-        if tess_status == "PASS"
-        else "one or more tessellation cases failed, were dependency-skipped, or FINE remains unverified"
-    )
-
-    diagnostic_name = str(settings["diagnostics"]["representative_state_name"])
-    rudder_samples: dict[float, dict[str, dict[str, float]]] = {}
-    diagnostic_rows: list[dict[str, Any]] = []
-    if diagnostic_name not in point_context or not schedule_points or recommended_preset is None:
-        reason = "diagnostic representative state, Wake schedule, or tessellation preset is unavailable"
-        cy_result = {
-            "status": "SKIPPED_DEPENDENCY", "classification": "SKIPPED_DEPENDENCY",
-            "recommended_delta_r_deg": None, "reason": reason,
-            "derivatives": {}, "comparisons": [],
-        }
-        cm_q_result = {
-            "status": "SKIPPED_DEPENDENCY", "numerical_status": "SKIPPED_DEPENDENCY",
-            "checks": [], "api_limitation": reason,
-        }
-    else:
-        diagnostic_context = point_context[diagnostic_name]
-        diagnostic_condition = diagnostic_context["condition"]
-        diagnostic_controls = diagnostic_context["controls"]
-        diagnostic_wake = derivative_bundle_wake(
-            schedule, diagnostic_condition, config["derivatives"]
-        )
-        diagnostic_errors: list[str] = []
-        for step in [float(item) for item in settings["diagnostics"]["rudder_steps_deg"]]:
-            pair: dict[str, dict[str, float]] = {}
-            for direction, sign in (("minus", -1.0), ("plus", 1.0)):
-                try:
-                    varied_condition, controls = perturb_state(
-                        diagnostic_condition, diagnostic_controls, "rudder", sign * step,
-                        config["controls"]["rudder"],
-                    )
-                    payload = cache.run(
-                        condition=varied_condition, controls=controls, wake=diagnostic_wake,
-                        tessellation=preset_map[recommended_preset], stability=False,
-                        perturbation={
-                            "purpose": "CY_delta_r_diagnostic", "variable": "rudder",
-                            "direction": direction, "step_deg": step,
-                        },
-                    )
-                    pair[direction] = {
-                        coefficient: _value_from_payload(payload, coefficient)
-                        for coefficient in ("CY", "Cl", "Cn")
-                    }
-                    diagnostic_rows.append({
-                        "diagnostic": "CY_delta_r", "step_deg": step,
-                        "direction": direction, "rudder_deg": controls["rudder"],
-                        **pair[direction],
-                    })
-                except Exception as exc:
-                    diagnostic_errors.append(
-                        f"rudder {step:g} {direction}: {type(exc).__name__}: {exc}"
-                    )
-            if set(pair) == {"minus", "plus"}:
-                rudder_samples[step] = pair
-        if len(rudder_samples) == len(settings["diagnostics"]["rudder_steps_deg"]):
-            cy_result = diagnose_cy_delta_r(
-                rudder_samples, settings["diagnostics"]["tolerance"]
-            )
-        else:
-            cy_result = {
-                "status": "FAIL", "classification": "INCOMPLETE_REAL_CASES",
-                "recommended_delta_r_deg": None,
-                "reason": "; ".join(diagnostic_errors) or "rudder diagnostic cases are incomplete",
-                "derivatives": {}, "comparisons": [],
-            }
-
-        wake_cm_q = {
-            wake: values.get("Cm_q", math.nan)
-            for wake, values in diagnostic_context["wake_values"].items()
-        }
-        tess_context = next(item for item in tess_details if item["point"] == diagnostic_name)
-        tess_cm_q = {
-            preset: values.get("Cm_q", math.nan)
-            for preset, values in tess_context["values"].items()
-        }
-        cm_q_result = diagnose_cm_q(
-            wake_cm_q, tess_cm_q, settings["diagnostics"]["tolerance"]
-        )
-        for item in cm_q_result["checks"]:
-            diagnostic_rows.append({"diagnostic": "Cm_q", **item})
-
-    gate_status = combine_status([wake_status, tess_status, boundary_status])
-    convergence_status = combine_status([gate_status, cy_result["status"], cm_q_result["status"]])
-    native_diagnostic_status = combine_status([
-        str(detail.get("native_derivative_diagnostic", {}).get("status", "WARN"))
-        for detail in wake_details if "decision" in detail
-    ])
-    recommended_steps = {
-        "aileron_deg": float(config["derivatives"]["perturbations"]["aileron_deg"]),
-        "elevator_deg": float(config["derivatives"]["perturbations"]["elevator_deg"]),
+    cm_q_diagnostic = {
+        "status": "METHOD_LIMITATION",
+        "numerical_diagnostic_status": "NOT_APPLICABLE",
+        "diagnostic_value": diagnostic_package.get("native_derivative_diagnostics", {}).get(
+            "Cm_q", {}
+        ).get("diagnostic_value"),
+        "reason": manifest["method_limitations"]["steady_rate_centered_difference"]["reason"],
+        "enters_production_gate": False,
     }
-    if cy_result.get("recommended_delta_r_deg") is not None:
-        recommended_steps["rudder_deg"] = float(cy_result["recommended_delta_r_deg"])
+
+    required_manifest = diagnostic_package["required_derivatives_manifest"]
+    manifest_gate_status = str(required_manifest["summary"]["gate_status"])
+    gate_status = combine_status([wake_status, boundary_status, manifest_gate_status])
+    convergence_status = gate_status
+    native_diagnostic_status = "DIAGNOSTIC_ONLY"
+    selected_fd_steps = {
+        name: float(record["selected_fd_step"])
+        for name, record in fd_selection.items()
+        if record.get("selected_fd_step") is not None
+    }
+    generated = datetime.now().astimezone().isoformat(timespec="seconds")
     production = {
-        "schema_version": "2.0",
-        "generated_at_local": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "schema_version": "3.0",
+        "generated_at_local": generated,
         "identity": convergence_identity(config, str(runner.vsp.GetVSPVersion())),
         "convergence_status": convergence_status,
-        "production_tessellation": {
-            "preset": recommended_preset,
-            "overrides": preset_map[recommended_preset] if recommended_preset is not None else [],
-            "status": tess_status, "reason": tess_reason,
+        "mesh": {
+            "source": "current_openvsp_model",
+            "numerically_certified": False,
+            "responsibility": "user",
+            "statement": "Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.",
         },
         "wake_schedule": schedule,
-        "derivative_bundle": {"rule": "maximum required Wake over base and every +/- derivative state", "enabled": True},
+        "derivative_bundle": {
+            "rule": "maximum required production Wake over base and every +/- derivative state",
+            "enabled": True,
+            "verification_only_level": verification_level,
+        },
         "trim": {
             "rule": "pre-trim then fixed-Wake production trim using a centered-difference Jacobian and backtracking",
             "pretrim_wake_iterations": int(settings["trim"]["pretrim_wake_iterations"]),
             "max_wake_upgrades": int(settings["trim"]["max_wake_upgrades"]),
         },
-        "recommended_control_perturbations_deg": recommended_steps,
-        "recommendation_reasons": {
-            "wake_schedule": "minimum level whose every later transition remains stable, then conservative untested-point and boundary rules",
-            "tessellation": tess_reason,
-            "aileron_deg": "retains the configured production delta and its per-Trim 0.5/1/2-scale validation",
-            "elevator_deg": "retains the configured production delta and its per-Trim 0.5/1/2-scale validation",
-            "rudder_deg": cy_result["reason"],
+        "selected_fd_steps_deg": selected_fd_steps,
+        "required_derivatives_manifest": required_manifest,
+        "diagnostics": {
+            "native_derivatives": {"status": native_diagnostic_status, "enters_production_gate": False},
+            "Cm_q": cm_q_diagnostic,
         },
-        "diagnostics": {"CY_delta_r": cy_result, "Cm_q": cm_q_result},
         "production_gate": {
             "status": gate_status,
-            "reason": "combined base-coefficient + key centered-FD Wake convergence, boundary continuity, and tessellation convergence",
+            "reason": (
+                "Wake coefficient/required-FD validation, boundary continuity, and the explicit "
+                "required-derivative manifest policy; mesh convergence is excluded"
+            ),
             "force_option": "--force",
         },
     }
     cache_summary = cache.summary(time.perf_counter() - started)
     report = {
-        "schema_version": "2.0", "generated_at_local": production["generated_at_local"],
-        "convergence_status": convergence_status, "production_gate_status": gate_status,
-        "wake": {"status": wake_status, "sample_points": sample_points, "details": wake_details, "boundary_status": boundary_status, "boundary_checks": boundary_checks},
-        "tessellation": {"status": tess_status, "recommended_preset": recommended_preset, "reason": tess_reason, "details": tess_details},
-        "cy_delta_r": {**cy_result, "raw_samples": rudder_samples}, "cm_q": cm_q_result,
+        "schema_version": "3.0",
+        "generated_at_local": generated,
+        "convergence_status": convergence_status,
+        "production_gate_status": gate_status,
+        "mesh": production["mesh"],
+        "wake": {
+            "status": wake_status,
+            "sample_points": sample_points,
+            "details": wake_details,
+            "boundary_status": boundary_status,
+            "boundary_checks": boundary_checks,
+        },
+        "fd_step_selection": fd_selection,
+        "fd_step_diagnostic_error": diagnostic_error,
+        "required_derivatives_manifest": required_manifest,
+        "cm_q": cm_q_diagnostic,
         "native_derivative_diagnostic": {"status": native_diagnostic_status},
         "cache": cache_summary,
         "production_numerical_settings": production,
     }
 
-    (output / "numerical_convergence_report.json").write_text(json.dumps(_json_safe(report), ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
-    (output / "numerical_convergence_report.md").write_text(_report_markdown(report), encoding="utf-8")
-    (output / "production_numerical_settings.yaml").write_text(yaml.safe_dump(_json_safe(production), allow_unicode=True, sort_keys=False), encoding="utf-8")
-    _write_csv(output / "wake_convergence_map.csv", [{key: value for key, value in point.items() if key != "pretrim"} for point in sample_points])
-    tess_rows = []
-    for detail in tess_details:
-        for preset, values in detail["values"].items():
-            for quantity, value in values.items():
-                tess_rows.append({"state": detail["point"], "preset": preset, "quantity": quantity, "value": value, "recommended_preset": recommended_preset, "status": detail["decision"]["status"]})
-    _write_csv(output / "tessellation_convergence.csv", tess_rows)
-    _write_csv(output / "derivative_diagnostics.csv", diagnostic_rows)
+    (output / "numerical_convergence_report.json").write_text(
+        json.dumps(_json_safe(report), ensure_ascii=False, indent=2, allow_nan=False),
+        encoding="utf-8",
+    )
+    (output / "numerical_convergence_report.md").write_text(
+        _report_markdown(report), encoding="utf-8"
+    )
+    (output / "production_numerical_settings.yaml").write_text(
+        yaml.safe_dump(_json_safe(production), allow_unicode=True, sort_keys=False),
+        encoding="utf-8",
+    )
+    _write_csv(
+        output / "wake_convergence_map.csv",
+        [{key: value for key, value in point.items() if key not in {"pretrim", "wake16_verification"}}
+         | {
+             "wake16_triggered": point.get("wake16_verification", {}).get("triggered", False),
+             "wake16_status": point.get("wake16_verification", {}).get("status", "NOT_NEEDED"),
+         }
+         for point in sample_points],
+    )
+    _write_csv(output / "fd_step_selection.csv", [
+        {
+            "name": name,
+            "selected_fd_step": record.get("selected_fd_step"),
+            "convergence_status": record.get("convergence_status"),
+            "derivative_value": record.get("derivative_value"),
+            "method": record.get("method"),
+        }
+        for name, record in fd_selection.items()
+    ])
+    _write_csv(output / "required_derivatives_manifest.csv", required_manifest["items"])
 
-    colors = [(36, 99, 235), (220, 38, 38), (5, 150, 105), (147, 51, 234), (234, 88, 12), (8, 145, 178)]
+    colors = [(36, 99, 235), (220, 38, 38), (5, 150, 105), (147, 51, 234), (234, 88, 12)]
     valid_wake_points = [point for point in sample_points if point.get("required_wake") is not None]
     if valid_wake_points:
         _write_line_png(output / "wake_convergence_map.png", [(
             [float(index) for index in range(len(valid_wake_points))],
-            [float(point["required_wake"]) for point in valid_wake_points], colors[0],
+            [float(point["required_wake"]) for point in valid_wake_points],
+            colors[0],
         )])
-    tess_series = [
-        (
-            [0.0, 1.0, 2.0],
-            [float(detail["values"].get(preset, {}).get("CL", math.nan)) for preset in PRESET_ORDER],
-            colors[index % len(colors)],
-        )
-        for index, detail in enumerate(tess_details) if detail["values"]
-    ]
-    if tess_series:
-        _write_line_png(output / "tessellation_convergence.png", tess_series)
-    if rudder_samples:
-        _write_line_png(output / "CY_vs_delta_r.png", [
-            (
-                [-step, step],
-                [rudder_samples[step]["minus"]["CY"], rudder_samples[step]["plus"]["CY"]],
+    fd_series = []
+    for index, record in enumerate(fd_selection.values()):
+        values = record.get("convergence", {}).get("values_by_step", {})
+        if values:
+            ordered = sorted((float(step), float(value)) for step, value in values.items())
+            fd_series.append((
+                [step for step, _ in ordered],
+                [value for _, value in ordered],
                 colors[index % len(colors)],
-            )
-            for index, step in enumerate(sorted(rudder_samples))
-        ])
-    boundary_series = []
-    for index, item in enumerate(boundary_checks):
-        differences = [
-            float(check.get("difference", math.nan)) for check in item["quantities"].values()
-            if math.isfinite(float(check.get("difference", math.nan)))
-        ]
-        if differences:
-            boundary_series.append((
-                [float(item["low_wake"]), float(item["high_wake"])],
-                [0.0, max(differences)], colors[index % len(colors)],
             ))
-    if boundary_series:
-        _write_line_png(output / "wake_boundary_check.png", boundary_series)
+    if fd_series:
+        _write_line_png(output / "fd_step_convergence.png", fd_series)
     return report

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from typing import Any
 
 
@@ -122,23 +121,6 @@ def map_stability_case(raw_stab: dict[str, Any], case_name: str) -> dict[str, di
 
 def rate_unit(variable: str) -> str:
     return {"p": "1/p_hat", "q": "1/q_hat", "r": "1/r_hat"}[variable]
-
-
-def rate_definition(variable: str) -> str:
-    name = f"{variable}_hat"
-    return str(COORDINATE_CONVENTION["rate_definitions"][name])
-
-
-def nondimensional_rate_step(
-    variable: str, rate_rad_s: float, speed_mps: float, reference: dict[str, float]
-) -> float:
-    if speed_mps <= 0:
-        raise ValueError("speed_mps must be positive")
-    length = reference["cref_m"] if variable == "q" else reference["bref_m"]
-    value = float(rate_rad_s) * float(length) / (2.0 * float(speed_mps))
-    if not math.isfinite(value) or value <= 0:
-        raise ValueError(f"Invalid nondimensional {variable} step: {value}")
-    return value
 
 
 def map_stability_derivatives(raw_stab: dict[str, Any]) -> dict[str, dict[str, Any]]:

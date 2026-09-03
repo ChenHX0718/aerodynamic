@@ -1,172 +1,116 @@
-# OpenVSP/VSPAERO 气动数据工具——快速使用
+# OpenVSP 无人机气动数据库：快速使用
 
-本工具自动完成小规模数值收敛、按飞行状态选择 Wake、真实中心差分两阶段 TRIM、23 项稳定/控制导数、验证以及 MATLAB `.mat` 导出。正式大规模 GRID/TRIM 前必须先生成 Production Numerical Settings。
+本工具使用 OpenVSP/VSPAERO 3.51.3 生成 GRID 气动数据、真实中心差分导数和纵向 TRIM 数据。正式导数以 centered finite difference（FD）为准；VSPAERO native derivatives 仅作诊断参考。
 
-## 1. 首次安装
+## 1. 首次准备
 
-要求：64 位 Python 3.11、OpenVSP 3.51.3（含 VSPAERO）。在项目根目录运行：
+1. 安装 OpenVSP 3.51.3，并确认目录中有 `vsp.exe` 和 `vspaero.exe`。
+2. 把 OpenVSP 路径写入 `config/openvsp.yaml`，或设置 `OPENVSP_ROOT`。
+3. 运行 `setup.bat`创建项目环境。
+4. 运行 `run_aero.bat check`检查模型、几何集、参考量和舵面映射。
 
-```powershell
-.\setup.bat
-.\.venv\Scripts\python.exe run.py check
-```
+## 2. 准备新的 OpenVSP 无人机模型
 
-OpenVSP 路径只在 `config/openvsp.yaml` 设置：
+在 OpenVSP 中完成以下内容后再保存 `.vsp3`：
 
-```yaml
-openvsp:
-  root: "D:/OpenVSP/OpenVSP-3.51.3-win64"
-  expected_version: "3.51.3"
-```
+- 设置机翼、平尾、垂尾和机身几何；
+- 在 VSPAERO Reference 中确认 `Sref`/`bref`/`cref` 和重心 `Xcg`/`Ycg`/`Zcg`；
+- 建立 Aileron、Elevator、Rudder Control Surface Groups，检查 gain、铰链和正偏角方向；
+- 把薄面升力体和厚体机身放入不同 Set；
+- 由用户根据几何曲率、前后缘、舵面铰链和计算成本设置 Tess_U、Tess_W 及聚类参数。
 
-`root: null` 会自动搜索；也可设置环境变量 `OPENVSP_ROOT`。不要把绝对路径写到其他代码或配置中。
+网格现在完全由用户在 OpenVSP 建模阶段负责。脚本不覆盖模型网格，不运行 COARSE/MEDIUM/FINE，不认证 Tessellation convergence，也不因网格“未收敛”导致 Production Gate FAIL。脚本仍会检查当前网格能否生成完整 VSPAERO case 及有限数值输出。
 
-## 2. 更换新飞机
+## 3. 更换飞机时修改哪里
 
-1. 把新 `.vsp3` 放入 `aircraft/`。
-2. 修改 `config/aircraft.yaml` 的 `aircraft.name` 与 `aircraft.model`。
-3. 核对 `geometry_sets.thin/thick`；机翼、平尾、垂尾通常是 thin，机身是 thick。
-4. 核对 `.vsp3` 内三个 Control Surface Group 名称，并修改 `controls.aileron/elevator/rudder.group`。
-5. 核对模型内或配置内的 `Sref/bref/cref` 与 CG。
-6. 修改大气、质量、重力、TRIM 搜索范围与舵面上下限。
-7. 修改 GRID 的 V/alpha/beta 和 TRIM 的 V/beta。
-8. 修改 `numerical_convergence.wake.representative_states`，覆盖线性区、巡航/Trim、中迎角、较大迎角和必要的 beta；不要按 alpha 人工写 Wake 分区。
-9. 按新模型的几何名称调整 COARSE/MEDIUM/FINE 三套剖分。主翼、尾翼、机身和聚类参数应分别设计，不要简单统一乘倍数。
-10. 运行 `check`，再运行一点式 `smoke`。
-11. 运行完整 Numerical Convergence，通过门禁后再扩大正式 GRID/TRIM。
+主配置是 `config/aircraft.yaml`，导数清单是 `config/required_derivatives.yaml`。
 
-## 3. 必须修改或复核的配置
-
-| 配置 | 作用 |
+| 配置 | 含义 |
 |---|---|
-| `aircraft.model` | 当前 `.vsp3` 文件 |
-| `geometry_sets` | thin/thick 几何选择及 set index |
-| `controls` | 控制组名称、中立位和限位 |
-| `reference` | 参考面积、展长、弦长和 CG 来源 |
-| `trim.mass_kg`、`trim.alpha/elevator` | 重量和配平搜索范围 |
-| `trim.max_iterations` | 统一为 15；只是停止上限，不是成功判据 |
-| `operating_conditions` | 人工非均匀或均匀 GRID 的 V/alpha/beta |
-| `trim.operating_conditions` | 正式 TRIM 的 V/beta |
-| `derivatives.perturbations` | 初始导数扰动；rudder 可由专项诊断更新 |
-| `numerical_convergence.wake.representative_states` | Wake 收敛代表状态 |
-| `numerical_convergence.*.tolerance` | 固定的绝对+相对容差，不得为求 PASS 临时放宽 |
-| `numerical_convergence.tessellation.presets` | COARSE/MEDIUM/FINE 定制剖分 |
+| `aircraft.model` | 新 `.vsp3` 模型路径 |
+| `geometry_sets` | 薄面/厚体集合和几何选择器 |
+| `reference` | 参考面积、展长、弦长和重心是从模型还是配置读取 |
+| `controls` | 副翼/升降舵/方向舵组名、中立位和限位 |
+| `trim.mass_kg` | 飞机质量，决定配平升力 |
+| `operating_conditions` | GRID 的速度、迎角和侧滑角范围 |
+| `trim.operating_conditions` | TRIM 速度和侧滑角 |
+| `numerical_convergence.wake.representative_states` | Wake 验证的少量代表工况 |
+| `numerical_convergence.wake.candidates` | 正式 Wake 候选，默认 3/5/8/12 |
+| `numerical_convergence.wake.verification_only_level` | 仅用于验证 12 的 Wake=16 |
+| `derivatives.fd_step_candidates_deg` | alpha/beta/各舵面分别使用的 FD 步长候选 |
+| `derivatives.trim_jacobian_steps_deg` | TRIM Jacobian 的 alpha/elevator 中心差分步长 |
+| `derivatives.convergence` | FD 步长稳定性的绝对+相对容差 |
+| `required_derivatives.yaml` | 23 项 required 导数和 METHOD_LIMITATION 接受策略 |
 
-Wake 候选 `[3, 5, 8, 12]` 只在配置中定义。`solver.wake_iterations` 和 `solver.tessellation_overrides` 仅作为 check/smoke 或显式 `--force` 时的回退，不是正式 Production 设置。
+不要为了获得 PASS 放宽容差、删除 required 导数或改动符号。
 
-## 4. 推荐运行顺序
+## 4. 运行 Numerical Validation
 
-```powershell
-# 只检查环境、模型、几何和舵面映射
-.\.venv\Scripts\python.exe run.py check
-
-# 一个真实 OpenVSP/VSPAERO 工况，验证调用链和 COARSE 预设
-.\.venv\Scripts\python.exe run.py smoke
-
-# 小规模代表状态：Wake -> 边界 -> tessellation -> 两项专项诊断
-.\.venv\Scripts\python.exe run.py numerical-convergence
-
-# 门禁允许后运行正式数据
-.\.venv\Scripts\python.exe run.py grid
-.\.venv\Scripts\python.exe run.py trim
-.\.venv\Scripts\python.exe run.py all
-
-# 固定交付飞机的回归
-.\.venv\Scripts\python.exe run.py regression
-
-# 纯逻辑与交付结果测试
-.\.venv\Scripts\python.exe -m unittest tests.test_core -v
+```bat
+run_aero.bat numerical-convergence
 ```
 
-Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞行包线重复计算 3/5/8/12 或 COARSE/MEDIUM/FINE。运行中断后直接重发同一命令；模型、状态、舵偏、Wake、剖分、分析类型和相关配置完全一致的成功 case 会从 `results/numerical_convergence/raw/` 复用，失败或不完整 case 会重算。
+此命令会：
 
-## 5. 如何查看 Wake Map
+- 在代表工况比较 Wake 3/5/8/12；
+- 以六个基础系数和 required Wake FD derivatives 作为正式 Wake Gate；
+- 当 8→12 未 PASS 时，仅对该代表工况运行 Wake=16；
+- 在一个代表点为 alpha、beta、elevator、aileron、rudder 导数独立选择 FD step；
+- 生成 required derivatives manifest 和 Production Gate。
 
-打开：
+如果 12→16 PASS，状态可判为已验证，但 Production Wake 仍是 12。如果 12→16 仍未 PASS，保持 WARN；Wake=16 不加入 GRID 或 Schedule。Native derivatives 只记录 diagnostic，不参与 Wake Gate。
 
-- `results/numerical_convergence/wake_convergence_map.csv`：每个实测代表工况的最小合格 Wake、状态与推荐理由。
-- `results/numerical_convergence/wake_convergence_map.png`：代表状态的 Wake 分布概览。
-- `results/numerical_convergence/numerical_convergence_report.md`：相邻级别、边界连续性和自动升级说明。
+## 5. 运行正式数据库
 
-每个 Wake 先检查六个基础系数，再用真实中心差分检查 `CL_alpha`、`Cm_alpha`、`Cm_delta_e`、`CY_beta`、`Cl_beta`、`Cl_delta_a`、`Cn_beta`、`Cn_delta_r`。两级都 PASS 才能判定 Wake 气动收敛。VSPAERO native derivatives 仍保存和比较，但只显示为诊断；例如 FD PASS、native FAIL 时，Wake 可 PASS，而 native diagnostic 为 WARN。
+Numerical Validation 完成后：
 
-未实测状态采用归一化 V/alpha/beta 距离的保守离散邻域查询，边界附近取较高 Wake，并对未实测点增加安全等级。Wake 永不做普通线性插值，也没有 `alpha < 某值` 的硬编码规则。
-
-## 6. 如何查看 tessellation 收敛
-
-打开：
-
-- `results/numerical_convergence/tessellation_convergence.csv`
-- `results/numerical_convergence/tessellation_convergence.png`
-
-程序先完成 Wake 研究，再在选定 Wake 下比较 COARSE/MEDIUM/FINE。只有 MEDIUM→FINE 稳定时才可推荐 MEDIUM；若该转换仍不合格，FINE 只代表最高已算等级，不会被冒充为已收敛。
-
-## 7. Production Numerical Settings
-
-最终统一文件是：
-
-`results/numerical_convergence/production_numerical_settings.yaml`
-
-其中包含：
-
-- 一套 Production tessellation preset 及完整 overrides；
-- 从实测状态生成的 Wake Schedule；
-- 未实测点的离散查询、boundary buffer 和 safety margin；
-- derivative bundle 最大 Wake 规则；
-- Pre-Trim→Production Trim 规则与跨区升级上限；
-- 推荐的控制扰动步长；
-- CY_delta_r、Cm_q 与 Production Gate 状态。
-
-不要手写或线性插值 Wake。正式计算会自动读取此文件。
-文件还绑定模型哈希、OpenVSP 版本和收敛配置哈希；更换飞机或修改收敛设置后，旧文件会被门禁拒绝，必须重跑。
-
-## 8. 正式 GRID/TRIM 的数值规则
-
-- 每个 GRID 状态单独查询 Wake Schedule，使用统一 Production tessellation。
-- TRIM 先用安全低成本 Wake 做 Pre-Trim，只定位近似解。
-- Pre-Trim 和正式 TRIM 都最多计算 15 次。只有某次同时满足 `|Force residual|<=1 N` 与 `|Moment residual|<=1 N·m` 才立即 PASS；第 15 次仍未同时满足就是 FAIL。
-- Newton Jacobian 来自 alpha/elevator 真实正负扰动的中心差分。完整 Newton step 先试 `lambda=1`；只有真实综合残差未改善才依次尝试 `0.5/0.25/0.125`。全部不改善会保留当前状态并明确 FAIL。
-- 根据 Pre-Trim 状态和所有 ± 导数扰动状态查询 Wake；整个 derivative bundle 取其中最大 Wake。
-- Production Trim 在这个固定 Wake 下完整重算。若最终 Trim 进入更高 Wake 区域，整轮升级后重算，不在单轮 Trim 中频繁切换。
-- base、alpha±、beta±、aileron±、elevator±、rudder± 以及 rate 检查全部使用同一 bundle Wake。
-
-人工非均匀 GRID 仍由 `values` 或 `start/step/end` 定义。`grid.mode: adaptive` 目前只开放门禁和 midpoint interpolation error 接口；只有 Numerical Convergence 为 PASS 才能启用，自动加密尚未展开。
-
-## 9. PASS / WARN / FAIL
-
-- `PASS`：正式 Gate 的基础系数、关键 FD derivatives、Wake 边界和 tessellation 均满足 PASS 容差，可正式运行。
-- `WARN`：正式结果可用，但存在必须审阅的诊断或 API 限制。native derivative 单独不稳定会记为诊断 WARN，不再把 FD 已收敛的 Wake 判成 FAIL。OpenVSP 3.51.3 无法提供真正的 `+q/-q` 稳态中心差分，因此 Cm_q 方法至少保持 WARN。
-- `FAIL`：默认禁止正式 GRID/TRIM；最高 Wake 或 FINE 不会被自动视为正确。单个代表 case FAIL 不会中断全部研究；独立 case 继续，真正依赖它的步骤标为 `SKIPPED_DEPENDENCY`。
-
-确需在 FAIL 下试跑，可显式使用：
-
-```powershell
-.\.venv\Scripts\python.exe run.py grid --force
+```bat
+run_aero.bat all
 ```
 
-这会在 `results/numerical_convergence/production_force_override.json` 留下时间、命令和原因。`--force` 不会把 FAIL 改成 PASS；Adaptive GRID 仍必须真实 PASS。
+也可分开运行：
 
-## 10. 结果位置
+```bat
+run_aero.bat grid
+run_aero.bat trim
+```
 
-| 文件 | 内容 |
+GRID 每点查询离散 Wake Schedule。TRIM 先用低成本 Wake 得到初值，再在固定 production bundle Wake 下重新配平和计算导数。每个 required alpha/beta/control 导数使用自己的 selected FD step。
+
+TRIM 保持以下硬性规则：
+
+- 最多 15 次迭代；
+- 仅当力残差不超过 ±1 N 且俯仰力矩残差不超过 ±1 N·m 才 PASS；
+- Jacobian 使用真实 alpha/elevator centered FD；
+- 回溯步长为 1 / 0.5 / 0.25 / 0.125；
+- native derivatives 不作 Jacobian。
+
+## 6. 如何理解状态
+
+| 状态 | 含义 |
 |---|---|
-| `results/numerical_convergence/numerical_convergence_report.md` | 人工审阅总报告 |
-| `results/numerical_convergence/numerical_convergence_report.json` | 完整机器可读证据 |
-| `results/numerical_convergence/wake_convergence_map.csv` | Wake 实测地图 |
-| `results/numerical_convergence/tessellation_convergence.csv` | 三档剖分比较 |
-| `results/numerical_convergence/derivative_diagnostics.csv` | CY_delta_r 与 Cm_q 诊断 |
-| `results/numerical_convergence/production_numerical_settings.yaml` | 正式计算唯一数值设置产物 |
-| `results/numerical_convergence/raw/<signature>/case_result.json` | 单个真实 case 的签名、成功缓存或完整失败原因；同目录保留 VSPAERO 日志 |
-| `results/latest/aero_database.json/.csv` | GRID/TRIM 总数据库 |
-| `results/latest/trim_derivatives.csv` | 导数及 0.5Δ/Δ/2Δ 证据 |
-| `results/validation/` | 分级验证与机身参与检查 |
-| `results/autotune/aircraft_aero.mat` | MATLAB/Simulink 最终文件；唯一顶层变量 `AERO` |
-| `results/regression/` | 固定飞机回归结果 |
+| `PASS` | 数值、方法和完整性满足正式规则 |
+| `WARN_NUMERICAL` | 导数有有限的步长敏感性，依 manifest 规则带警告接受 |
+| `METHOD_LIMITATION` | 工具/API 无法实现所要求的方法；例如 3.51.3 无真实负 steady-q，`Cm_q` 不能伪装为 centered FD |
+| `FAIL` | required 正式数据缺失、非有限、方法或数值检查不可接受 |
 
-MATLAB 读取：
+Manifest 在 `status_policy` 中显式规定各状态对 Gate 的处理。`METHOD_LIMITATION` 不会被偷偷跳过；报告会列出数量、原因和是否进入 production。
 
-```matlab
-load('results/autotune/aircraft_aero.mat', 'AERO');
-```
+## 7. 输出和缓存
 
-若命令返回 FAIL，先看 `numerical_convergence_report.md/.json` 的逐状态汇总，再按其中 signature 到 `raw/<signature>/case_result.json` 和同目录 `vspaero_console.txt` 查看原因。若 `.mat` 未生成，再检查 Production Gate、TRIM、required derivatives 和 validation 是否存在 FAIL。
+| 路径 | 内容 |
+|---|---|
+| `results/numerical_convergence/numerical_convergence_report.md` | 人可读 Numerical Convergence / Validation Report |
+| `results/numerical_convergence/numerical_convergence_report.json` | 完整机读报告 |
+| `results/numerical_convergence/production_numerical_settings.yaml` | 正式 Wake Schedule、selected FD steps、manifest 和 Gate |
+| `results/numerical_convergence/wake_convergence_map.csv` | 代表点、Production Wake 和 Wake=16 验证状态 |
+| `results/numerical_convergence/fd_step_selection.csv` | 逐导数 FD step 选择 |
+| `results/numerical_convergence/required_derivatives_manifest.csv` | required 导数逐项状态 |
+| `results/latest/aero_database.json/.csv` | 最新气动数据库 |
+| `results/latest/trim_derivatives.csv` | 正式 FD/native diagnostic 明确分列的导数表 |
+| `results/autotune/aircraft_aero.mat` | MATLAB/Simulink 数据；正式 FD 与 native diagnostic 分区 |
+| `results/validation/` | 验证汇总和机身参与检查 |
+
+`results/numerical_convergence/raw/<signature>/` 保存逐 VSPAERO case 缓存。Signature 区分模型哈希、状态、舵偏、Wake（包括 16）、当前模型网格身份和分析类型。重跑相同命令会复用完整成功的真实 case，不在启动时整体清空 raw。
+
+如果 Gate FAIL，先查看报告中的 Wake、FD step 和 manifest 汇总，再按 signature 查看对应 `case_result.json` 和 `vspaero_console.txt`。

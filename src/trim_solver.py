@@ -27,10 +27,11 @@ def _value(payload: dict[str, Any], category: str, name: str) -> float:
 
 
 def _native_derivative(payload: dict[str, Any], name: str) -> float | None:
-    stability = payload.get("stability_derivatives", {})
+    diagnostics = payload.get("native_derivative_diagnostics", {})
+    stability = diagnostics.get("stability", {})
     if name in stability:
         return float(stability[name]["standard_value"])
-    elevator = payload.get("control_derivatives", {}).get("elevator", {}).get("derivatives", {})
+    elevator = diagnostics.get("controls", {}).get("elevator", {}).get("derivatives", {})
     if name in elevator:
         return float(elevator[name]["standard_value"])
     return None
@@ -55,8 +56,9 @@ def solve_longitudinal_trim(
     force_tolerance = float(trim_config["force_tolerance_n"])
     moment_tolerance = float(trim_config["moment_tolerance_nm"])
     max_step_deg = float(trim_config.get("max_step_deg", 5.0))
-    alpha_step = float(derivative_config["perturbations"]["alpha_deg"])
-    elevator_step = float(derivative_config["perturbations"]["elevator_deg"])
+    jacobian_steps = derivative_config["trim_jacobian_steps_deg"]
+    alpha_step = float(jacobian_steps["alpha"])
+    elevator_step = float(jacobian_steps["elevator"])
     line_search_lambdas = (1.0, 0.5, 0.25, 0.125)
     weight = float(trim_config["mass_kg"]) * float(trim_config["gravity_m_s2"])
     q_s = dynamic_pressure_pa * float(reference["sref_m2"])
@@ -93,7 +95,7 @@ def solve_longitudinal_trim(
             "force_residual_n": force_residual,
             "moment_residual_nm": moment_residual,
             "residual_norm": residual_norm,
-            "native_derivatives": {
+            "native_derivative_diagnostics": {
                 name: _native_derivative(payload, name)
                 for name in ("CL_alpha", "Cm_alpha", "CL_delta_e", "Cm_delta_e")
             },

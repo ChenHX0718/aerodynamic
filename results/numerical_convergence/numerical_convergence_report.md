@@ -1,42 +1,81 @@
-# Numerical Convergence Report
+# Numerical Convergence / Validation Report
 
-Generated: 2026-09-03T00:36:07+08:00
+Generated: 2026-09-03T16:47:10+08:00
 
-Production gate: **FAIL**
+Production gate: **FAIL (incomplete targeted scope)**
 
-## Wake convergence map
+Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.
 
-| State | V (m/s) | alpha (deg) | beta (deg) | Required Wake | Base | FD derivatives | Native diagnostic | Status | Why |
-|---|---:|---:|---:|---:|---|---|---|---|---|
-| linear_low_alpha | 8 | 0 | 0 | 3 | PASS | PASS | WARN | PASS | all subsequent higher-level transitions satisfy PASS tolerance |
-| cruise_trim | 8 | 4.07757 | 0 | 12 | PASS | WARN | WARN | WARN | highest level is selected conservatively but remains unverified |
-| medium_alpha | 9 | 6 | 0 | 12 | PASS | WARN | WARN | WARN | highest level is selected conservatively but remains unverified |
-| high_alpha_beta | 9 | 10 | 2 | 12 | PASS | WARN | WARN | WARN | highest level is selected conservatively but remains unverified |
+The solver used the mesh currently saved in the OpenVSP model. No script-side mesh override or mesh-convergence gate was applied.
 
-The map is generated from solver comparisons at the representative states. Untested states use a conservative discrete nearest-region lookup, a boundary buffer, and a configured one-level safety margin; no alpha threshold or linear Wake interpolation is used.
+## Verification scope
 
-## Boundary continuity
+This was a real, targeted affected-path verification at medium_alpha (V=9 m/s, alpha=6 deg, beta=0 deg), not the full representative-state convergence matrix or the full production database.
 
-Status: **PASS**. Checks performed: 3. Any discontinuous low-Wake endpoint is automatically upgraded in the final map.
+Real cached cases: **43**; failed cases: **0**; summed solver time: **6203.1 s**. The separate real smoke test is **PASS** (324.0 s).
 
-## Tessellation
+Because the configured representative-state set and boundary checks were intentionally not run, no production Wake schedule was generated and the production gate remains FAIL. This is an incompleteness result, not a fabricated numerical failure.
 
-Recommended preset: **FINE** (FAIL). one or more tessellation cases failed, were dependency-skipped, or FINE remains unverified
+## Wake verification
 
-## CY_delta_r diagnostic
+Production candidates are 3, 5, 8, and 12. Wake 16 is verification-only and the production implementation invokes it only when the 8->12 transition is not PASS.
 
-Status: **WARN**; classification: **LARGE_DEFLECTION_NONLINEAR**; recommended delta_r: 1.0 deg. the local small-step range is stable but the 2-to-4 degree transition is not The extra rudder points are diagnostic-only and are not expanded over the GRID.
+For this targeted test, the 12->16 branch was exercised directly without evaluating Wake 8. The six base coefficients are all PASS; the aggregate status of the 15 required production centered-FD derivatives is WARN (13 PASS, 2 WARN). Production Wake remains 12.
 
-## Cm_q diagnostic
+| Quantity | Wake 12 | Wake 16 | Status |
+|---|---:|---:|---|
+| CL | 0.606044868 | 0.605791904 | PASS |
+| CD | 0.0425207211 | 0.0424617001 | PASS |
+| CY | 0.00395872447 | 0.0046137886 | PASS |
+| Cl | -0.000751092592 | -0.000809039854 | PASS |
+| Cm | -0.154363768 | -0.154099578 | PASS |
+| Cn | -0.000441416808 | -0.000550066401 | PASS |
+| CL_alpha | 4.69883435 | 4.75097062 | PASS |
+| CD_alpha | 0.430432713 | 0.43959433 | PASS |
+| Cm_alpha | -1.14961664 | -1.17565284 | PASS |
+| CL_delta_e | 0.479440744 | 0.485587144 | PASS |
+| CD_delta_e | 0.0430071107 | 0.0452742097 | PASS |
+| Cm_delta_e | -1.34823952 | -1.35465134 | PASS |
+| CY_beta | -0.346936734 | -0.374627 | WARN |
+| Cl_beta | -0.120375517 | -0.117030723 | PASS |
+| Cn_beta | 0.0412013795 | 0.0460783288 | PASS |
+| CY_delta_a | -0.0129013913 | 0.00371521207 | WARN |
+| Cl_delta_a | -0.288788662 | -0.293383487 | PASS |
+| Cn_delta_a | 0.00941427177 | 0.00816519025 | PASS |
+| CY_delta_r | -0.158260001 | -0.150662177 | PASS |
+| Cl_delta_r | 0.00372398339 | 0.011948838 | PASS |
+| Cn_delta_r | 0.0687303566 | 0.0689082037 | PASS |
 
-Status: **WARN**; numerical sensitivity: **FAIL**. OpenVSP 3.51.3 does not expose a negative steady q input; Cm_q remains a native positive-rate derivative and cannot be represented as a fabricated centered difference.
+## FD step selection
 
-## Production numerical settings
+| Derivative | Selected step (deg) | Status | Value | Method |
+|---|---:|---|---:|---|
+| CL_alpha | 0.5 | PASS | 4.69883435 | centered_finite_difference |
+| CD_alpha | 0.5 | PASS | 0.430432713 | centered_finite_difference |
+| Cm_alpha | 0.5 | PASS | -1.14961664 | centered_finite_difference |
+| CY_beta | 0.5 | PASS | -0.346936734 | centered_finite_difference |
+| Cl_beta | 0.5 | PASS | -0.120375517 | centered_finite_difference |
+| Cn_beta | 0.5 | PASS | 0.0412013795 | centered_finite_difference |
+| CY_delta_a | 1 | PASS | -0.0129013913 | centered_finite_difference |
+| Cl_delta_a | 1 | PASS | -0.288788662 | centered_finite_difference |
+| Cn_delta_a | 1 | PASS | 0.00941427177 | centered_finite_difference |
+| CL_delta_e | 1 | PASS | 0.479440744 | centered_finite_difference |
+| CD_delta_e | 1 | PASS | 0.0430071107 | centered_finite_difference |
+| Cm_delta_e | 1 | PASS | -1.34823952 | centered_finite_difference |
+| CY_delta_r | 1 | PASS | -0.158260001 | centered_finite_difference |
+| Cl_delta_r | 1 | PASS | 0.00372398339 | centered_finite_difference |
+| Cn_delta_r | 1 | PASS | 0.0687303566 | centered_finite_difference |
 
-Uniform tessellation: **FINE**. Wake is selected per flight state, then promoted to the maximum required by the complete derivative bundle. TRIM uses a low-cost pre-trim followed by a production trim and only upgrades Wake between complete trim solves.
+Each derivative independently selects a centered-FD step. Production data, native diagnostics, and the required-derivative manifest are separate fields and files.
 
-Final convergence status: **FAIL**; production gate: **FAIL**.
+## Required derivatives manifest
+
+Required: **23**; PASS: **15**; WARN_NUMERICAL: **0**; METHOD_LIMITATION: **8**; FAIL: **0**.
+
+PASS is accepted, WARN_NUMERICAL and METHOD_LIMITATION are accepted with warning, and FAIL is rejected. Native VSPAERO derivatives are diagnostic-only: they do not enter the Wake gate, production derivative set, TRIM Jacobian, or overwrite centered-FD values.
+
+Cm_q is METHOD_LIMITATION because OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady-q input; its native value is retained only as a diagnostic reference.
 
 ## Cache / resume
 
-Enabled: **True**; hits: **272**; misses: **0**; failed real cases: **0**; wall time: **2.0 s**.
+A resume probe reused **22** cases with **0** misses. Stored case counts by Wake: {'12': 32, '16': 11}.

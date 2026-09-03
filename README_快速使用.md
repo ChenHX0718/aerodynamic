@@ -1,6 +1,6 @@
 # OpenVSP/VSPAERO 气动数据工具——快速使用
 
-本工具自动完成小规模数值收敛、按飞行状态选择 Wake、两阶段 TRIM、23 项稳定/控制导数、验证以及 MATLAB `.mat` 导出。正式大规模 GRID/TRIM 前必须先生成 Production Numerical Settings。
+本工具自动完成小规模数值收敛、按飞行状态选择 Wake、真实中心差分两阶段 TRIM、23 项稳定/控制导数、验证以及 MATLAB `.mat` 导出。正式大规模 GRID/TRIM 前必须先生成 Production Numerical Settings。
 
 ## 1. 首次安装
 
@@ -44,6 +44,7 @@ openvsp:
 | `controls` | 控制组名称、中立位和限位 |
 | `reference` | 参考面积、展长、弦长和 CG 来源 |
 | `trim.mass_kg`、`trim.alpha/elevator` | 重量和配平搜索范围 |
+| `trim.max_iterations` | 统一为 15；只是停止上限，不是成功判据 |
 | `operating_conditions` | 人工非均匀或均匀 GRID 的 V/alpha/beta |
 | `trim.operating_conditions` | 正式 TRIM 的 V/beta |
 | `derivatives.perturbations` | 初始导数扰动；rudder 可由专项诊断更新 |
@@ -77,7 +78,7 @@ Wake 候选 `[3, 5, 8, 12]` 只在配置中定义。`solver.wake_iterations` 和
 .\.venv\Scripts\python.exe -m unittest tests.test_core -v
 ```
 
-Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞行包线重复计算 3/5/8/12 或 COARSE/MEDIUM/FINE。
+Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞行包线重复计算 3/5/8/12 或 COARSE/MEDIUM/FINE。运行中断后直接重发同一命令；模型、状态、舵偏、Wake、剖分、分析类型和相关配置完全一致的成功 case 会从 `results/numerical_convergence/raw/` 复用，失败或不完整 case 会重算。
 
 ## 5. 如何查看 Wake Map
 
@@ -86,6 +87,8 @@ Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞�
 - `results/numerical_convergence/wake_convergence_map.csv`：每个实测代表工况的最小合格 Wake、状态与推荐理由。
 - `results/numerical_convergence/wake_convergence_map.png`：代表状态的 Wake 分布概览。
 - `results/numerical_convergence/numerical_convergence_report.md`：相邻级别、边界连续性和自动升级说明。
+
+每个 Wake 先检查六个基础系数，再用真实中心差分检查 `CL_alpha`、`Cm_alpha`、`Cm_delta_e`、`CY_beta`、`Cl_beta`、`Cl_delta_a`、`Cn_beta`、`Cn_delta_r`。两级都 PASS 才能判定 Wake 气动收敛。VSPAERO native derivatives 仍保存和比较，但只显示为诊断；例如 FD PASS、native FAIL 时，Wake 可 PASS，而 native diagnostic 为 WARN。
 
 未实测状态采用归一化 V/alpha/beta 距离的保守离散邻域查询，边界附近取较高 Wake，并对未实测点增加安全等级。Wake 永不做普通线性插值，也没有 `alpha < 某值` 的硬编码规则。
 
@@ -121,6 +124,8 @@ Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞�
 
 - 每个 GRID 状态单独查询 Wake Schedule，使用统一 Production tessellation。
 - TRIM 先用安全低成本 Wake 做 Pre-Trim，只定位近似解。
+- Pre-Trim 和正式 TRIM 都最多计算 15 次。只有某次同时满足 `|Force residual|<=1 N` 与 `|Moment residual|<=1 N·m` 才立即 PASS；第 15 次仍未同时满足就是 FAIL。
+- Newton Jacobian 来自 alpha/elevator 真实正负扰动的中心差分。完整 Newton step 先试 `lambda=1`；只有真实综合残差未改善才依次尝试 `0.5/0.25/0.125`。全部不改善会保留当前状态并明确 FAIL。
 - 根据 Pre-Trim 状态和所有 ± 导数扰动状态查询 Wake；整个 derivative bundle 取其中最大 Wake。
 - Production Trim 在这个固定 Wake 下完整重算。若最终 Trim 进入更高 Wake 区域，整轮升级后重算，不在单轮 Trim 中频繁切换。
 - base、alpha±、beta±、aileron±、elevator±、rudder± 以及 rate 检查全部使用同一 bundle Wake。
@@ -129,9 +134,9 @@ Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞�
 
 ## 9. PASS / WARN / FAIL
 
-- `PASS`：Wake、边界连续性和 tessellation 均满足 PASS 容差，可正式运行。
-- `WARN`：允许正式运行，但报告中存在必须审阅的数值或 API 限制。OpenVSP 3.51.3 无法提供真正的 `+q/-q` 稳态中心差分，因此 Cm_q 方法至少保持 WARN。
-- `FAIL`：默认禁止正式 GRID/TRIM；最高 Wake 或 FINE 不会被自动视为正确。
+- `PASS`：正式 Gate 的基础系数、关键 FD derivatives、Wake 边界和 tessellation 均满足 PASS 容差，可正式运行。
+- `WARN`：正式结果可用，但存在必须审阅的诊断或 API 限制。native derivative 单独不稳定会记为诊断 WARN，不再把 FD 已收敛的 Wake 判成 FAIL。OpenVSP 3.51.3 无法提供真正的 `+q/-q` 稳态中心差分，因此 Cm_q 方法至少保持 WARN。
+- `FAIL`：默认禁止正式 GRID/TRIM；最高 Wake 或 FINE 不会被自动视为正确。单个代表 case FAIL 不会中断全部研究；独立 case 继续，真正依赖它的步骤标为 `SKIPPED_DEPENDENCY`。
 
 确需在 FAIL 下试跑，可显式使用：
 
@@ -151,6 +156,7 @@ Numerical Convergence 只跑配置中的少量代表状态，不会对整个飞�
 | `results/numerical_convergence/tessellation_convergence.csv` | 三档剖分比较 |
 | `results/numerical_convergence/derivative_diagnostics.csv` | CY_delta_r 与 Cm_q 诊断 |
 | `results/numerical_convergence/production_numerical_settings.yaml` | 正式计算唯一数值设置产物 |
+| `results/numerical_convergence/raw/<signature>/case_result.json` | 单个真实 case 的签名、成功缓存或完整失败原因；同目录保留 VSPAERO 日志 |
 | `results/latest/aero_database.json/.csv` | GRID/TRIM 总数据库 |
 | `results/latest/trim_derivatives.csv` | 导数及 0.5Δ/Δ/2Δ 证据 |
 | `results/validation/` | 分级验证与机身参与检查 |
@@ -163,4 +169,4 @@ MATLAB 读取：
 load('results/autotune/aircraft_aero.mat', 'AERO');
 ```
 
-若 `.mat` 未生成，先检查 Production Gate、TRIM、required derivatives 和 validation 是否存在 FAIL。
+若命令返回 FAIL，先看 `numerical_convergence_report.md/.json` 的逐状态汇总，再按其中 signature 到 `raw/<signature>/case_result.json` 和同目录 `vspaero_console.txt` 查看原因。若 `.mat` 未生成，再检查 Production Gate、TRIM、required derivatives 和 validation 是否存在 FAIL。

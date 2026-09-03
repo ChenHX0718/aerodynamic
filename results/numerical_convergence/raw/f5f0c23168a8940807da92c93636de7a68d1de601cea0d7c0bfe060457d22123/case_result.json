@@ -1,0 +1,749 @@
+{
+  "schema_version": "1.0",
+  "signature": "f5f0c23168a8940807da92c93636de7a68d1de601cea0d7c0bfe060457d22123",
+  "status": "SUCCESS",
+  "request": {
+    "identity": {
+      "model_sha256": "5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b",
+      "openvsp_version": "OpenVSP 3.51.3",
+      "convergence_configuration_sha256": "e04e2dbee8203933aaf5ed8e72c646e69b190d49b1e38cf00fef676e36c46963"
+    },
+    "condition": {
+      "speed_mps": 9.0,
+      "alpha_deg": 10.0,
+      "beta_deg": 2.0,
+      "rho_kg_m3": 1.225,
+      "dynamic_viscosity_pa_s": 1.7894e-05,
+      "speed_of_sound_mps": 340.294,
+      "mach": 0.026447718737327135,
+      "reynolds_cref": 918031.1836369734,
+      "dynamic_pressure_pa": 49.612500000000004
+    },
+    "control_deflections_deg": {
+      "aileron": 0.0,
+      "elevator": 0.0,
+      "rudder": 0.0
+    },
+    "wake_iterations": 12,
+    "tessellation": [
+      {
+        "name": "Wing",
+        "type": "Wing",
+        "tess_u": 8,
+        "tess_w": 21,
+        "le_cluster": 0.18,
+        "te_cluster": 0.18
+      },
+      {
+        "name": "Tail",
+        "type": "Wing",
+        "tess_u": 6,
+        "tess_w": 17,
+        "le_cluster": 0.2,
+        "te_cluster": 0.16
+      },
+      {
+        "name": "TailV",
+        "type": "Wing",
+        "tess_u": 6,
+        "tess_w": 17,
+        "le_cluster": 0.2,
+        "te_cluster": 0.16
+      },
+      {
+        "name": "Fuselage",
+        "type": "Fuselage",
+        "tess_u": 13,
+        "tess_w": 17
+      }
+    ],
+    "analysis_type": "stability",
+    "perturbation": {
+      "purpose": "tessellation",
+      "state": "high_alpha_beta",
+      "preset": "COARSE"
+    },
+    "include_thick": true
+  },
+  "payload": {
+    "coefficients": {
+      "CX": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CFx",
+        "raw_value": -0.0917176,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.0917176,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      },
+      "CY": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CFy",
+        "raw_value": -0.0132368,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.0132368,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "CZ": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CFz",
+        "raw_value": 0.8860432,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.8860432,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      },
+      "CL": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CL",
+        "raw_value": 0.8885088,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.8885088,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "CD": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CD",
+        "raw_value": 0.0639589,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.0639589,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "Cl": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CMl",
+        "raw_value": -0.0051761,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.0051761,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "Cm": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CMm",
+        "raw_value": -0.2228026,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.2228026,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "Cn": {
+        "raw_field": "VSPAERO_Stab.Base_Aero_CMn",
+        "raw_value": 0.0022828,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.0022828,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      }
+    },
+    "stability_derivatives": {
+      "CD_alpha": {
+        "raw_field": "VSPAERO_Stab.CD_Alpha",
+        "raw_value": 2.2262693,
+        "raw_unit": "1/rad",
+        "standard_value": 2.2262693,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CD_beta": {
+        "raw_field": "VSPAERO_Stab.CD_Beta",
+        "raw_value": 0.2523647,
+        "raw_unit": "1/rad",
+        "standard_value": 0.2523647,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CD_p": {
+        "raw_field": "VSPAERO_Stab.CD_p",
+        "raw_value": -0.0514045,
+        "raw_unit": "1/p_hat",
+        "standard_value": -0.0514045,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CD_q": {
+        "raw_field": "VSPAERO_Stab.CD_q",
+        "raw_value": -1.1981019,
+        "raw_unit": "1/q_hat",
+        "standard_value": -1.1981019,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CD_r": {
+        "raw_field": "VSPAERO_Stab.CD_r",
+        "raw_value": -0.0175285,
+        "raw_unit": "1/r_hat",
+        "standard_value": -0.0175285,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CY_alpha": {
+        "raw_field": "VSPAERO_Stab.CFy_Alpha",
+        "raw_value": -0.4427902,
+        "raw_unit": "1/rad",
+        "standard_value": -0.4427902,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CY_beta": {
+        "raw_field": "VSPAERO_Stab.CFy_Beta",
+        "raw_value": 7.4900963,
+        "raw_unit": "1/rad",
+        "standard_value": 7.4900963,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CY_p": {
+        "raw_field": "VSPAERO_Stab.CFy_p",
+        "raw_value": -0.7958559,
+        "raw_unit": "1/p_hat",
+        "standard_value": -0.7958559,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CY_q": {
+        "raw_field": "VSPAERO_Stab.CFy_q",
+        "raw_value": 1.3625829,
+        "raw_unit": "1/q_hat",
+        "standard_value": 1.3625829,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CY_r": {
+        "raw_field": "VSPAERO_Stab.CFy_r",
+        "raw_value": 0.3324502,
+        "raw_unit": "1/r_hat",
+        "standard_value": 0.3324502,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CL_alpha": {
+        "raw_field": "VSPAERO_Stab.CL_Alpha",
+        "raw_value": 11.5563052,
+        "raw_unit": "1/rad",
+        "standard_value": 11.5563052,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CL_beta": {
+        "raw_field": "VSPAERO_Stab.CL_Beta",
+        "raw_value": -4.2615518,
+        "raw_unit": "1/rad",
+        "standard_value": -4.2615518,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CL_p": {
+        "raw_field": "VSPAERO_Stab.CL_p",
+        "raw_value": -0.1899165,
+        "raw_unit": "1/p_hat",
+        "standard_value": -0.1899165,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CL_q": {
+        "raw_field": "VSPAERO_Stab.CL_q",
+        "raw_value": 9.0320779,
+        "raw_unit": "1/q_hat",
+        "standard_value": 9.0320779,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "CL_r": {
+        "raw_field": "VSPAERO_Stab.CL_r",
+        "raw_value": -0.0327563,
+        "raw_unit": "1/r_hat",
+        "standard_value": -0.0327563,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cl_alpha": {
+        "raw_field": "VSPAERO_Stab.CMl_Alpha",
+        "raw_value": -3.8073224,
+        "raw_unit": "1/rad",
+        "standard_value": -3.8073224,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cl_beta": {
+        "raw_field": "VSPAERO_Stab.CMl_Beta",
+        "raw_value": 0.4479233,
+        "raw_unit": "1/rad",
+        "standard_value": 0.4479233,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cl_p": {
+        "raw_field": "VSPAERO_Stab.CMl_p",
+        "raw_value": -0.2788707,
+        "raw_unit": "1/p_hat",
+        "standard_value": -0.2788707,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cl_q": {
+        "raw_field": "VSPAERO_Stab.CMl_q",
+        "raw_value": -0.8244136,
+        "raw_unit": "1/q_hat",
+        "standard_value": -0.8244136,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cl_r": {
+        "raw_field": "VSPAERO_Stab.CMl_r",
+        "raw_value": 0.1374076,
+        "raw_unit": "1/r_hat",
+        "standard_value": 0.1374076,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cm_alpha": {
+        "raw_field": "VSPAERO_Stab.CMm_Alpha",
+        "raw_value": -7.126489,
+        "raw_unit": "1/rad",
+        "standard_value": -7.126489,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cm_beta": {
+        "raw_field": "VSPAERO_Stab.CMm_Beta",
+        "raw_value": 2.787669,
+        "raw_unit": "1/rad",
+        "standard_value": 2.787669,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cm_p": {
+        "raw_field": "VSPAERO_Stab.CMm_p",
+        "raw_value": 0.0717415,
+        "raw_unit": "1/p_hat",
+        "standard_value": 0.0717415,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cm_q": {
+        "raw_field": "VSPAERO_Stab.CMm_q",
+        "raw_value": -7.976293,
+        "raw_unit": "1/q_hat",
+        "standard_value": -7.976293,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cm_r": {
+        "raw_field": "VSPAERO_Stab.CMm_r",
+        "raw_value": 0.5590659,
+        "raw_unit": "1/r_hat",
+        "standard_value": 0.5590659,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cn_alpha": {
+        "raw_field": "VSPAERO_Stab.CMn_Alpha",
+        "raw_value": -3.2084364,
+        "raw_unit": "1/rad",
+        "standard_value": -3.2084364,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cn_beta": {
+        "raw_field": "VSPAERO_Stab.CMn_Beta",
+        "raw_value": -6.5634546,
+        "raw_unit": "1/rad",
+        "standard_value": -6.5634546,
+        "standard_unit": "1/rad",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cn_p": {
+        "raw_field": "VSPAERO_Stab.CMn_p",
+        "raw_value": 0.0882852,
+        "raw_unit": "1/p_hat",
+        "standard_value": 0.0882852,
+        "standard_unit": "1/p_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cn_q": {
+        "raw_field": "VSPAERO_Stab.CMn_q",
+        "raw_value": -0.8069756,
+        "raw_unit": "1/q_hat",
+        "standard_value": -0.8069756,
+        "standard_unit": "1/q_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      },
+      "Cn_r": {
+        "raw_field": "VSPAERO_Stab.CMn_r",
+        "raw_value": -0.0212638,
+        "raw_unit": "1/r_hat",
+        "standard_value": -0.0212638,
+        "standard_unit": "1/r_hat",
+        "conversion": "VSPAERO standard aerodynamic coefficient and documented derivative denominator"
+      }
+    },
+    "control_derivatives": {
+      "aileron": {
+        "group_name": "Aileron",
+        "derivatives": {
+          "CD_delta_a": {
+            "raw_field": "VSPAERO_Stab.CD_Aileron",
+            "raw_value": 0.2786898,
+            "raw_unit": "1/rad",
+            "standard_value": 0.2786898,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CY_delta_a": {
+            "raw_field": "VSPAERO_Stab.CFy_Aileron",
+            "raw_value": -1.2960651,
+            "raw_unit": "1/rad",
+            "standard_value": -1.2960651,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CL_delta_a": {
+            "raw_field": "VSPAERO_Stab.CL_Aileron",
+            "raw_value": 0.2650795,
+            "raw_unit": "1/rad",
+            "standard_value": 0.2650795,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cl_delta_a": {
+            "raw_field": "VSPAERO_Stab.CMl_Aileron",
+            "raw_value": -0.3808862,
+            "raw_unit": "1/rad",
+            "standard_value": -0.3808862,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cm_delta_a": {
+            "raw_field": "VSPAERO_Stab.CMm_Aileron",
+            "raw_value": 0.2569918,
+            "raw_unit": "1/rad",
+            "standard_value": 0.2569918,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cn_delta_a": {
+            "raw_field": "VSPAERO_Stab.CMn_Aileron",
+            "raw_value": 0.1210122,
+            "raw_unit": "1/rad",
+            "standard_value": 0.1210122,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          }
+        }
+      },
+      "elevator": {
+        "group_name": "Elevator",
+        "derivatives": {
+          "CD_delta_e": {
+            "raw_field": "VSPAERO_Stab.CD_Elevator",
+            "raw_value": 0.2050517,
+            "raw_unit": "1/rad",
+            "standard_value": 0.2050517,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CY_delta_e": {
+            "raw_field": "VSPAERO_Stab.CFy_Elevator",
+            "raw_value": -0.1440587,
+            "raw_unit": "1/rad",
+            "standard_value": -0.1440587,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CL_delta_e": {
+            "raw_field": "VSPAERO_Stab.CL_Elevator",
+            "raw_value": 0.8792168,
+            "raw_unit": "1/rad",
+            "standard_value": 0.8792168,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cl_delta_e": {
+            "raw_field": "VSPAERO_Stab.CMl_Elevator",
+            "raw_value": 0.1013125,
+            "raw_unit": "1/rad",
+            "standard_value": 0.1013125,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cm_delta_e": {
+            "raw_field": "VSPAERO_Stab.CMm_Elevator",
+            "raw_value": -3.0328266,
+            "raw_unit": "1/rad",
+            "standard_value": -3.0328266,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cn_delta_e": {
+            "raw_field": "VSPAERO_Stab.CMn_Elevator",
+            "raw_value": -0.3671931,
+            "raw_unit": "1/rad",
+            "standard_value": -0.3671931,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          }
+        }
+      },
+      "rudder": {
+        "group_name": "Rudder",
+        "derivatives": {
+          "CD_delta_r": {
+            "raw_field": "VSPAERO_Stab.CD_Rudder",
+            "raw_value": -0.1178443,
+            "raw_unit": "1/rad",
+            "standard_value": -0.1178443,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CY_delta_r": {
+            "raw_field": "VSPAERO_Stab.CFy_Rudder",
+            "raw_value": -0.4205757,
+            "raw_unit": "1/rad",
+            "standard_value": -0.4205757,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "CL_delta_r": {
+            "raw_field": "VSPAERO_Stab.CL_Rudder",
+            "raw_value": -0.7281242,
+            "raw_unit": "1/rad",
+            "standard_value": -0.7281242,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cl_delta_r": {
+            "raw_field": "VSPAERO_Stab.CMl_Rudder",
+            "raw_value": 0.1002956,
+            "raw_unit": "1/rad",
+            "standard_value": 0.1002956,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cm_delta_r": {
+            "raw_field": "VSPAERO_Stab.CMm_Rudder",
+            "raw_value": -1.6640052,
+            "raw_unit": "1/rad",
+            "standard_value": -1.6640052,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          },
+          "Cn_delta_r": {
+            "raw_field": "VSPAERO_Stab.CMn_Rudder",
+            "raw_value": 0.2434828,
+            "raw_unit": "1/rad",
+            "standard_value": 0.2434828,
+            "standard_unit": "1/rad",
+            "conversion": "positive group DeflectionAngle, per radian"
+          }
+        }
+      }
+    },
+    "native_rate_cases": {
+      "p": {
+        "CX": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CFx",
+          "raw_value": -0.0919928,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0919928,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CY": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CFy",
+          "raw_value": -0.0181004,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0181004,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CZ": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CFz",
+          "raw_value": 0.8848162,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.8848162,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CL": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CL",
+          "raw_value": 0.8873482,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.8873482,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CD": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CD",
+          "raw_value": 0.0636447,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0636447,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cl": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CMl",
+          "raw_value": -0.0068803,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0068803,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cm": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CMm",
+          "raw_value": -0.2223642,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.2223642,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cn": {
+          "raw_field": "VSPAERO_Stab.Roll__Rate_CMn",
+          "raw_value": 0.0028223,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0028223,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        }
+      },
+      "q": {
+        "CX": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CFx",
+          "raw_value": -0.0939543,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0939543,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CY": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CFy",
+          "raw_value": -0.0121089,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0121089,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CZ": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CFz",
+          "raw_value": 0.8932407,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.8932407,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CL": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CL",
+          "raw_value": 0.8959854,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.8959854,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CD": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CD",
+          "raw_value": 0.0629671,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0629671,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cl": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CMl",
+          "raw_value": -0.0058585,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0058585,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cm": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CMm",
+          "raw_value": -0.2294052,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.2294052,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cn": {
+          "raw_field": "VSPAERO_Stab.Pitch_Rate_CMn",
+          "raw_value": 0.0016148,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0016148,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        }
+      },
+      "r": {
+        "CX": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CFx",
+          "raw_value": -0.0917185,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0917185,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CY": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CFy",
+          "raw_value": -0.0112052,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0112052,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CZ": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CFz",
+          "raw_value": 0.8858398,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.8858398,
+          "standard_unit": "dimensionless",
+          "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+        },
+        "CL": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CL",
+          "raw_value": 0.8883086,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.8883086,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "CD": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CD",
+          "raw_value": 0.0638518,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0638518,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cl": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CMl",
+          "raw_value": -0.0043364,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.0043364,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cm": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CMm",
+          "raw_value": -0.2193861,
+          "raw_unit": "dimensionless",
+          "standard_value": -0.2193861,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        },
+        "Cn": {
+          "raw_field": "VSPAERO_Stab.Yaw___Rate_CMn",
+          "raw_value": 0.0021528,
+          "raw_unit": "dimensionless",
+          "standard_value": 0.0021528,
+          "standard_unit": "dimensionless",
+          "conversion": "none"
+        }
+      }
+    },
+    "warnings": [],
+    "solver_run": {
+      "analysis": "stability",
+      "geometry_result_id": "CBZHUFK",
+      "sweep_result_id": "OHARCWZ",
+      "data_result_id": "IPJPVLM",
+      "duration_sec": 234.34805469983257,
+      "raw_directory": "E:\\aerodynamic\\results\\numerical_convergence\\raw\\f5f0c23168a8940807da92c93636de7a68d1de601cea0d7c0bfe060457d22123"
+    }
+  },
+  "solver_duration_sec": 234.34805469983257
+}

@@ -1,0 +1,431 @@
+schema_version: '2.0'
+generated_at_local: '2026-09-03T00:36:07+08:00'
+identity:
+  model_sha256: 5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b
+  openvsp_version: OpenVSP 3.51.3
+  convergence_configuration_sha256: e04e2dbee8203933aaf5ed8e72c646e69b190d49b1e38cf00fef676e36c46963
+convergence_status: FAIL
+production_tessellation:
+  preset: FINE
+  overrides:
+  - name: Wing
+    type: Wing
+    tess_u: 18
+    tess_w: 45
+    le_cluster: 0.08
+    te_cluster: 0.06
+  - name: Tail
+    type: Wing
+    tess_u: 12
+    tess_w: 35
+    le_cluster: 0.09
+    te_cluster: 0.06
+  - name: TailV
+    type: Wing
+    tess_u: 12
+    tess_w: 35
+    le_cluster: 0.09
+    te_cluster: 0.06
+  - name: Fuselage
+    type: Fuselage
+    tess_u: 33
+    tess_w: 37
+  status: FAIL
+  reason: one or more tessellation cases failed, were dependency-skipped, or FINE
+    remains unverified
+wake_schedule:
+  algorithm: conservative_discrete_nearest_regions
+  candidates:
+  - 3
+  - 5
+  - 8
+  - 12
+  sample_points:
+  - name: linear_low_alpha
+    speed_mps: 8.0
+    alpha_deg: 0.0
+    beta_deg: 0.0
+    required_wake: 3
+    status: PASS
+    reason: all subsequent higher-level transitions satisfy PASS tolerance
+    source: solver_convergence
+    pretrim: null
+    base_coefficient_status: PASS
+    fd_derivative_status: PASS
+    native_derivative_diagnostic: WARN
+  - name: cruise_trim
+    speed_mps: 8.0
+    alpha_deg: 4.077569810668674
+    beta_deg: 0.0
+    required_wake: 12
+    status: WARN
+    reason: highest level is selected conservatively but remains unverified
+    source: solver_convergence
+    pretrim:
+      status: PASS
+      iterations: 4
+      alpha_deg: 4.077569810668674
+      elevator_deg: -4.2557666664753
+      force_residual_n: -0.02834886879992382
+      moment_residual_nm: -0.5344684200240002
+      history:
+      - iteration: 1
+        alpha_deg: 2.0
+        elevator_deg: 0.0
+        CL: 0.2608162
+        Cm: -0.068094
+        force_residual_n: -79.84425020319995
+        moment_residual_nm: -64.31187947184002
+        residual_norm: 79.84425020319995
+        native_derivatives:
+          CL_alpha: 7.3887971
+          Cm_alpha: -7.1959403
+          CL_delta_e: 0.7776435
+          Cm_delta_e: -2.0399659
+        fd_derivatives:
+          CL_alpha: 4.793876686441503
+          Cm_alpha: -1.1492652813834334
+          CL_delta_e: 0.5167335642798994
+          Cm_delta_e: -1.4836268490980478
+        jacobian:
+        - - 3038.6658519745574
+          - 327.5388039887142
+        - - -1085.4320535950549
+          - -1401.2222971242609
+        jacobian_condition_number: 2.8475141320832105
+        raw_newton_step_deg:
+          alpha: 1.9519491495776264
+          elevator: -4.141746425346083
+        limited_newton_step_deg:
+          alpha: 1.9519491495776264
+          elevator: -4.141746425346083
+        line_search_trials:
+        - lambda: 1.0
+          alpha_deg: 3.9519491495776267
+          elevator_deg: -4.141746425346083
+          force_residual_n: -5.570919071199938
+          moment_residual_nm: 0.7329933570960002
+          residual_norm: 5.570919071199938
+          improved: true
+        line_search_attempts: 1
+        line_search_lambda: 1.0
+        applied_step_deg:
+          alpha: 1.9519491495776267
+          elevator: -4.141746425346083
+        new_force_residual_n: -5.570919071199938
+        new_moment_residual_nm: 0.7329933570960002
+        new_residual_norm: 5.570919071199938
+        decision: ACCEPT_NEWTON_STEP
+      - iteration: 2
+        alpha_deg: 3.9519491495776267
+        elevator_deg: -4.141746425346083
+        CL: 0.3779917
+        Cm: 0.0007761
+        force_residual_n: -5.570919071199938
+        moment_residual_nm: 0.7329933570960002
+        residual_norm: 5.570919071199938
+        native_derivatives:
+          CL_alpha: 7.5169481
+          Cm_alpha: -16.3344397
+          CL_delta_e: 0.1351651
+          Cm_delta_e: -1.5447419
+        fd_derivatives:
+          CL_alpha: 4.749766166657323
+          Cm_alpha: -1.0429350622067692
+          CL_delta_e: 0.5190578025835688
+          Cm_delta_e: -1.4757628262729467
+        jacobian:
+        - - 3010.705781462078
+          - 329.01205497683134
+        - - -985.0076955032413
+          - -1393.7950628878862
+        jacobian_condition_number: 2.7585653493965423
+        raw_newton_step_deg:
+          alpha: 0.11132300535789699
+          elevator: -0.0485412762556132
+        limited_newton_step_deg:
+          alpha: 0.11132300535789699
+          elevator: -0.0485412762556132
+        line_search_trials:
+        - lambda: 1.0
+          alpha_deg: 4.0632721549355235
+          elevator_deg: -4.190287701601696
+          force_residual_n: -0.37703745519991116
+          moment_residual_nm: -1.3646464394640003
+          residual_norm: 1.3646464394640003
+          improved: true
+        line_search_attempts: 1
+        line_search_lambda: 1.0
+        applied_step_deg:
+          alpha: 0.11132300535789685
+          elevator: -0.04854127625561322
+        new_force_residual_n: -0.37703745519991116
+        new_moment_residual_nm: -1.3646464394640003
+        new_residual_norm: 1.3646464394640003
+        decision: ACCEPT_NEWTON_STEP
+      - iteration: 3
+        alpha_deg: 4.0632721549355235
+        elevator_deg: -4.190287701601696
+        CL: 0.3861857
+        Cm: -0.0014449
+        force_residual_n: -0.37703745519991116
+        moment_residual_nm: -1.3646464394640003
+        residual_norm: 1.3646464394640003
+        native_derivatives:
+          CL_alpha: 10.6061279
+          Cm_alpha: -2.630044
+          CL_delta_e: 1.1224366
+          Cm_delta_e: -1.6419525
+        fd_derivatives:
+          CL_alpha: 4.73974135501791
+          Cm_alpha: -0.9580402163599516
+          CL_delta_e: 0.5144597401888485
+          Cm_delta_e: -1.4735175059154715
+        jacobian:
+        - - 3004.351414257073
+          - 326.0975087550644
+        - - -904.8281335171489
+          - -1391.674453550711
+        jacobian_condition_number: 2.6869947578044453
+        raw_newton_step_deg:
+          alpha: 0.014297655733150165
+          elevator: -0.06547896487360415
+        limited_newton_step_deg:
+          alpha: 0.014297655733150165
+          elevator: -0.06547896487360415
+        line_search_trials:
+        - lambda: 1.0
+          alpha_deg: 4.077569810668674
+          elevator_deg: -4.2557666664753
+          force_residual_n: -0.02834886879992382
+          moment_residual_nm: -0.5344684200240002
+          residual_norm: 0.5344684200240002
+          improved: true
+        line_search_attempts: 1
+        line_search_lambda: 1.0
+        applied_step_deg:
+          alpha: 0.01429765573315045
+          elevator: -0.06547896487360383
+        new_force_residual_n: -0.02834886879992382
+        new_moment_residual_nm: -0.5344684200240002
+        new_residual_norm: 0.5344684200240002
+        decision: ACCEPT_NEWTON_STEP
+      - iteration: 4
+        alpha_deg: 4.077569810668674
+        elevator_deg: -4.2557666664753
+        CL: 0.3867358
+        Cm: -0.0005659
+        force_residual_n: -0.02834886879992382
+        moment_residual_nm: -0.5344684200240002
+        residual_norm: 0.5344684200240002
+        native_derivatives:
+          CL_alpha: 10.4573604
+          Cm_alpha: 2.3903038
+          CL_delta_e: 1.1305833
+          Cm_delta_e: -1.267717
+        decision: PASS_BOTH_RESIDUALS
+    base_coefficient_status: PASS
+    fd_derivative_status: WARN
+    native_derivative_diagnostic: WARN
+  - name: medium_alpha
+    speed_mps: 9.0
+    alpha_deg: 6.0
+    beta_deg: 0.0
+    required_wake: 12
+    status: WARN
+    reason: highest level is selected conservatively but remains unverified
+    source: solver_convergence
+    pretrim: null
+    base_coefficient_status: PASS
+    fd_derivative_status: WARN
+    native_derivative_diagnostic: WARN
+  - name: high_alpha_beta
+    speed_mps: 9.0
+    alpha_deg: 10.0
+    beta_deg: 2.0
+    required_wake: 12
+    status: WARN
+    reason: highest level is selected conservatively but remains unverified
+    source: solver_convergence
+    pretrim: null
+    base_coefficient_status: PASS
+    fd_derivative_status: WARN
+    native_derivative_diagnostic: WARN
+  axis_scales:
+    speed_mps: 1.0
+    alpha_deg: 10.0
+    beta_deg: 2.0
+  neighbor_count: 4
+  boundary_buffer_normalized: 0.12
+  safety_margin_levels_for_untested: 1
+derivative_bundle:
+  rule: maximum required Wake over base and every +/- derivative state
+  enabled: true
+trim:
+  rule: pre-trim then fixed-Wake production trim using a centered-difference Jacobian
+    and backtracking
+  pretrim_wake_iterations: 5
+  max_wake_upgrades: 3
+recommended_control_perturbations_deg:
+  aileron_deg: 2.0
+  elevator_deg: 2.0
+  rudder_deg: 1.0
+recommendation_reasons:
+  wake_schedule: minimum level whose every later transition remains stable, then conservative
+    untested-point and boundary rules
+  tessellation: one or more tessellation cases failed, were dependency-skipped, or
+    FINE remains unverified
+  aileron_deg: retains the configured production delta and its per-Trim 0.5/1/2-scale
+    validation
+  elevator_deg: retains the configured production delta and its per-Trim 0.5/1/2-scale
+    validation
+  rudder_deg: the local small-step range is stable but the 2-to-4 degree transition
+    is not
+diagnostics:
+  CY_delta_r:
+    status: WARN
+    classification: LARGE_DEFLECTION_NONLINEAR
+    recommended_delta_r_deg: 1.0
+    reason: the local small-step range is stable but the 2-to-4 degree transition
+      is not
+    derivatives:
+      '0.5':
+        CY_delta_r: -0.14903104133663203
+        Cl_delta_r: 0.006900923986827863
+        Cn_delta_r: 0.06540261436033667
+      '1.0':
+        CY_delta_r: -0.1530961584724921
+        Cl_delta_r: 0.0042254370867692076
+        Cn_delta_r: 0.06315983931057047
+      '2.0':
+        CY_delta_r: -0.15197311048727083
+        Cl_delta_r: 0.002282522850887818
+        Cn_delta_r: 0.06499143149946388
+      '4.0':
+        CY_delta_r: -0.2493548328933949
+        Cl_delta_r: 0.014927739598548049
+        Cn_delta_r: 0.10703470722589306
+    comparisons:
+    - lower_step_deg: 0.5
+      higher_step_deg: 1.0
+      status: PASS
+      quantities:
+        CY_delta_r:
+          status: PASS
+          difference: 0.00406511713586008
+          relative_difference: 0.02655270502159915
+          pass_limit: 0.014592884754174763
+          warn_limit: 0.04224769267779937
+          reference_scale: 0.1530961584724921
+        Cl_delta_r:
+          status: PASS
+          difference: 0.0026754869000586556
+          relative_difference: 0.05350973800117311
+          pass_limit: 0.0115
+          warn_limit: 0.034
+          reference_scale: 0.05
+        Cn_delta_r:
+          status: PASS
+          difference: 0.0022427750497662075
+          relative_difference: 0.034291825666319775
+          pass_limit: 0.0119620784308101
+          warn_limit: 0.03523220914882693
+          reference_scale: 0.06540261436033667
+    - lower_step_deg: 1.0
+      higher_step_deg: 2.0
+      status: PASS
+      quantities:
+        CY_delta_r:
+          status: PASS
+          difference: 0.0011230479852212816
+          relative_difference: 0.007335572599772761
+          pass_limit: 0.014592884754174763
+          warn_limit: 0.04224769267779937
+          reference_scale: 0.1530961584724921
+        Cl_delta_r:
+          status: PASS
+          difference: 0.0019429142358813895
+          relative_difference: 0.03885828471762779
+          pass_limit: 0.0115
+          warn_limit: 0.034
+          reference_scale: 0.05
+        Cn_delta_r:
+          status: PASS
+          difference: 0.0018315921888934078
+          relative_difference: 0.028182056413213745
+          pass_limit: 0.011949742944983917
+          warn_limit: 0.03519931451995711
+          reference_scale: 0.06499143149946388
+    - lower_step_deg: 2.0
+      higher_step_deg: 4.0
+      status: FAIL
+      quantities:
+        CY_delta_r:
+          status: FAIL
+          difference: 0.09738172240612408
+          relative_difference: 0.3905347302723307
+          pass_limit: 0.017480644986801845
+          warn_limit: 0.049948386631471595
+          reference_scale: 0.2493548328933949
+        Cl_delta_r:
+          status: WARN
+          difference: 0.01264521674766023
+          relative_difference: 0.2529043349532046
+          pass_limit: 0.0115
+          warn_limit: 0.034
+          reference_scale: 0.05
+        Cn_delta_r:
+          status: FAIL
+          difference: 0.042043275726429186
+          relative_difference: 0.39280039919853565
+          pass_limit: 0.013211041216776792
+          warn_limit: 0.038562776578071445
+          reference_scale: 0.10703470722589306
+  Cm_q:
+    status: WARN
+    numerical_status: FAIL
+    checks:
+    - source: wake
+      lower: 3
+      higher: 5
+      status: FAIL
+      difference: null
+      reason: non-finite value
+    - source: wake
+      lower: 5
+      higher: 8
+      status: FAIL
+      difference: null
+      reason: non-finite value
+    - source: wake
+      lower: 8
+      higher: 12
+      status: FAIL
+      difference: null
+      reason: non-finite value
+    - source: tessellation
+      lower: COARSE
+      higher: MEDIUM
+      status: WARN
+      difference: 0.6265648000000006
+      relative_difference: 0.046628272807152
+      pass_limit: 0.413123317
+      warn_limit: 1.1049955120000001
+      reference_scale: 13.4374439
+    - source: tessellation
+      lower: MEDIUM
+      higher: FINE
+      status: WARN
+      difference: 0.45117920000000034
+      relative_difference: 0.03402029985043878
+      pass_limit: 0.407861749
+      warn_limit: 1.090964664
+      reference_scale: 13.2620583
+    api_limitation: OpenVSP 3.51.3 does not expose a negative steady q input; Cm_q
+      remains a native positive-rate derivative and cannot be represented as a fabricated
+      centered difference.
+production_gate:
+  status: FAIL
+  reason: combined base-coefficient + key centered-FD Wake convergence, boundary continuity,
+    and tessellation convergence
+  force_option: --force

@@ -8,6 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from scipy.io import loadmat
 
@@ -34,6 +35,7 @@ from numerical_convergence import (
     run_numerical_convergence,
     trim_wake_decision,
 )
+from trim_solver import solve_longitudinal_trim
 
 
 class ConfigurationTests(unittest.TestCase):
@@ -97,6 +99,105 @@ class ConventionAndNumericsTests(unittest.TestCase):
         failed = convergence_result({"0.5": 1.5, "1": 1.0, "2": 0.5}, settings)
         self.assertEqual(passed["status"], "PASS")
         self.assertEqual(failed["status"], "FAIL")
+
+
+class TrimSolverTests(unittest.TestCase):
+    @staticmethod
+    def trim_config(**overrides) -> dict:
+        config = {
+            "alpha": {"initial_deg": 0.0, "min_deg": -120.0, "max_deg": 120.0},
+            "elevator": {"initial_deg": 0.0, "min_deg": -30.0, "max_deg": 30.0},
+            "max_iterations": 15, "force_tolerance_n": 1.0e-6,
+            "moment_tolerance_nm": 1.0e-6, "max_step_deg": 90.0,
+            "mass_kg": 0.0, "gravity_m_s2": 1.0,
+        }
+        config.update(overrides)
+        return config
+
+    @staticmethod
+    def derivatives(alpha_step: float = 0.1, elevator_step: float = 0.1) -> dict:
+        return {"perturbations": {"alpha_deg": alpha_step, "elevator_deg": elevator_step}}
+
+    @staticmethod
+    def payload(cl: float, cm: float, stability: bool, native_scale: float = 1.0) -> dict:
+        result = {
+            "coefficients": {
+                "CL": {"standard_value": cl}, "Cm": {"standard_value": cm},
+            }
+        }
+        if stability:
+            result["stability_derivatives"] = {
+                "CL_alpha": {"standard_value": 99.0 * native_scale},
+                "Cm_alpha": {"standard_value": -99.0 * native_scale},
+            }
+            result["control_derivatives"] = {"elevator": {"derivatives": {
+                "CL_delta_e": {"standard_value": 55.0 * native_scale},
+                "Cm_delta_e": {"standard_value": -55.0 * native_scale},
+            }}}
+        return result
+
+    def test_centered_jacobian_converges_and_native_is_diagnostic_only(self) -> None:
+        config = self.trim_config(
+            alpha={"initial_deg": 2.0, "min_deg": -20.0, "max_deg": 20.0},
+            elevator={"initial_deg": 0.0, "min_deg": -20.0, "max_deg": 20.0},
+            mass_kg=1.0, gravity_m_s2=10.0,
+        )
+
+        def evaluate(alpha_deg, elevator_deg, _label, stability):
+            alpha = math.radians(alpha_deg)
+            elevator = math.radians(elevator_deg)
+            return self.payload(
+                0.05 + alpha + 0.2 * elevator,
+                0.01 - 0.5 * alpha - elevator,
+                stability,
+            )
+
+        result = solve_longitudinal_trim(
+            evaluate=evaluate, trim_config=config, derivative_config=self.derivatives(),
+            dynamic_pressure_pa=10.0, reference={"sref_m2": 10.0, "cref_m": 1.0},
+        )
+        self.assertTrue(result.converged)
+        self.assertEqual(result.iterations, 2)
+        self.assertEqual(result.history[0]["line_search_lambda"], 1.0)
+        self.assertAlmostEqual(result.history[0]["fd_derivatives"]["CL_alpha"], 1.0, places=9)
+        self.assertEqual(result.history[0]["native_derivatives"]["CL_alpha"], 99.0)
+
+    def test_backtracking_uses_first_improving_candidate(self) -> None:
+        def evaluate(alpha_deg, elevator_deg, _label, stability):
+            alpha = math.radians(alpha_deg)
+            elevator = math.radians(elevator_deg)
+            return self.payload(alpha ** 3 - 2.0 * alpha + 2.0, elevator, stability)
+
+        result = solve_longitudinal_trim(
+            evaluate=evaluate, trim_config=self.trim_config(),
+            derivative_config=self.derivatives(0.01, 0.1),
+            dynamic_pressure_pa=1.0, reference={"sref_m2": 1.0, "cref_m": 1.0},
+        )
+        backtracked = [
+            row for row in result.history if float(row.get("line_search_lambda", 1.0)) < 1.0
+        ]
+        self.assertTrue(backtracked)
+        self.assertEqual(backtracked[0]["line_search_lambda"], 0.25)
+        self.assertEqual(backtracked[0]["line_search_attempts"], 3)
+        self.assertLess(backtracked[0]["new_residual_norm"], backtracked[0]["residual_norm"])
+
+    def test_iteration_cap_is_not_convergence(self) -> None:
+        config = self.trim_config(
+            mass_kg=2.0, max_step_deg=5.0,
+            force_tolerance_n=1.0e-9, moment_tolerance_nm=1.0e-9,
+        )
+
+        def evaluate(alpha_deg, elevator_deg, _label, stability):
+            return self.payload(math.radians(alpha_deg), math.radians(elevator_deg), stability)
+
+        result = solve_longitudinal_trim(
+            evaluate=evaluate, trim_config=config, derivative_config=self.derivatives(),
+            dynamic_pressure_pa=1.0, reference={"sref_m2": 1.0, "cref_m": 1.0},
+        )
+        self.assertFalse(result.converged)
+        self.assertEqual(result.iterations, 15)
+        self.assertEqual(result.history[-1]["decision"], "FAIL_MAX_ITERATIONS")
+        self.assertIn("15 iterations", result.failure_reason)
 
 
 class NumericalConvergenceLogicTests(unittest.TestCase):
@@ -298,6 +399,42 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
                 "wake_convergence_map.png", "tessellation_convergence.png", "CY_vs_delta_r.png",
             ):
                 self.assertTrue((output / name).is_file(), name)
+            resumed = run_numerical_convergence(
+                config=config, runner=FakeRunner(), reference=reference, manifest=manifest,
+                analysis_mapper=lambda raw: raw.payload,
+            )
+            self.assertGreater(resumed["cache"]["hits"], 0)
+            self.assertEqual(resumed["cache"]["misses"], 0)
+
+            failed_pretrim = (
+                2.0, 0.0,
+                {
+                    "status": "FAIL", "iterations": 15, "alpha_deg": 2.0,
+                    "elevator_deg": 0.0, "force_residual_n": 10.0,
+                    "moment_residual_nm": 2.0, "reason": "simulated non-convergence",
+                    "history": [{"iteration": 15, "decision": "FAIL_MAX_ITERATIONS"}],
+                },
+            )
+            with patch("numerical_convergence._trim_representative", return_value=failed_pretrim):
+                isolated = run_numerical_convergence(
+                    config=config, runner=FakeRunner(), reference=reference, manifest=manifest,
+                    analysis_mapper=lambda raw: raw.payload,
+                )
+            wake_status = {
+                point["name"]: point["status"] for point in isolated["wake"]["sample_points"]
+            }
+            self.assertEqual(wake_status["cruise_trim"], "FAIL")
+            self.assertEqual(wake_status["linear_low_alpha"], "PASS")
+            self.assertEqual(wake_status["medium_alpha"], "PASS")
+            self.assertEqual(wake_status["high_alpha_beta"], "PASS")
+            tess_status = {
+                detail["point"]: detail["decision"]["status"]
+                for detail in isolated["tessellation"]["details"]
+            }
+            self.assertEqual(tess_status["cruise_trim"], "SKIPPED_DEPENDENCY")
+            self.assertIn(tess_status["high_alpha_beta"], {"PASS", "WARN", "FAIL"})
+            self.assertEqual(isolated["production_gate_status"], "FAIL")
+            self.assertTrue((output / "numerical_convergence_report.json").is_file())
 
 
 class DeliveredResultTests(unittest.TestCase):

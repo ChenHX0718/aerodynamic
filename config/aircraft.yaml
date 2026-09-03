@@ -115,7 +115,8 @@ trim:
   elevator: {initial_deg: 0, min_deg: -20, max_deg: 20}
   force_tolerance_n: 1.0
   moment_tolerance_nm: 1.0
-  max_iterations: 7
+  # 15 是停止上限，不是收敛判据；仅同时满足 ±1 N / ±1 N·m 才算成功。
+  max_iterations: 15
   max_step_deg: 5
 
 derivatives:

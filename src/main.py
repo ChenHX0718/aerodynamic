@@ -54,9 +54,9 @@ from validation import (
 from vspaero_runner import AeroRunResult, VSPAERORunner
 
 
-INTERNAL_SCHEMA_VERSION = "4.0.0"
+INTERNAL_SCHEMA_VERSION = "5.0.0"
 AUTOTUNE_SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "4.0"
+TOOL_VERSION = "5.0"
 COEFFICIENT_NAMES = ("CL", "CD", "Cm", "CY", "Cl", "Cn")
 
 
@@ -307,21 +307,26 @@ def _trim_case(
             stage_config["alpha"]["initial_deg"] = alpha_initial
             stage_config["elevator"]["initial_deg"] = elevator_initial
 
-            def evaluate(alpha_deg: float, elevator_deg: float, iteration: int) -> dict[str, Any]:
+            def evaluate(
+                alpha_deg: float, elevator_deg: float, label: str, stability: bool,
+            ) -> dict[str, Any]:
                 nonlocal stage_condition
                 stage_condition = _condition(spec, alpha_deg, config, reference)
                 raw = runner.run(
-                    stage_condition, raw_dir, f"{stage}_iter_{iteration:02d}",
-                    stability=True, include_thick=True,
+                    stage_condition, raw_dir, f"{stage}_{label}",
+                    stability=stability, include_thick=True,
                     control_deflections_deg={"elevator": elevator_deg},
                     wake_iterations=wake_iterations,
                     tessellation_overrides=tessellation,
                 )
                 durations.append(raw.duration_sec)
-                return _analysis_payload(raw, control_names)
+                if stability:
+                    return _analysis_payload(raw, control_names)
+                return {"coefficients": map_polar_coefficients(raw.raw_data)}
 
             solved = solve_longitudinal_trim(
                 evaluate=evaluate, trim_config=stage_config,
+                derivative_config=config["derivatives"],
                 dynamic_pressure_pa=stage_condition["dynamic_pressure_pa"], reference=reference,
             )
             return solved, stage_condition
@@ -409,7 +414,7 @@ def _trim_case(
             "elevator_max_deg": float(trim_config["elevator"]["max_deg"]),
             "history": list(trim.history),
             "failure_reason": trim.failure_reason,
-            "solver_method": "bounded Newton using local VSPAERO stability/control Jacobian",
+            "solver_method": "bounded Newton using real centered-difference Jacobian and backtracking line search",
             "pretrim": {
                 "wake_iterations": pretrim_wake,
                 "alpha_trim_deg": pretrim.alpha_deg,

@@ -67,6 +67,41 @@ def convergence_result(values: dict[str, float], settings: dict[str, Any]) -> di
     }
 
 
+def perturb_state(
+    condition: dict[str, float], controls: dict[str, float], variable: str, offset_deg: float,
+    control_config: dict[str, Any] | None = None,
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Return one aerodynamic state perturbed in the project's standard degree convention."""
+    perturbed_condition = dict(condition)
+    perturbed_controls = dict(controls)
+    if variable in {"alpha", "beta"}:
+        perturbed_condition[f"{variable}_deg"] = (
+            float(perturbed_condition[f"{variable}_deg"]) + float(offset_deg)
+        )
+    elif variable in perturbed_controls:
+        value = float(perturbed_controls[variable]) + float(offset_deg)
+        if control_config is not None:
+            lower = float(control_config.get("min_deg", -90.0))
+            upper = float(control_config.get("max_deg", 90.0))
+            if not lower <= value <= upper:
+                raise ValueError(
+                    f"{variable} perturbation {value:g} deg exceeds configured limits "
+                    f"{lower:g}..{upper:g} deg"
+                )
+        perturbed_controls[variable] = value
+    else:
+        raise ValueError(f"Unsupported centered-difference variable: {variable}")
+    return perturbed_condition, perturbed_controls
+
+
+def centered_derivative(plus: float, minus: float, step_deg: float) -> float:
+    """Centered derivative per radian for a symmetric perturbation expressed in degrees."""
+    step = float(step_deg)
+    if not math.isfinite(step) or step <= 0.0:
+        raise ValueError(f"Centered-difference step must be positive, got {step_deg}")
+    return (float(plus) - float(minus)) / (2.0 * math.radians(step))
+
+
 def _plain_coefficients(mapped: dict[str, dict[str, Any]]) -> dict[str, float]:
     return {name: float(item["standard_value"]) for name, item in mapped.items()}
 
@@ -132,27 +167,13 @@ def calculate_trim_derivatives(
         for scale in scales:
             key = _scale_key(scale)
             step_deg = base_step * scale
-            plus_condition = dict(condition)
-            minus_condition = dict(condition)
-            plus_controls = dict(base_controls)
-            minus_controls = dict(base_controls)
-            if variable == "alpha":
-                plus_condition["alpha_deg"] += step_deg
-                minus_condition["alpha_deg"] -= step_deg
-            elif variable == "beta":
-                plus_condition["beta_deg"] += step_deg
-                minus_condition["beta_deg"] -= step_deg
-            else:
-                plus_controls[variable] += step_deg
-                minus_controls[variable] -= step_deg
-                control_cfg = derivative_config["_controls"][variable]
-                lower = float(control_cfg.get("min_deg", -90.0))
-                upper = float(control_cfg.get("max_deg", 90.0))
-                if not lower <= minus_controls[variable] <= plus_controls[variable] <= upper:
-                    raise ValueError(
-                        f"{variable} perturbation exceeds configured limits at scale {scale:g}: "
-                        f"{minus_controls[variable]:g}..{plus_controls[variable]:g} deg"
-                    )
+            control_cfg = derivative_config["_controls"].get(variable)
+            plus_condition, plus_controls = perturb_state(
+                condition, base_controls, variable, step_deg, control_cfg
+            )
+            minus_condition, minus_controls = perturb_state(
+                condition, base_controls, variable, -step_deg, control_cfg
+            )
             plus_payload = run_polar(plus_condition, f"fd_{variable}_{key}_plus", plus_controls)
             minus_payload = run_polar(minus_condition, f"fd_{variable}_{key}_minus", minus_controls)
             run_count += 2
@@ -160,11 +181,10 @@ def calculate_trim_derivatives(
             solver_duration += float(minus_payload.get("solver_duration_sec", 0.0))
             plus = _plain_coefficients(plus_payload["coefficients"])
             minus = _plain_coefficients(minus_payload["coefficients"])
-            denominator = 2.0 * math.radians(step_deg)
             sample_outputs[key] = {
                 "step": float(step_deg),
                 "step_unit": "deg",
-                "derivative_denominator": float(denominator),
+                "derivative_denominator": float(2.0 * math.radians(step_deg)),
                 "derivative_denominator_unit": "rad",
                 "plus": {"state": _state_snapshot(plus_condition, plus_controls), "coefficients": plus},
                 "minus": {"state": _state_snapshot(minus_condition, minus_controls), "coefficients": minus},
@@ -175,10 +195,11 @@ def calculate_trim_derivatives(
             samples: dict[str, Any] = {}
             values: dict[str, float] = {}
             for key, sample in sample_outputs.items():
-                value = (
-                    float(sample["plus"]["coefficients"][coefficient])
-                    - float(sample["minus"]["coefficients"][coefficient])
-                ) / float(sample["derivative_denominator"])
+                value = centered_derivative(
+                    float(sample["plus"]["coefficients"][coefficient]),
+                    float(sample["minus"]["coefficients"][coefficient]),
+                    float(sample["step"]),
+                )
                 values[key] = value
                 samples[key] = {**sample, "derivative": float(value)}
             convergence = convergence_result(values, convergence_settings)

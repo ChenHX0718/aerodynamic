@@ -1,0 +1,5 @@
+﻿alpha_deg,base_coefficient_status,beta_deg,fd_derivative_status,name,native_derivative_diagnostic,reason,required_wake,source,speed_mps,status
+0.0,PASS,0.0,PASS,linear_low_alpha,WARN,all subsequent higher-level transitions satisfy PASS tolerance,3,solver_convergence,8.0,PASS
+4.077569810668674,PASS,0.0,WARN,cruise_trim,WARN,highest level is selected conservatively but remains unverified,12,solver_convergence,8.0,WARN
+6.0,PASS,0.0,WARN,medium_alpha,WARN,highest level is selected conservatively but remains unverified,12,solver_convergence,9.0,WARN
+10.0,PASS,2.0,WARN,high_alpha_beta,WARN,highest level is selected conservatively but remains unverified,12,solver_convergence,9.0,WARN

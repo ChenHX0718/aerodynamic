@@ -75,7 +75,7 @@ class VSPAERORunner:
         self,
         case_dir: Path,
         condition: dict[str, float],
-        stability: bool,
+        stability_mode: str,
         include_thick: bool,
         wake_iterations: int | None,
     ) -> str:
@@ -87,6 +87,8 @@ class VSPAERORunner:
             "WakeNumIter", "NCPU", "UnsteadyType", "RedirectFile", "RefFlag",
             "Sref", "bref", "cref", "Xcg", "Ycg", "Zcg", "Symmetry",
         }
+        if stability_mode in {"p", "q", "r"}:
+            required.update({"AutoTimeStepFlag", "NumTimeSteps"})
         self._require_inputs(analysis, required)
         solver = self.config["solver"]
         self.vsp.SetAnalysisInputDefaults(analysis)
@@ -114,7 +116,16 @@ class VSPAERORunner:
             raise OpenVSPError(f"WakeNumIter must be positive, got {wake}")
         self._set_int(analysis, "WakeNumIter", wake)
         self._set_int(analysis, "NCPU", int(solver.get("ncpu", 4)))
-        self._set_int(analysis, "UnsteadyType", self.vsp.STABILITY_DEFAULT if stability else self.vsp.STABILITY_OFF)
+        stability_types = {
+            "off": self.vsp.STABILITY_OFF,
+            "steady": self.vsp.STABILITY_DEFAULT,
+            "p": self.vsp.STABILITY_P_ANALYSIS,
+            "q": self.vsp.STABILITY_Q_ANALYSIS,
+            "r": self.vsp.STABILITY_R_ANALYSIS,
+        }
+        if stability_mode not in stability_types:
+            raise OpenVSPError(f"Unsupported VSPAERO stability mode: {stability_mode}")
+        self._set_int(analysis, "UnsteadyType", stability_types[stability_mode])
         self._set_string(analysis, "RedirectFile", str((case_dir / "vspaero_console.txt").resolve()))
         self._set_int(analysis, "RefFlag", 0)
         for input_name, key in (
@@ -161,10 +172,13 @@ class VSPAERORunner:
         return raw
 
     @staticmethod
-    def _validate_raw_files(case_dir: Path, stability: bool) -> None:
+    def _validate_raw_files(case_dir: Path, stability_mode: str) -> None:
         required = [".vspgeom", ".vspaero", ".history", ".adb"]
-        if stability:
-            required.append(".stab")
+        stability_suffix = {
+            "steady": ".stab", "p": ".pstab", "q": ".qstab", "r": ".rstab",
+        }.get(stability_mode)
+        if stability_suffix:
+            required.append(stability_suffix)
         names = [path.name.lower() for path in case_dir.iterdir() if path.is_file()]
         missing = [suffix for suffix in required if not any(name.endswith(suffix) for name in names)]
         if missing:
@@ -177,11 +191,17 @@ class VSPAERORunner:
         label: str,
         *,
         stability: bool,
+        stability_mode: str | None = None,
         include_thick: bool = True,
         control_deflections_deg: dict[str, float] | None = None,
         wake_iterations: int | None = None,
     ) -> AeroRunResult:
         start = time.perf_counter()
+        mode = stability_mode or ("steady" if stability else "off")
+        if stability != (mode != "off"):
+            raise OpenVSPError(
+                f"stability={stability} conflicts with stability_mode={mode}"
+            )
         case_dir = parent_dir.resolve() / label
         self._prepare_case(case_dir, control_deflections_deg)
         old_cwd = Path.cwd()
@@ -189,17 +209,17 @@ class VSPAERORunner:
             os.chdir(case_dir)
             geometry_id = self._configure_geometry(include_thick)
             sweep_id = self._configure_sweep(
-                case_dir, condition, stability, include_thick, wake_iterations
+                case_dir, condition, mode, include_thick, wake_iterations
             )
-            result_name = "VSPAERO_Stab" if stability else "VSPAERO_Polar"
+            result_name = "VSPAERO_Stab" if mode != "off" else "VSPAERO_Polar"
             data_id = self.vsp.FindLatestResultsID(result_name)
             if not data_id:
                 raise OpenVSPError(f"{result_name} Results ID is missing")
             raw = self._read_result(data_id)
         finally:
             os.chdir(old_cwd)
-        self._validate_raw_files(case_dir, stability)
+        self._validate_raw_files(case_dir, mode)
         return AeroRunResult(
-            "stability" if stability else "polar", case_dir, geometry_id, sweep_id,
+            mode if mode != "off" else "polar", case_dir, geometry_id, sweep_id,
             data_id, raw, time.perf_counter() - start,
         )

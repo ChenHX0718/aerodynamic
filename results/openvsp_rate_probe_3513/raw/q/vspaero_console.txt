@@ -1,0 +1,807 @@
+D:\OpenVSP\OpenVSP-3.51.3-win64\vspaero.exe -omp 4 -qstab E:\aerodynamic\results\openvsp_rate_probe_3513\raw\q\test_aircraft
+Setting Sref to: 16.170000 
+Setting Cref to: 1.490000 
+Setting Bref to: 11.000000 
+Setting X_cg to: 0.000000 
+Setting Y_cg to: 0.000000 
+Setting Z_cg to: 0.710000 
+Number of Machs: 1 
+Mach: 0.023509 
+Number of AoAs: 1 
+AoA: 4.268907 
+Number of Betas: 1 
+Beta: 0.000000 
+Number of ReCs: 1 
+ReC: 816027.718788 
+Setting Vinf to: 8.000000 
+Setting Vref to: 8.000000 
+Setting Mref to: 0.300000 
+Setting Rho to: 1.225000 
+Setting StallModel to: 0 
+Setting Clo2D to: 0.000000 
+Setting CLMax2D to: 1.000000 
+Setting Symmetry to: 0 
+Setting FreezeMultiPoleAtIteration to: 10000 
+Setting FreezeWakeAtIteration to: 10000 
+Setting FreezeWakeRootVortices to: 0 
+Setting ImplicitWake to: 0 
+Setting ImplicitWakeStartIteration_ to: 0 
+Setting FarDist to: -1.000000 
+Setting NumWakeNodes to: 8 
+Setting WakeIters to: 3 
+Setting WakeRelax to: 1.000000 
+Setting ForwardGMRESConvergenceFactor to: 1.000000e+00 
+Setting AdjointGMRESConvergenceFactor_ to: 1.000000e+00 
+Setting NonLinearConvergenceFactor to: 1.000000e+00 
+Setting CoreSizeFactor to: 1.000000 
+Setting multipole FarAway factor to: 5.000000 
+Setting UpdateMatrixPreconditioner flag to: 0 
+Setting UseWakeNodeMatrixPreconditioner flag to: 0 
+Number of NumberOfAdjointForceAndMomentCases_: 0 
+Number of NumberOfAdjointComponentListSettings_: 0 
+Setting Write2DFEMFile to: 0 
+Setting WriteTecplotFile to: 0 
+Sref            = 16.170000 
+Cref            = 1.490000 
+Bref            = 11.000000 
+X_cg            = 0.000000 
+Y_cg            = 0.000000 
+Z_cg            = 0.710000 
+Mach            = 0.023509 
+AoA             = 4.268907 
+Beta            = 0.000000 
+Vinf            = 8.000000 
+Vref            = 8.000000 
+Rho             = 1.225000 
+ReCref          = 816027.718788 
+StallModel      = 0  
+Clo2D           = 0.000000 
+CLMax2D_        = 1.000000 
+Symmetry        = 0  
+FarDist         = -1.000000 
+NumWakeNodes    = 8  
+WakeIters       = 3  
+NumberOfControlGroups = 3 
+ControlSurfaceGroup_[1].Name(): Aileron 
+There are 2 control surfaces in group: 1 
+Control surface(1): Wing_Surf0_Aileron 
+Control surface(2): Wing_Surf1_Aileron 
+Control surface(1) direction: 1.000000 
+Control surface(2) direction 1.000000 
+Control group deflection angle: 0.000000 
+ControlSurfaceGroup_[2].Name(): Elevator 
+There are 2 control surfaces in group: 2 
+Control surface(1): Tail_Surf0_Elevator 
+Control surface(2): Tail_Surf1_Elevator 
+Control surface(1) direction: 1.000000 
+Control surface(2) direction -1.000000 
+Control group deflection angle: -5.952487 
+ControlSurfaceGroup_[3].Name(): Rudder 
+There is 1 control surface in group: 3 
+Control Surface(1): TailV_Surf0_Rudder___ 
+Control surface(1) direction: 1.000000 
+Control group deflection angle: 0.000000 
+NumberofSurveyPoints: 0 
+NumberOfInlets: 0 
+NumberOfNozzles: 0 
+NumberOfInlets: 0 
+NumberOfNozzles: 0 
+VSPAERO v.7.2.2 --- Compiled on: Aug 17 2026 at 21:02:54 PST 
+
+
+
+
+Initializing OPENMP for 4 threads 
+NumberOfThreads_: 4 
+_OPENMP Version string: 200203
+NumNodes: 7223 
+MaxNumberOfGridLevels_: 24 
+NumLoops: 6974 
+NumNodesInList: 47 
+KuttaNodeList_[1]: 3 
+KuttaNodeList_[2]: 1 
+KuttaNodeList_[3]: 16 
+KuttaNodeList_[4]: 52 
+KuttaNodeList_[5]: 109 
+KuttaNodeList_[6]: 142 
+KuttaNodeList_[7]: 175 
+KuttaNodeList_[8]: 208 
+KuttaNodeList_[9]: 241 
+KuttaNodeList_[10]: 274 
+KuttaNodeList_[11]: 307 
+KuttaNodeList_[12]: 340 
+KuttaNodeList_[13]: 373 
+KuttaNodeList_[14]: 406 
+KuttaNodeList_[15]: 439 
+KuttaNodeList_[16]: 472 
+KuttaNodeList_[17]: 505 
+KuttaNodeList_[18]: 538 
+KuttaNodeList_[19]: 571 
+KuttaNodeList_[20]: 604 
+KuttaNodeList_[21]: 637 
+KuttaNodeList_[22]: 670 
+KuttaNodeList_[23]: 703 
+KuttaNodeList_[24]: 736 
+KuttaNodeList_[25]: 769 
+KuttaNodeList_[26]: 803 
+KuttaNodeList_[27]: 802 
+KuttaNodeList_[28]: 848 
+KuttaNodeList_[29]: 882 
+KuttaNodeList_[30]: 916 
+KuttaNodeList_[31]: 950 
+KuttaNodeList_[32]: 984 
+KuttaNodeList_[33]: 1018 
+KuttaNodeList_[34]: 1052 
+KuttaNodeList_[35]: 1086 
+KuttaNodeList_[36]: 1120 
+KuttaNodeList_[37]: 1154 
+KuttaNodeList_[38]: 1188 
+KuttaNodeList_[39]: 1222 
+KuttaNodeList_[40]: 1256 
+KuttaNodeList_[41]: 1290 
+KuttaNodeList_[42]: 1324 
+KuttaNodeList_[43]: 1359 
+KuttaNodeList_[44]: 1358 
+KuttaNodeList_[45]: 1403 
+KuttaNodeList_[46]: 1436 
+KuttaNodeList_[47]: 1469 
+NumNodesInList: 47 
+KuttaNodeList_[48]: 2970 
+KuttaNodeList_[49]: 2937 
+KuttaNodeList_[50]: 2904 
+KuttaNodeList_[51]: 2859 
+KuttaNodeList_[52]: 2860 
+KuttaNodeList_[53]: 2825 
+KuttaNodeList_[54]: 2791 
+KuttaNodeList_[55]: 2757 
+KuttaNodeList_[56]: 2723 
+KuttaNodeList_[57]: 2689 
+KuttaNodeList_[58]: 2655 
+KuttaNodeList_[59]: 2621 
+KuttaNodeList_[60]: 2587 
+KuttaNodeList_[61]: 2553 
+KuttaNodeList_[62]: 2519 
+KuttaNodeList_[63]: 2485 
+KuttaNodeList_[64]: 2451 
+KuttaNodeList_[65]: 2417 
+KuttaNodeList_[66]: 2383 
+KuttaNodeList_[67]: 2349 
+KuttaNodeList_[68]: 2303 
+KuttaNodeList_[69]: 2304 
+KuttaNodeList_[70]: 2270 
+KuttaNodeList_[71]: 2237 
+KuttaNodeList_[72]: 2204 
+KuttaNodeList_[73]: 2171 
+KuttaNodeList_[74]: 2138 
+KuttaNodeList_[75]: 2105 
+KuttaNodeList_[76]: 2072 
+KuttaNodeList_[77]: 2039 
+KuttaNodeList_[78]: 2006 
+KuttaNodeList_[79]: 1973 
+KuttaNodeList_[80]: 1940 
+KuttaNodeList_[81]: 1907 
+KuttaNodeList_[82]: 1875 
+KuttaNodeList_[83]: 1842 
+KuttaNodeList_[84]: 1809 
+KuttaNodeList_[85]: 1776 
+KuttaNodeList_[86]: 1743 
+KuttaNodeList_[87]: 1710 
+KuttaNodeList_[88]: 1677 
+KuttaNodeList_[89]: 1644 
+KuttaNodeList_[90]: 1611 
+KuttaNodeList_[91]: 1554 
+KuttaNodeList_[92]: 1518 
+KuttaNodeList_[93]: 1502 
+KuttaNodeList_[94]: 1504 
+NumNodesInList: 45 
+KuttaNodeList_[95]: 3773 
+KuttaNodeList_[96]: 3749 
+KuttaNodeList_[97]: 3747 
+KuttaNodeList_[98]: 3728 
+KuttaNodeList_[99]: 3710 
+KuttaNodeList_[100]: 3692 
+KuttaNodeList_[101]: 3674 
+KuttaNodeList_[102]: 3656 
+KuttaNodeList_[103]: 3638 
+KuttaNodeList_[104]: 3620 
+KuttaNodeList_[105]: 3602 
+KuttaNodeList_[106]: 3584 
+KuttaNodeList_[107]: 3567 
+KuttaNodeList_[108]: 3549 
+KuttaNodeList_[109]: 3531 
+KuttaNodeList_[110]: 3513 
+KuttaNodeList_[111]: 3494 
+KuttaNodeList_[112]: 3477 
+KuttaNodeList_[113]: 3443 
+KuttaNodeList_[114]: 3440 
+KuttaNodeList_[115]: 3420 
+KuttaNodeList_[116]: 3399 
+KuttaNodeList_[117]: 3005 
+KuttaNodeList_[118]: 3003 
+KuttaNodeList_[119]: 3030 
+KuttaNodeList_[120]: 3051 
+KuttaNodeList_[121]: 3053 
+KuttaNodeList_[122]: 3087 
+KuttaNodeList_[123]: 3104 
+KuttaNodeList_[124]: 3122 
+KuttaNodeList_[125]: 3140 
+KuttaNodeList_[126]: 3158 
+KuttaNodeList_[127]: 3176 
+KuttaNodeList_[128]: 3194 
+KuttaNodeList_[129]: 3212 
+KuttaNodeList_[130]: 3230 
+KuttaNodeList_[131]: 3248 
+KuttaNodeList_[132]: 3266 
+KuttaNodeList_[133]: 3284 
+KuttaNodeList_[134]: 3302 
+KuttaNodeList_[135]: 3320 
+KuttaNodeList_[136]: 3338 
+KuttaNodeList_[137]: 3357 
+KuttaNodeList_[138]: 3359 
+KuttaNodeList_[139]: 3382 
+NumNodesInList: 39 
+KuttaNodeList_[140]: 3789 
+KuttaNodeList_[141]: 3790 
+KuttaNodeList_[142]: 3795 
+KuttaNodeList_[143]: 3801 
+KuttaNodeList_[144]: 3805 
+KuttaNodeList_[145]: 3812 
+KuttaNodeList_[146]: 3810 
+KuttaNodeList_[147]: 3820 
+KuttaNodeList_[148]: 3826 
+KuttaNodeList_[149]: 3832 
+KuttaNodeList_[150]: 3840 
+KuttaNodeList_[151]: 3846 
+KuttaNodeList_[152]: 3853 
+KuttaNodeList_[153]: 3902 
+KuttaNodeList_[154]: 3920 
+KuttaNodeList_[155]: 3938 
+KuttaNodeList_[156]: 3956 
+KuttaNodeList_[157]: 3974 
+KuttaNodeList_[158]: 3993 
+KuttaNodeList_[159]: 4011 
+KuttaNodeList_[160]: 4029 
+KuttaNodeList_[161]: 4048 
+KuttaNodeList_[162]: 4067 
+KuttaNodeList_[163]: 4086 
+KuttaNodeList_[164]: 4104 
+KuttaNodeList_[165]: 4122 
+KuttaNodeList_[166]: 4140 
+KuttaNodeList_[167]: 4158 
+KuttaNodeList_[168]: 4176 
+KuttaNodeList_[169]: 4194 
+KuttaNodeList_[170]: 4212 
+KuttaNodeList_[171]: 4230 
+KuttaNodeList_[172]: 4248 
+KuttaNodeList_[173]: 4266 
+KuttaNodeList_[174]: 4284 
+KuttaNodeList_[175]: 4303 
+KuttaNodeList_[176]: 4302 
+KuttaNodeList_[177]: 4327 
+KuttaNodeList_[178]: 4344 
+VSPGEOM defined NumKuttaNodes: 178 
+Found 6 VSPGEOM Surfaces 
+Found 6 VSPGEOM Surfaces 
+DumChar: # VSPGEOM v3 Tag Key File
+ 
+DumChar: E:\aerodynamic\results\openvsp_rate_probe_3513\raw\q\test_aircraft.vspgeom
+ 
+DumChar: 6
+ 
+NumberOfVSPSurfaces: 6 
+DumChar: 
+ 
+DumChar: # part#,geom#,surf#,gname,gid,thick,plate,copy#,geomcopy#
+ 
+Thick/thin data exists... DumChar: # part#,geom#,surf#,gname,gid,thick,plate,copy#,geomcopy#
+ 
+Part: 1 ... CompID: 3 ... SurfID: 0 
+Surface: 1 exists in triangulation and has OpenVSP Name: Wing_C 
+CompID: 3 
+Setting OpenVSP_ComponentIDForSurface_ to : 3 
+Surface: 1 is thin 
+Setting ComponentIDForSurface_ to : 4 
+Part: 2 ... CompID: 3 ... SurfID: 1 
+Surface: 2 exists in triangulation and has OpenVSP Name: Wing_C 
+CompID: 3 
+Setting OpenVSP_ComponentIDForSurface_ to : 3 
+Surface: 2 is thin 
+Setting ComponentIDForSurface_ to : 4 
+Part: 3 ... CompID: 0 ... SurfID: 0 
+Surface: 3 exists in triangulation and has OpenVSP Name: Tail_C 
+CompID: 0 
+Setting OpenVSP_ComponentIDForSurface_ to : 0 
+Surface: 3 is thin 
+Setting ComponentIDForSurface_ to : 1 
+Part: 4 ... CompID: 0 ... SurfID: 1 
+Surface: 4 exists in triangulation and has OpenVSP Name: Tail_C 
+CompID: 0 
+Setting OpenVSP_ComponentIDForSurface_ to : 0 
+Surface: 4 is thin 
+Setting ComponentIDForSurface_ to : 1 
+Part: 5 ... CompID: 2 ... SurfID: 0 
+Surface: 5 exists in triangulation and has OpenVSP Name: TailV_C 
+CompID: 2 
+Setting OpenVSP_ComponentIDForSurface_ to : 2 
+Surface: 5 is thin 
+Setting ComponentIDForSurface_ to : 3 
+Part: 6 ... CompID: 1 ... SurfID: 0 
+Surface: 6 exists in triangulation and has OpenVSP Name: Fuselage_S 
+CompID: 1 
+Setting OpenVSP_ComponentIDForSurface_ to : 1 
+Surface: 6 is thick 
+Setting ComponentIDForSurface_ to : 2 
+Found 6 used surfaces based on parsing VSPGEOM file 
+Found 6 used surfaces based on parsing VKEY file ... 
+Marking tris on thick and thin surfaces 
+Determining the number of thin and thick surfaces 
+NumberOfThinSurfaces_: 5 
+NumberOfThickSurfaces_: 1 
+Renumbering surfaces 
+Renumbering surface lists 
+Determining number of unique components 
+Found 4 unique components 
+ComponentIDForComponent_[1]: 4 
+ComponentIDForComponent_[2]: 1 
+ComponentIDForComponent_[3]: 3 
+ComponentIDForComponent_[4]: 2 
+ComponentIDForSurface_[1]: 1 
+ComponentIDForSurface_[2]: 1 
+ComponentIDForSurface_[3]: 2 
+ComponentIDForSurface_[4]: 2 
+ComponentIDForSurface_[5]: 3 
+ComponentIDForSurface_[6]: 4 
+ComponentIDForComponent_[1]: 4 
+ComponentIDForComponent_[2]: 1 
+ComponentIDForComponent_[3]: 3 
+ComponentIDForComponent_[4]: 2 
+Surface: 1 --> Component: 1 --> SurfaceName: Wing_C 
+Surface: 2 --> Component: 1 --> SurfaceName: Wing_C 
+Surface: 3 --> Component: 2 --> SurfaceName: Tail_C 
+Surface: 4 --> Component: 2 --> SurfaceName: Tail_C 
+Surface: 5 --> Component: 3 --> SurfaceName: TailV_C 
+Surface: 6 --> Component: 4 --> SurfaceName: Fuselage_S 
+SurfaceIsThick_[1]: 0 
+SurfaceIsThick_[2]: 0 
+SurfaceIsThick_[3]: 0 
+SurfaceIsThick_[4]: 0 
+SurfaceIsThick_[5]: 0 
+SurfaceIsThick_[6]: 1 
+Component: 1 with ID: 1 is thin 
+Component: 2 with ID: 2 is thin 
+Component: 3 with ID: 3 is thin 
+Component: 4 with ID: 4 is thick 
+Pure tri mesh has 14240 tris 
+After building ...pure tri mesh has 14240 tris 
+Looking for E:\aerodynamic\results\openvsp_rate_probe_3513\raw\q\test_aircraft.ControlSurfaces.taglist control surface definition file ... 
+There is control surface information... 
+Control surface has 187 loops 
+xyz1: 0.817373 2.906375 0.850284 
+xyz2: 0.648633 5.021980 0.895011 
+HingeNode_1_: 0.408686 1.453188 0.425142 
+HingeNode_2_: 0.324317 2.510990 0.447505 
+xyz1: 0.812238 2.909316 0.751202 
+xyz2: 0.644817 5.024165 0.821369 
+HingeNode_1_: 0.814805 2.907846 0.800743 
+HingeNode_2_: 0.646725 5.023073 0.858190 
+Control surface has 187 loops 
+xyz1: 0.817373 -2.906375 0.850284 
+xyz2: 0.648633 -5.021980 0.895011 
+HingeNode_1_: 0.408686 -1.453188 0.425142 
+HingeNode_2_: 0.324317 -2.510990 0.447505 
+xyz1: 0.812238 -2.909316 0.751202 
+xyz2: 0.644817 -5.024165 0.821369 
+HingeNode_1_: 0.814805 -2.907846 0.800743 
+HingeNode_2_: 0.646725 -5.023073 0.858190 
+Control surface has 105 loops 
+xyz1: 4.714873 0.133600 0.385314 
+xyz2: 4.866715 1.586500 0.373570 
+HingeNode_1_: 2.357437 0.066800 0.192657 
+HingeNode_2_: 2.433358 0.793250 0.186785 
+xyz1: 4.714873 0.133600 0.314686 
+xyz2: 4.866715 1.586500 0.326430 
+HingeNode_1_: 4.714873 0.133600 0.350000 
+HingeNode_2_: 4.866715 1.586500 0.350000 
+Control surface has 105 loops 
+xyz1: 4.714873 -0.133600 0.385314 
+xyz2: 4.866715 -1.586500 0.373570 
+HingeNode_1_: 2.357437 -0.066800 0.192657 
+HingeNode_2_: 2.433358 -0.793250 0.186785 
+xyz1: 4.714873 -0.133600 0.314686 
+xyz2: 4.866715 -1.586500 0.326430 
+HingeNode_1_: 4.714873 -0.133600 0.350000 
+HingeNode_2_: 4.866715 -1.586500 0.350000 
+Control surface has 193 loops 
+xyz1: 4.142692 -0.078872 0.272400 
+xyz2: 5.506970 -0.014439 1.821000 
+HingeNode_1_: 2.071346 -0.039436 0.136200 
+HingeNode_2_: 2.753485 -0.007220 0.910500 
+xyz1: 4.142692 0.078872 0.272400 
+xyz2: 5.506970 0.014439 1.821000 
+HingeNode_1_: 4.142692 0.000000 0.272400 
+HingeNode_2_: 5.506970 0.000000 1.821000 
+Did not find a groups file... so setting up a single group for steady analysis 
+NumberOfComponentGroups_: 1 
+AllComponentsAreFixed_: 0 
+ThereIsRelativeComponentMotion_: 0 
+There are thin 3 components 
+Number of thin  tris:        8070 
+Number of thick tris:        6170 
+Number of thin + thick tris: 14240 
+Number actual total tris:    14240 
+There are thin components... renumbering for edge data structures 
+NumberOfThickTris: 6170 
+There are thick components as well... it's a mixed mesh 
+Thick tris are being stored in temp mesh: 1 
+ComponentIDForComponent(1): 1 
+ComponentIDForComponent(2): 2 
+ComponentIDForComponent(3): 3 
+ComponentIDForComponent(4): 4 
+ComponentIsThick(1): 0 
+ComponentIsThick(2): 0 
+ComponentIsThick(3): 0 
+ComponentIsThick(4): 1 
+Surface 1 has 5658 tris and is being stored in temp mesh: 2 
+Surface 2 has 1390 tris and is being stored in temp mesh: 3 
+Surface 3 has 1022 tris and is being stored in temp mesh: 4 
+Created one thick surface mesh structure... 
+Created 3 thin surface mesh structures 
+Created 4 total mesh structures 
+Searching for thin/thick or thin/thin intersections... 
+Number of kutta nodes before trimming: 178 
+NumberOfKuttaNodes after trimming: 178 
+NumberOfKuttaNodes: 178 
+NumberOfKuttaEdges: 174 
+Working on VortexSheet: 1 
+KuttaNodeList[k].IsKuttaNode: 1 
+IncidentKuttaEdgesOnNode_[k]: 1 
+Found a starting wake sheet node... 3 
+Working on CurrentComponentID: 1 
+Kutta node: 1... ie Node: 3 is not convex! 
+VortexSheet: 1 finished... which has 47 kutta nodes ... and 47 out of 178 kutta nodes are now allocated 
+Working on VortexSheet: 2 
+KuttaNodeList[k].IsKuttaNode: 1 
+IncidentKuttaEdgesOnNode_[k]: 1 
+Found a starting wake sheet node... 1504 
+Working on CurrentComponentID: 1 
+Kutta node: 1... ie Node: 1504 is not convex! 
+VortexSheet: 2 finished... which has 47 kutta nodes ... and 94 out of 178 kutta nodes are now allocated 
+Working on VortexSheet: 3 
+KuttaNodeList[k].IsKuttaNode: 1 
+IncidentKuttaEdgesOnNode_[k]: 1 
+Found a starting wake sheet node... 3382 
+Working on CurrentComponentID: 2 
+VortexSheet: 3 finished... which has 45 kutta nodes ... and 139 out of 178 kutta nodes are now allocated 
+Working on VortexSheet: 4 
+KuttaNodeList[k].IsKuttaNode: 1 
+IncidentKuttaEdgesOnNode_[k]: 1 
+Found a starting wake sheet node... 3789 
+Working on CurrentComponentID: 3 
+VortexSheet: 4 finished... which has 39 kutta nodes ... and 178 out of 178 kutta nodes are now allocated 
+Creating wake grids... 
+WakeAngle: 1.000000 0.000000 0.000000 
+Xmax_ - Xmin_: 8.174385 
+Ymax_ - Ymin_: 10.575827 
+Zmax_ - Zmin_: 2.570243 
+
+Wake FarFieldDist_ set to: 10.575827 
+
+There are:          4 Vortex Sheets 
+NumberOfWakeTrailingNodes_: 32 
+NumberOfWakeNodes: 5696 
+NumberOfWakeLoops: 5394 
+Merging fine wake grids... 
+Merging coarse wake grids... 
+Model is a VSPGEOM Panel geometry 
+NumberOfComponents_: 4
+Total NumberOfNodes:      12919 
+Total NumberOfLoops:      25028 
+Total NumberOfEdges:      38168 
+Total NumberOfKuttaNodes: 178 
+NumberOfSurfaces_:        6 
+Total surface area: 41.056248 
+Minimum loop area constraint set to: 41.056248 
+Agglomerating mesh... 
+Grid:0 --> # loops:      25028 ...# Edges:      38168 ...# Nodes:      12919  
+There are: 12919 coarse grid nodes 
+There are: 25508 coarse grid edges 
+There are: 12368 coarse grid loops 
+Number of Kutta Nodes: 178 
+Grid:1 --> # loops:      12368 ...# Edges:      25508 ...# Nodes:      12919  
+There are: 9945 coarse grid nodes 
+There are: 13358 coarse grid edges 
+There are: 3286 coarse grid loops 
+Number of Kutta Nodes: 178 
+Merged: 5107 edges that were colinear 
+Grid:2 --> # loops:       3286 ...# Edges:       8251 ...# Nodes:       4838 
+There are: 3850 coarse grid nodes 
+There are: 4944 coarse grid edges 
+There are: 1012 coarse grid loops 
+Number of Kutta Nodes: 178 
+Merged: 1102 edges that were colinear 
+Grid:3 --> # loops:       1012 ...# Edges:       3842 ...# Nodes:       2748 
+There are: 2262 coarse grid nodes 
+There are: 2713 coarse grid edges 
+There are: 399 coarse grid loops 
+Number of Kutta Nodes: 178 
+Merged: 261 edges that were colinear 
+Grid:4 --> # loops:        399 ...# Edges:       2452 ...# Nodes:       2001 
+There are: 1734 coarse grid nodes 
+There are: 1980 coarse grid edges 
+There are: 238 coarse grid loops 
+Number of Kutta Nodes: 178 
+Merged: 48 edges that were colinear 
+NumberOfGridLevels_: 4 
+NumberOfSurfaces_: 6 
+WakeAngle: 1.000000 0.000000 0.000000 
+Xmax_ - Xmin_: 8.174385 
+Ymax_ - Ymin_: 10.575827 
+Zmax_ - Zmin_: 2.570243 
+
+Wake FarFieldDist_ set to: 10.575827 
+
+There are:          4 Vortex Sheets 
+Creating vortex sheet data... 
+There are: 47 kutta nodes for sheet: 1 
+There are: 47 kutta nodes for sheet: 2 
+There are: 45 kutta nodes for sheet: 3 
+There are: 39 kutta nodes for sheet: 4 
+Marking kutta node 1 on sheet 1 as concave 
+Marking kutta node 1 on sheet 1 as on thin/thick or thin/thin intersection 
+CoreWidth_: 0.026548 
+There are:         47 kutta nodes for vortex sheet:          1  
+Marking kutta node 1 on sheet 2 as concave 
+Marking kutta node 1 on sheet 2 as on thin/thick or thin/thin intersection 
+CoreWidth_: 0.026548 
+There are:         47 kutta nodes for vortex sheet:          2  
+Marking kutta node 23 on sheet 3 as on thin/thick or thin/thin intersection 
+CoreWidth_: 0.021864 
+There are:         45 kutta nodes for vortex sheet:          3  
+CoreWidth_: 0.014008 
+There are:         39 kutta nodes for vortex sheet:          4  
+Done creating vortex sheet data... 
+j: 1 --> U1,2: 0.371429 0.356553 
+j: 2 --> U1,2: 0.371429 0.400000 
+j: 3 --> U1,2: 0.400000 0.405764 
+j: 4 --> U1,2: 0.405764 0.412608 
+j: 5 --> U1,2: 0.412608 0.420632 
+j: 6 --> U1,2: 0.420632 0.429903 
+j: 7 --> U1,2: 0.429903 0.440436 
+j: 8 --> U1,2: 0.440436 0.452174 
+j: 9 --> U1,2: 0.452174 0.464979 
+j: 10 --> U1,2: 0.464979 0.478626 
+j: 11 --> U1,2: 0.478626 0.492813 
+j: 12 --> U1,2: 0.492813 0.507187 
+j: 13 --> U1,2: 0.507187 0.521374 
+j: 14 --> U1,2: 0.521374 0.535021 
+j: 15 --> U1,2: 0.535021 0.547826 
+j: 16 --> U1,2: 0.547826 0.559564 
+j: 17 --> U1,2: 0.559564 0.570097 
+j: 18 --> U1,2: 0.570097 0.579368 
+j: 19 --> U1,2: 0.579368 0.587392 
+j: 20 --> U1,2: 0.587392 0.594236 
+j: 21 --> U1,2: 0.594236 0.600000 
+j: 22 --> U1,2: 0.600000 0.604687 
+j: 23 --> U1,2: 0.604687 0.610098 
+j: 24 --> U1,2: 0.610098 0.616293 
+j: 25 --> U1,2: 0.616293 0.620340 
+j: 26 --> U1,2: 0.623320 0.620340 
+j: 27 --> U1,2: 0.623320 0.631206 
+j: 28 --> U1,2: 0.631206 0.639952 
+j: 29 --> U1,2: 0.639952 0.649526 
+j: 30 --> U1,2: 0.649526 0.659854 
+j: 31 --> U1,2: 0.659854 0.670825 
+j: 32 --> U1,2: 0.670825 0.682289 
+j: 33 --> U1,2: 0.682289 0.694061 
+j: 34 --> U1,2: 0.694061 0.705939 
+j: 35 --> U1,2: 0.705939 0.717711 
+j: 36 --> U1,2: 0.717711 0.729175 
+j: 37 --> U1,2: 0.729175 0.740146 
+j: 38 --> U1,2: 0.740146 0.750474 
+j: 39 --> U1,2: 0.750474 0.760048 
+j: 40 --> U1,2: 0.760048 0.768794 
+j: 41 --> U1,2: 0.768794 0.776680 
+j: 42 --> U1,2: 0.776680 0.780038 
+j: 43 --> U1,2: 0.783707 0.780038 
+j: 44 --> U1,2: 0.783707 0.789902 
+j: 45 --> U1,2: 0.789902 0.795313 
+j: 46 --> U1,2: 0.795313 0.800000 
+j: 1 --> U1,2: 0.371429 0.356553 
+j: 2 --> U1,2: 0.371429 0.400000 
+j: 3 --> U1,2: 0.400000 0.405764 
+j: 4 --> U1,2: 0.405764 0.412608 
+j: 5 --> U1,2: 0.412608 0.420632 
+j: 6 --> U1,2: 0.420632 0.429903 
+j: 7 --> U1,2: 0.429903 0.440436 
+j: 8 --> U1,2: 0.440436 0.452174 
+j: 9 --> U1,2: 0.452174 0.464979 
+j: 10 --> U1,2: 0.464979 0.478626 
+j: 11 --> U1,2: 0.478626 0.492813 
+j: 12 --> U1,2: 0.492813 0.507187 
+j: 13 --> U1,2: 0.507187 0.521374 
+j: 14 --> U1,2: 0.521374 0.535021 
+j: 15 --> U1,2: 0.535021 0.547826 
+j: 16 --> U1,2: 0.547826 0.559564 
+j: 17 --> U1,2: 0.559564 0.570097 
+j: 18 --> U1,2: 0.570097 0.579368 
+j: 19 --> U1,2: 0.579368 0.587392 
+j: 20 --> U1,2: 0.587392 0.594236 
+j: 21 --> U1,2: 0.594236 0.600000 
+j: 22 --> U1,2: 0.600000 0.604687 
+j: 23 --> U1,2: 0.604687 0.610098 
+j: 24 --> U1,2: 0.610098 0.616293 
+j: 25 --> U1,2: 0.616293 0.620340 
+j: 26 --> U1,2: 0.623320 0.620340 
+j: 27 --> U1,2: 0.623320 0.631206 
+j: 28 --> U1,2: 0.631206 0.639952 
+j: 29 --> U1,2: 0.639952 0.649526 
+j: 30 --> U1,2: 0.649526 0.659854 
+j: 31 --> U1,2: 0.659854 0.670825 
+j: 32 --> U1,2: 0.670825 0.682289 
+j: 33 --> U1,2: 0.682289 0.694061 
+j: 34 --> U1,2: 0.694061 0.705939 
+j: 35 --> U1,2: 0.705939 0.717711 
+j: 36 --> U1,2: 0.717711 0.729175 
+j: 37 --> U1,2: 0.729175 0.740146 
+j: 38 --> U1,2: 0.740146 0.750474 
+j: 39 --> U1,2: 0.750474 0.760048 
+j: 40 --> U1,2: 0.760048 0.768794 
+j: 41 --> U1,2: 0.768794 0.776680 
+j: 42 --> U1,2: 0.776680 0.780038 
+j: 43 --> U1,2: 0.783707 0.780038 
+j: 44 --> U1,2: 0.783707 0.789902 
+j: 45 --> U1,2: 0.789902 0.795313 
+j: 46 --> U1,2: 0.795313 0.800000 
+j: 1 --> U1,2: 0.792521 0.800000 
+j: 2 --> U1,2: 0.788322 0.792521 
+j: 3 --> U1,2: 0.783265 0.788322 
+j: 4 --> U1,2: 0.772052 0.783265 
+j: 5 --> U1,2: 0.758818 0.772052 
+j: 6 --> U1,2: 0.743666 0.758818 
+j: 7 --> U1,2: 0.726916 0.743666 
+j: 8 --> U1,2: 0.709097 0.726916 
+j: 9 --> U1,2: 0.690903 0.709097 
+j: 10 --> U1,2: 0.673084 0.690903 
+j: 11 --> U1,2: 0.656334 0.673084 
+j: 12 --> U1,2: 0.641182 0.656334 
+j: 13 --> U1,2: 0.627948 0.641182 
+j: 14 --> U1,2: 0.616735 0.627948 
+j: 15 --> U1,2: 0.607479 0.616735 
+j: 16 --> U1,2: 0.600000 0.607479 
+j: 17 --> U1,2: 0.533333 0.600000 
+j: 18 --> U1,2: 0.466667 0.533333 
+j: 19 --> U1,2: 0.448000 0.466667 
+j: 20 --> U1,2: 0.400000 0.448000 
+j: 21 --> U1,2: 0.300000 0.400000 
+j: 22 --> U1,2: 0.300000 0.200000 
+j: 23 --> U1,2: 0.200000 0.300000 
+j: 24 --> U1,2: 0.300000 0.400000 
+j: 25 --> U1,2: 0.400000 0.448000 
+j: 26 --> U1,2: 0.448000 0.466667 
+j: 27 --> U1,2: 0.466667 0.533333 
+j: 28 --> U1,2: 0.533333 0.600000 
+j: 29 --> U1,2: 0.600000 0.607479 
+j: 30 --> U1,2: 0.607479 0.616735 
+j: 31 --> U1,2: 0.616735 0.627948 
+j: 32 --> U1,2: 0.627948 0.641182 
+j: 33 --> U1,2: 0.641182 0.656334 
+j: 34 --> U1,2: 0.656334 0.673084 
+j: 35 --> U1,2: 0.673084 0.690903 
+j: 36 --> U1,2: 0.690903 0.709097 
+j: 37 --> U1,2: 0.709097 0.726916 
+j: 38 --> U1,2: 0.726916 0.743666 
+j: 39 --> U1,2: 0.743666 0.758818 
+j: 40 --> U1,2: 0.758818 0.772052 
+j: 41 --> U1,2: 0.772052 0.783265 
+j: 42 --> U1,2: 0.783265 0.788322 
+j: 43 --> U1,2: 0.788322 0.792521 
+j: 44 --> U1,2: 0.792521 0.800000 
+j: 1 --> U1,2: 0.166667 0.181818 
+j: 2 --> U1,2: 0.181818 0.196970 
+j: 3 --> U1,2: 0.196970 0.212121 
+j: 4 --> U1,2: 0.212121 0.227273 
+j: 5 --> U1,2: 0.227273 0.229123 
+j: 6 --> U1,2: 0.242424 0.229123 
+j: 7 --> U1,2: 0.242424 0.257576 
+j: 8 --> U1,2: 0.257576 0.272727 
+j: 9 --> U1,2: 0.272727 0.287879 
+j: 10 --> U1,2: 0.287879 0.303030 
+j: 11 --> U1,2: 0.303030 0.318182 
+j: 12 --> U1,2: 0.318182 0.333333 
+j: 13 --> U1,2: 0.333333 0.357143 
+j: 14 --> U1,2: 0.357143 0.380952 
+j: 15 --> U1,2: 0.380952 0.404762 
+j: 16 --> U1,2: 0.404762 0.428571 
+j: 17 --> U1,2: 0.428571 0.452381 
+j: 18 --> U1,2: 0.452381 0.476190 
+j: 19 --> U1,2: 0.476190 0.500000 
+j: 20 --> U1,2: 0.500000 0.555556 
+j: 21 --> U1,2: 0.555556 0.611111 
+j: 22 --> U1,2: 0.611111 0.666667 
+j: 23 --> U1,2: 0.666667 0.678242 
+j: 24 --> U1,2: 0.678242 0.690654 
+j: 25 --> U1,2: 0.690654 0.703730 
+j: 26 --> U1,2: 0.703730 0.717247 
+j: 27 --> U1,2: 0.717247 0.730952 
+j: 28 --> U1,2: 0.730952 0.744577 
+j: 29 --> U1,2: 0.744577 0.757860 
+j: 30 --> U1,2: 0.757860 0.770564 
+j: 31 --> U1,2: 0.770564 0.782496 
+j: 32 --> U1,2: 0.782496 0.793511 
+j: 33 --> U1,2: 0.793511 0.803519 
+j: 34 --> U1,2: 0.803519 0.812484 
+j: 35 --> U1,2: 0.812484 0.817384 
+j: 36 --> U1,2: 0.820409 0.817384 
+j: 37 --> U1,2: 0.820409 0.827338 
+j: 38 --> U1,2: 0.827338 0.833333 
+Found 4 wake surfaces for component group: 1 
+Found vortex sheet: 1 for component group: 1 
+Found vortex sheet: 2 for component group: 1 
+Found vortex sheet: 3 for component group: 1 
+Found vortex sheet: 4 for component group: 1 
+Xmax_ - Xmin_: 8.174385 
+Ymax_ - Ymin_: 10.575827 
+Zmax_ - Zmin_: 2.570243 
+
+Minimum loop area: 1.717517e-07 
+Character Minimum loop length: 5.860916e-04 
+Setting surface edge cutoff to: 1.000000e-05 
+Number Of Trailing Vortices: 178 
+Used FarFieldDist_ of: 10.575827 to calculate time step 
+TimeAnalysisType_: 4 
+DeltaTime_: 0.165247 
+ReducedFrequency_: 0.055326 
+Unsteady_AngleRate_: 0.594108 
+Model type: PANEL or MIXED 
+Setting up Kelvin constraints... 
+Found 1 disjoint thick bodies 
+Found 1 actual kelvin constraints 
+Number Of Vortex Loop Equations: 6974 
+Number Of Wake Node Equations:   17088 
+Number Of Stall Equations:       174 
+Number Of Vortex Stretching Equations:       5394 
+Total Number Of Equations:       29630 
+No high lift data file found... 
+Creating vortex loop matrix preconditioners data structure... 
+Starting at level: 4 with a target of 500 loops 
+Level: 4 has MaxLoops of: 122 
+Using level: 4 to create matrix preconditioners. 
+Created: 14 Matrix preconditioners 
+Min matrix: 216 Loops 
+Max matrix: 552 Loops 
+Avg matrix: 498 Loops 
+
+Using 6974 out of 6974 surface loops 
+Creating wake nodes matrix preconditioners data structure... 
+Starting... Creating vorticity gradient data structure .. 
+Finished... Creating vorticity gradient data structure .. 
+VSPGeom().Grid(MGLevel_).NumberOfLoops(): 12368 
+NumberOfEngineFaces_: 0 
+VSPGeom().NumberOfSurfaces(): 6 
+Done with setup... 
+WakeAngle_: 0.997226 -0.000000 0.074438 
+Xmax_ - Xmin_: 8.174385 
+Ymax_ - Ymin_: 10.575827 
+Zmax_ - Zmin_: 2.570243 
+
+The wake FarDist set to: 10.575827 
+Updating wake grids... 
+SigmaAvg_: 0.099913 
+Creating interaction lists... 
+
+Forward sweep... 
+1000 / 12368 2000 / 12368 3000 / 12368 4000 / 12368 5000 / 12368 6000 / 12368 7000 / 12368 8000 / 12368 9000 / 12368 10000 / 12368 11000 / 12368 12000 / 12368 Working on level 2 of 4 Working on level 3 of 4 Working on level 4 of 4 Forward Mode: total multipole speed up ratio: 14.064898 
+Surface: 1 ... ComponentID: 1 ... Name: Wing_C ... SurfaceGIDList: FINPJLCHBA 
+Surface: 2 ... ComponentID: 1 ... Name: Wing_C ... SurfaceGIDList: FINPJLCHBA 
+Surface: 3 ... ComponentID: 2 ... Name: Tail_C ... SurfaceGIDList: WUTDECXIUE 
+Surface: 4 ... ComponentID: 2 ... Name: Tail_C ... SurfaceGIDList: WUTDECXIUE 
+Surface: 5 ... ComponentID: 3 ... Name: TailV_C ... SurfaceGIDList: GKZFRDJWKL 
+Surface: 6 ... ComponentID: 4 ... Name: Fuselage_S ... SurfaceGIDList: VCMZSOWZLN 
+Solving... Mach: 0.023509 ... Alpha: 4.268907 ... Beta: 0.000000 
+
+                                                                    Surface Integration Forces and Moments -->                                                  Wake Induced Forces -->  
+                                                                    Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-  Wake-Wake-Wake-Wake-Wake-Wake-Wake-Wake 
+   Time      Iter      Mach       AoA      Beta       CLo       CLi      CLtot     CDo        CDi      CDtot      L/D        E       CMxtot    CMytot    Cmztot    CLiw      CDiw    LoDwake    Ewake      T/QS      L2Res    MaxRes  Wall_Time 
+1000 / 12368 2000 / 12368 3000 / 12368 4000 / 12368 5000 / 12368 6000 / 12368 7000 / 12368 8000 / 12368 9000 / 12368 10000 / 12368 11000 / 12368 12000 / 12368 Working on level 2 of 4 Working on level 3 of 4 Working on level 4 of 4 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.97772    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.32931 / -1.00000   ...  Max:    1.64840 / -0.09691   ... STime:    4.91700 ... TotTime:    9.46900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.47356 / -1.00000   ...  Max:    1.50416 / -0.09691   ... STime:    5.15200 ... TotTime:    9.70400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.57161 / -1.00000   ...  Max:    1.40611 / -0.09691   ... STime:    5.35800 ... TotTime:    9.91000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.60613 / -1.00000   ...  Max:    1.37159 / -0.09691   ... STime:    5.55600 ... TotTime:   10.10800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.62278 / -1.00000   ...  Max:    1.35493 / -0.09691   ... STime:    5.74100 ... TotTime:   10.29300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -0.70562 / -1.00000   ...  Max:    1.27210 / -0.09691   ... STime:    5.95100 ... TotTime:   10.50300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -0.79173 / -1.00000   ...  Max:    1.18599 / -0.09691   ... STime:    6.16700 ... TotTime:   10.71900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -0.84118 / -1.00000   ...  Max:    1.13653 / -0.09691   ... STime:    6.37500 ... TotTime:   10.92700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -0.88710 / -1.00000   ...  Max:    1.09062 / -0.09691   ... STime:    6.58000 ... TotTime:   11.13200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -0.96516 / -1.00000   ...  Max:    1.01256 / -0.09691   ... STime:    6.79000 ... TotTime:   11.34200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -1.04087 / -1.00000   ...  Max:    0.93684 / -0.09691   ... STime:    6.99600 ... TotTime:   11.54800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -1.22733 / -1.00000   ...  Max:    0.75039 / -0.09691   ... STime:    7.19100 ... TotTime:   11.74300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -1.35747 / -1.00000   ...  Max:    0.62025 / -0.09691   ... STime:    7.39600 ... TotTime:   11.94800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -1.60991 / -1.00000   ...  Max:    0.36781 / -0.09691   ... STime:    7.60200 ... TotTime:   12.15400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -1.77009 / -1.00000   ...  Max:    0.20763 / -0.09691   ... STime:    7.80700 ... TotTime:   12.35900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -1.88521 / -1.00000   ...  Max:    0.09251 / -0.09691   ... STime:    8.02500 ... TotTime:   12.57700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -1.96932 / -1.00000   ...  Max:    0.00840 / -0.09691   ... STime:    8.25000 ... TotTime:   12.80200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -1.99595 / -1.00000   ...  Max:   -0.01823 / -0.09691   ... STime:    8.48800 ... TotTime:   13.04000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -2.00188 / -1.00000   ...  Max:   -0.02416 / -0.09691   ... STime:    8.71000 ... TotTime:   13.26200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -2.00927 / -1.00000   ...  Max:   -0.03156 / -0.09691   ... STime:    8.93300 ... TotTime:   13.48500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -2.01140 / -1.00000   ...  Max:   -0.03369 / -0.09691   ... STime:    9.16800 ... TotTime:   13.72000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -2.01429 / -1.00000   ...  Max:   -0.03657 / -0.09691   ... STime:    9.37900 ... TotTime:   13.93100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -2.01870 / -1.00000   ...  Max:   -0.04098 / -0.09691   ... STime:    9.59700 ... TotTime:   14.14900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -2.01944 / -1.00000   ...  Max:   -0.04173 / -0.09691   ... STime:    9.80500 ... TotTime:   14.35700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    25 ... Red:   -2.02047 / -1.00000   ...  Max:   -0.04276 / -0.09691   ... STime:   10.01700 ... TotTime:   14.56900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    26 ... Red:   -2.03123 / -1.00000   ...  Max:   -0.05351 / -0.09691   ... STime:   10.22800 ... TotTime:   14.78000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    27 ... Red:   -2.05463 / -1.00000   ...  Max:   -0.07691 / -0.09691   ... STime:   10.46500 ... TotTime:   15.01700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    28 ... Red:   -2.12383 / -1.00000   ...  Max:   -0.14612 / -0.09691   ... STime:   10.67700 ... TotTime:   15.22900   0.16525         1   0.02351   4.26891   0.00000  -0.00101  -0.23208  -0.23309   0.01317  -0.58476  -0.57159   0.00000   0.00000  -0.00045   0.41236   0.00023   0.00000   0.00000   0.00000   0.00000   0.00000  -0.12902   0.89353  11.18400 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.35822    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.45201 / -1.00000   ...  Max:    0.90620 / -0.09691   ... STime:   12.85300 ... TotTime:   17.40500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.77452 / -1.00000   ...  Max:    0.58369 / -0.09691   ... STime:   13.05500 ... TotTime:   17.60700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.04373 / -1.00000   ...  Max:    0.31448 / -0.09691   ... STime:   13.28000 ... TotTime:   17.83200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.18824 / -1.00000   ...  Max:    0.16998 / -0.09691   ... STime:   13.52800 ... TotTime:   18.08000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.33401 / -1.00000   ...  Max:    0.02420 / -0.09691   ... STime:   13.73400 ... TotTime:   18.28600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.44334 / -1.00000   ...  Max:   -0.08513 / -0.09691   ... STime:   13.94000 ... TotTime:   18.49200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.51962 / -1.00000   ...  Max:   -0.16140 / -0.09691   ... STime:   14.15600 ... TotTime:   18.70800   0.16525         2   0.02351   4.26891   0.00000  -0.00107  -0.08694  -0.08800   0.01375  -0.58209  -0.56834   0.00000   0.00000   0.00031   0.40415   0.00033   0.28352   0.01052   0.00000   0.00000   0.00000  -0.02229   2.04338  14.65100 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.99449    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.34219 / -1.00000   ...  Max:    0.65230 / -0.09691   ... STime:   16.24600 ... TotTime:   20.79800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.55717 / -1.00000   ...  Max:    0.43732 / -0.09691   ... STime:   16.48900 ... TotTime:   21.04100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.62580 / -1.00000   ...  Max:    0.36870 / -0.09691   ... STime:   16.73600 ... TotTime:   21.28800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.63753 / -1.00000   ...  Max:    0.35697 / -0.09691   ... STime:   16.95800 ... TotTime:   21.51000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.64027 / -1.00000   ...  Max:    0.35422 / -0.09691   ... STime:   17.16200 ... TotTime:   21.71400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -0.64080 / -1.00000   ...  Max:    0.35369 / -0.09691   ... STime:   17.38200 ... TotTime:   21.93400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -0.64268 / -1.00000   ...  Max:    0.35181 / -0.09691   ... STime:   17.59400 ... TotTime:   22.14600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -0.66890 / -1.00000   ...  Max:    0.32559 / -0.09691   ... STime:   17.80700 ... TotTime:   22.35900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -0.68210 / -1.00000   ...  Max:    0.31239 / -0.09691   ... STime:   18.01200 ... TotTime:   22.56400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -0.68569 / -1.00000   ...  Max:    0.30880 / -0.09691   ... STime:   18.24400 ... TotTime:   22.79600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -0.70372 / -1.00000   ...  Max:    0.29077 / -0.09691   ... STime:   18.46600 ... TotTime:   23.01800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -0.72903 / -1.00000   ...  Max:    0.26546 / -0.09691   ... STime:   18.68100 ... TotTime:   23.23300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -0.75297 / -1.00000   ...  Max:    0.24152 / -0.09691   ... STime:   18.89300 ... TotTime:   23.44500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -0.79051 / -1.00000   ...  Max:    0.20398 / -0.09691   ... STime:   19.13200 ... TotTime:   23.68400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -0.80004 / -1.00000   ...  Max:    0.19445 / -0.09691   ... STime:   19.35300 ... TotTime:   23.90500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -0.80364 / -1.00000   ...  Max:    0.19085 / -0.09691   ... STime:   19.58100 ... TotTime:   24.13300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -0.80773 / -1.00000   ...  Max:    0.18676 / -0.09691   ... STime:   19.78400 ... TotTime:   24.33600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -0.81935 / -1.00000   ...  Max:    0.17515 / -0.09691   ... STime:   20.00400 ... TotTime:   24.55600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -0.84537 / -1.00000   ...  Max:    0.14912 / -0.09691   ... STime:   20.25000 ... TotTime:   24.80200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -0.85100 / -1.00000   ...  Max:    0.14349 / -0.09691   ... STime:   20.49700 ... TotTime:   25.04900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -0.85992 / -1.00000   ...  Max:    0.13458 / -0.09691   ... STime:   20.74200 ... TotTime:   25.29400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -0.87073 / -1.00000   ...  Max:    0.12377 / -0.09691   ... STime:   20.98700 ... TotTime:   25.53900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -0.88789 / -1.00000   ...  Max:    0.10661 / -0.09691   ... STime:   21.23100 ... TotTime:   25.78300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -0.93992 / -1.00000   ...  Max:    0.05457 / -0.09691   ... STime:   21.44800 ... TotTime:   26.00000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    25 ... Red:   -0.99743 / -1.00000   ...  Max:   -0.00294 / -0.09691   ... STime:   21.68800 ... TotTime:   26.24000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    26 ... Red:   -1.06189 / -1.00000   ...  Max:   -0.06739 / -0.09691   ... STime:   21.92900 ... TotTime:   26.48100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    27 ... Red:   -1.19328 / -1.00000   ...  Max:   -0.19879 / -0.09691   ... STime:   22.17700 ... TotTime:   26.72900   0.16525         3   0.02351   4.26891   0.00000  -0.00112   0.02943   0.02831   0.01438  -0.56556  -0.55118   0.00000   0.00000  -0.00043   0.41887  -0.00027   0.41250   0.01735   0.00000   0.00000   0.00000  -0.47743   1.32205  22.65600 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.26269    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.38268 / -1.00000   ...  Max:    0.88000 / -0.09691   ... STime:   24.35300 ... TotTime:   28.90500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.68642 / -1.00000   ...  Max:    0.57627 / -0.09691   ... STime:   24.57000 ... TotTime:   29.12200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.84259 / -1.00000   ...  Max:    0.42010 / -0.09691   ... STime:   24.79600 ... TotTime:   29.34800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.90973 / -1.00000   ...  Max:    0.35296 / -0.09691   ... STime:   25.01900 ... TotTime:   29.57100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.94916 / -1.00000   ...  Max:    0.31353 / -0.09691   ... STime:   25.24400 ... TotTime:   29.79600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -0.96019 / -1.00000   ...  Max:    0.30250 / -0.09691   ... STime:   25.47200 ... TotTime:   30.02400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -0.96395 / -1.00000   ...  Max:    0.29873 / -0.09691   ... STime:   25.70400 ... TotTime:   30.25600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -0.97155 / -1.00000   ...  Max:    0.29114 / -0.09691   ... STime:   25.91700 ... TotTime:   30.46900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -0.97586 / -1.00000   ...  Max:    0.28682 / -0.09691   ... STime:   26.16100 ... TotTime:   30.71300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -0.98414 / -1.00000   ...  Max:    0.27854 / -0.09691   ... STime:   26.38700 ... TotTime:   30.93900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -0.99617 / -1.00000   ...  Max:    0.26652 / -0.09691   ... STime:   26.65100 ... TotTime:   31.20300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -1.00821 / -1.00000   ...  Max:    0.25448 / -0.09691   ... STime:   26.89500 ... TotTime:   31.44700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -1.03116 / -1.00000   ...  Max:    0.23152 / -0.09691   ... STime:   27.14200 ... TotTime:   31.69400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -1.06403 / -1.00000   ...  Max:    0.19866 / -0.09691   ... STime:   27.37700 ... TotTime:   31.92900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -1.08347 / -1.00000   ...  Max:    0.17921 / -0.09691   ... STime:   27.61800 ... TotTime:   32.17000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -1.12019 / -1.00000   ...  Max:    0.14249 / -0.09691   ... STime:   27.87800 ... TotTime:   32.43000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -1.13189 / -1.00000   ...  Max:    0.13079 / -0.09691   ... STime:   28.12100 ... TotTime:   32.67300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -1.13903 / -1.00000   ...  Max:    0.12365 / -0.09691   ... STime:   28.37000 ... TotTime:   32.92200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -1.14986 / -1.00000   ...  Max:    0.11282 / -0.09691   ... STime:   28.60100 ... TotTime:   33.15300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -1.15509 / -1.00000   ...  Max:    0.10759 / -0.09691   ... STime:   28.81800 ... TotTime:   33.37000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -1.16682 / -1.00000   ...  Max:    0.09587 / -0.09691   ... STime:   29.04500 ... TotTime:   33.59700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -1.18814 / -1.00000   ...  Max:    0.07455 / -0.09691   ... STime:   29.28300 ... TotTime:   33.83500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -1.21927 / -1.00000   ...  Max:    0.04342 / -0.09691   ... STime:   29.50900 ... TotTime:   34.06100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -1.25440 / -1.00000   ...  Max:    0.00829 / -0.09691   ... STime:   29.71000 ... TotTime:   34.26200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    25 ... Red:   -1.28235 / -1.00000   ...  Max:   -0.01966 / -0.09691   ... STime:   29.91600 ... TotTime:   34.46800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    26 ... Red:   -1.35339 / -1.00000   ...  Max:   -0.09070 / -0.09691   ... STime:   30.12200 ... TotTime:   34.67400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    27 ... Red:   -1.45820 / -1.00000   ...  Max:   -0.19551 / -0.09691   ... STime:   30.35000 ... TotTime:   34.90200   0.16525         4   0.02351   4.26891   0.00000  -0.00114   0.07158   0.07044   0.01454  -0.57326  -0.55872   0.00000   0.00000   0.00099   0.40031  -0.00090   0.43073   0.00876   0.00000   0.00000   0.00000  -0.22173   1.62897  30.85300 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.11069    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.45341 / -1.00000   ...  Max:    0.65728 / -0.09691   ... STime:   32.55600 ... TotTime:   37.10800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.73096 / -1.00000   ...  Max:    0.37972 / -0.09691   ... STime:   32.78200 ... TotTime:   37.33400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.96455 / -1.00000   ...  Max:    0.14614 / -0.09691   ... STime:   33.02500 ... TotTime:   37.57700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.12127 / -1.00000   ...  Max:   -0.01058 / -0.09691   ... STime:   33.24700 ... TotTime:   37.79900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.23151 / -1.00000   ...  Max:   -0.12082 / -0.09691   ... STime:   33.47100 ... TotTime:   38.02300   0.16525         5   0.02351   4.26891   0.00000  -0.00114   0.05892   0.05778   0.01454  -0.56877  -0.55423   0.00000   0.00000  -0.00021   0.37217   0.00176   0.44587   0.00620   0.00000   0.00000   0.00000  -0.33455   1.64522  33.95100 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.22864    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.68934 / -1.00000   ...  Max:    0.53930 / -0.09691   ... STime:   35.61300 ... TotTime:   40.16500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -1.03193 / -1.00000   ...  Max:    0.19671 / -0.09691   ... STime:   35.84600 ... TotTime:   40.39800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.22461 / -1.00000   ...  Max:    0.00403 / -0.09691   ... STime:   36.07400 ... TotTime:   40.62600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.40073 / -1.00000   ...  Max:   -0.17209 / -0.09691   ... STime:   36.29000 ... TotTime:   40.84200   0.16525         6   0.02351   4.26891   0.00000  -0.00115   0.09614   0.09500   0.01465  -0.55452  -0.53987   0.00000   0.00000   0.00078   0.36411   0.00037   0.46388   0.02977   0.00000   0.00000   0.00000  -0.43196   1.36399  36.76700 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.84949    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.41059 / -1.00000   ...  Max:    0.43889 / -0.09691   ... STime:   38.45500 ... TotTime:   43.00700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.65396 / -1.00000   ...  Max:    0.19553 / -0.09691   ... STime:   38.68300 ... TotTime:   43.23500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.80142 / -1.00000   ...  Max:    0.04807 / -0.09691   ... STime:   38.90200 ... TotTime:   43.45400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.90578 / -1.00000   ...  Max:   -0.05629 / -0.09691   ... STime:   39.12700 ... TotTime:   43.67900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.99451 / -1.00000   ...  Max:   -0.14502 / -0.09691   ... STime:   39.35500 ... TotTime:   43.90700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.09673 / -1.00000   ...  Max:   -0.24724 / -0.09691   ... STime:   39.56400 ... TotTime:   44.11600   0.16525         7   0.02351   4.26891   0.00000  -0.00112   0.02936   0.02824   0.01439  -0.57101  -0.55662   0.00000   0.00000  -0.00001   0.40507  -0.00089   0.41590   0.01905   0.00000   0.00000   0.00000  -0.60119   1.16175  40.11200 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.24011    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.35223 / -1.00000   ...  Max:    0.88788 / -0.09691   ... STime:   41.80200 ... TotTime:   46.35400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.76886 / -1.00000   ...  Max:    0.47125 / -0.09691   ... STime:   42.03500 ... TotTime:   46.58700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.95263 / -1.00000   ...  Max:    0.28748 / -0.09691   ... STime:   41.29400 ... TotTime:   45.84600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.05417 / -1.00000   ...  Max:    0.18594 / -0.09691   ... STime:   42.51900 ... TotTime:   47.07100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.10458 / -1.00000   ...  Max:    0.13553 / -0.09691   ... STime:   42.73900 ... TotTime:   47.29100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.13076 / -1.00000   ...  Max:    0.10935 / -0.09691   ... STime:   42.96100 ... TotTime:   47.51300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.14565 / -1.00000   ...  Max:    0.09446 / -0.09691   ... STime:   43.19300 ... TotTime:   47.74500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -1.16590 / -1.00000   ...  Max:    0.07421 / -0.09691   ... STime:   43.42900 ... TotTime:   47.98100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -1.16593 / -1.00000   ...  Max:    0.07418 / -0.09691   ... STime:   43.64800 ... TotTime:   48.20000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -1.16679 / -1.00000   ...  Max:    0.07332 / -0.09691   ... STime:   43.87700 ... TotTime:   48.42900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -1.17022 / -1.00000   ...  Max:    0.06989 / -0.09691   ... STime:   44.09400 ... TotTime:   48.64600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -1.17091 / -1.00000   ...  Max:    0.06920 / -0.09691   ... STime:   44.31600 ... TotTime:   48.86800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -1.18147 / -1.00000   ...  Max:    0.05864 / -0.09691   ... STime:   44.53100 ... TotTime:   49.08300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -1.19960 / -1.00000   ...  Max:    0.04051 / -0.09691   ... STime:   44.74700 ... TotTime:   49.29900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -1.21399 / -1.00000   ...  Max:    0.02612 / -0.09691   ... STime:   44.96900 ... TotTime:   49.52100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -1.23671 / -1.00000   ...  Max:    0.00340 / -0.09691   ... STime:   45.18800 ... TotTime:   49.74000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -1.26484 / -1.00000   ...  Max:   -0.02473 / -0.09691   ... STime:   45.41300 ... TotTime:   49.96500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -1.28396 / -1.00000   ...  Max:   -0.04385 / -0.09691   ... STime:   45.64500 ... TotTime:   50.19700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -1.29127 / -1.00000   ...  Max:   -0.05116 / -0.09691   ... STime:   45.89500 ... TotTime:   50.44700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -1.29803 / -1.00000   ...  Max:   -0.05792 / -0.09691   ... STime:   46.13700 ... TotTime:   50.68900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -1.30781 / -1.00000   ...  Max:   -0.06770 / -0.09691   ... STime:   46.39900 ... TotTime:   50.95100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -1.31649 / -1.00000   ...  Max:   -0.07638 / -0.09691   ... STime:   46.65900 ... TotTime:   51.21100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -1.33156 / -1.00000   ...  Max:   -0.09145 / -0.09691   ... STime:   46.88000 ... TotTime:   51.43200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -1.37060 / -1.00000   ...  Max:   -0.13049 / -0.09691   ... STime:   47.15200 ... TotTime:   51.70400   0.16525         8   0.02351   4.26891   0.00000  -0.00114   0.04838   0.04724   0.01457  -0.57173  -0.55716   0.00000   0.00000   0.00028   0.41668   0.00175   0.42674   0.01354   0.00000   0.00000   0.00000  -0.34204   1.53841  47.68700 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.20619    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.40494 / -1.00000   ...  Max:    0.80125 / -0.09691   ... STime:   49.48600 ... TotTime:   54.03800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.72494 / -1.00000   ...  Max:    0.48125 / -0.09691   ... STime:   49.70900 ... TotTime:   54.26100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.87178 / -1.00000   ...  Max:    0.33441 / -0.09691   ... STime:   49.96400 ... TotTime:   54.51600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.96693 / -1.00000   ...  Max:    0.23926 / -0.09691   ... STime:   50.20000 ... TotTime:   54.75200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.07998 / -1.00000   ...  Max:    0.12621 / -0.09691   ... STime:   50.44800 ... TotTime:   55.00000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.19417 / -1.00000   ...  Max:    0.01202 / -0.09691   ... STime:   50.67000 ... TotTime:   55.22200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.23675 / -1.00000   ...  Max:   -0.03056 / -0.09691   ... STime:   50.87900 ... TotTime:   55.43100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -1.28722 / -1.00000   ...  Max:   -0.08103 / -0.09691   ... STime:   51.08100 ... TotTime:   55.63300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -1.34218 / -1.00000   ...  Max:   -0.13599 / -0.09691   ... STime:   51.28300 ... TotTime:   55.83500   0.16525         9   0.02351   4.26891   0.00000  -0.00114   0.06865   0.06751   0.01456  -0.55807  -0.54352   0.00000   0.00000   0.00152   0.38261  -0.00075   0.43637   0.01354   0.00000   0.00000   0.00000  -0.25331   1.54915  51.79600 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.22801    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.51312 / -1.00000   ...  Max:    0.71489 / -0.09691   ... STime:   53.39600 ... TotTime:   57.94800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.81296 / -1.00000   ...  Max:    0.41505 / -0.09691   ... STime:   53.61700 ... TotTime:   58.16900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.94127 / -1.00000   ...  Max:    0.28674 / -0.09691   ... STime:   53.84900 ... TotTime:   58.40100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.11437 / -1.00000   ...  Max:    0.11363 / -0.09691   ... STime:   54.07300 ... TotTime:   58.62500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.22165 / -1.00000   ...  Max:    0.00635 / -0.09691   ... STime:   54.31500 ... TotTime:   58.86700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.37765 / -1.00000   ...  Max:   -0.14964 / -0.09691   ... STime:   54.53400 ... TotTime:   59.08600   0.16525        10   0.02351   4.26891   0.00000  -0.00114   0.06525   0.06410   0.01456  -0.56022  -0.54566   0.00000   0.00000  -0.00309   0.40000  -0.00195   0.44580   0.02583   0.00000   0.00000   0.00000  -0.29583   1.31852  55.03400 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.18262    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.49749 / -1.00000   ...  Max:    0.68512 / -0.09691   ... STime:   56.70300 ... TotTime:   61.25500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.80710 / -1.00000   ...  Max:    0.37552 / -0.09691   ... STime:   56.91700 ... TotTime:   61.46900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.10529 / -1.00000   ...  Max:    0.07732 / -0.09691   ... STime:   57.14500 ... TotTime:   61.69700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.31338 / -1.00000   ...  Max:   -0.13076 / -0.09691   ... STime:   57.34800 ... TotTime:   61.90000   0.16525        11   0.02351   4.26891   0.00000  -0.00112   0.04685   0.04574   0.01436  -0.55302  -0.53865   0.00000   0.00000   0.00131   0.38069   0.00229   0.41454   0.02063   0.00000   0.00000   0.00000  -0.30282   1.32917  57.84400 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.31389    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.44657 / -1.00000   ...  Max:    0.86732 / -0.09691   ... STime:   59.50800 ... TotTime:   64.06000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.90667 / -1.00000   ...  Max:    0.40722 / -0.09691   ... STime:   59.73500 ... TotTime:   64.28700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.15666 / -1.00000   ...  Max:    0.15723 / -0.09691   ... STime:   59.97400 ... TotTime:   64.52600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.35716 / -1.00000   ...  Max:   -0.04327 / -0.09691   ... STime:   60.20200 ... TotTime:   64.75400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.46017 / -1.00000   ...  Max:   -0.14628 / -0.09691   ... STime:   60.40900 ... TotTime:   64.96100   0.16525        12   0.02351   4.26891   0.00000  -0.00113   0.05491   0.05378   0.01445  -0.57893  -0.56447   0.00000   0.00000  -0.00149   0.40240  -0.00098   0.41714   0.01434   0.00000   0.00000   0.00000  -0.12552   1.69052  60.90200 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.22652    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.45119 / -1.00000   ...  Max:    0.77533 / -0.09691   ... STime:   62.46800 ... TotTime:   67.02000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.83978 / -1.00000   ...  Max:    0.38674 / -0.09691   ... STime:   62.71300 ... TotTime:   67.26500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.07694 / -1.00000   ...  Max:    0.14958 / -0.09691   ... STime:   62.92700 ... TotTime:   67.47900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.23345 / -1.00000   ...  Max:   -0.00693 / -0.09691   ... STime:   63.15400 ... TotTime:   67.70600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.34795 / -1.00000   ...  Max:   -0.12143 / -0.09691   ... STime:   63.36500 ... TotTime:   67.91700   0.16525        13   0.02351   4.26891   0.00000  -0.00114   0.07801   0.07687   0.01455  -0.57646  -0.56191   0.00000   0.00000  -0.00059   0.38227   0.00037   0.44069   0.00866   0.00000   0.00000   0.00000  -0.39556   1.29056  63.85900 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.15671    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.62230 / -1.00000   ...  Max:    0.53441 / -0.09691   ... STime:   65.62200 ... TotTime:   70.17400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.95292 / -1.00000   ...  Max:    0.20379 / -0.09691   ... STime:   65.84300 ... TotTime:   70.39500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.19899 / -1.00000   ...  Max:   -0.04228 / -0.09691   ... STime:   66.06900 ... TotTime:   70.62100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.39732 / -1.00000   ...  Max:   -0.24061 / -0.09691   ... STime:   66.30500 ... TotTime:   70.85700   0.16525        14   0.02351   4.26891   0.00000  -0.00114   0.07784   0.07670   0.01457  -0.56204  -0.54747   0.00000   0.00000   0.00266   0.36960  -0.00156   0.44970   0.02138   0.00000   0.00000   0.00000  -0.40814   1.48719  66.81200 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.98361    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.43147 / -1.00000   ...  Max:    0.55214 / -0.09691   ... STime:   68.67200 ... TotTime:   73.22400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.78072 / -1.00000   ...  Max:    0.20289 / -0.09691   ... STime:   68.92300 ... TotTime:   73.47500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.92356 / -1.00000   ...  Max:    0.06005 / -0.09691   ... STime:   69.17800 ... TotTime:   73.73000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.02060 / -1.00000   ...  Max:   -0.03699 / -0.09691   ... STime:   69.43300 ... TotTime:   73.98500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.08542 / -1.00000   ...  Max:   -0.10181 / -0.09691   ... STime:   69.68900 ... TotTime:   74.24100   0.16525        15   0.02351   4.26891   0.00000  -0.00113   0.04982   0.04869   0.01444  -0.56358  -0.54913   0.00000   0.00000  -0.00273   0.39282   0.00013   0.42473   0.02188   0.00000   0.00000   0.00000  -0.50306   1.46007  70.24800 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.30763    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.46704 / -1.00000   ...  Max:    0.84059 / -0.09691   ... STime:   72.13800 ... TotTime:   76.69000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.84589 / -1.00000   ...  Max:    0.46174 / -0.09691   ... STime:   72.37400 ... TotTime:   76.92600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.05563 / -1.00000   ...  Max:    0.25200 / -0.09691   ... STime:   72.60800 ... TotTime:   77.16000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.23246 / -1.00000   ...  Max:    0.07516 / -0.09691   ... STime:   72.82200 ... TotTime:   77.37400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.33305 / -1.00000   ...  Max:   -0.02542 / -0.09691   ... STime:   73.04200 ... TotTime:   77.59400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.44992 / -1.00000   ...  Max:   -0.14229 / -0.09691   ... STime:   73.24600 ... TotTime:   77.79800   0.16525        16   0.02351   4.26891   0.00000  -0.00113   0.01520   0.01406   0.01450  -0.59375  -0.57925   0.00000   0.00000  -0.00067   0.46079  -0.00490   0.41915   0.01496   0.00000   0.00000   0.00000  -0.33321   1.50864  73.74600 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.34205    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.47605 / -1.00000   ...  Max:    0.86600 / -0.09691   ... STime:   75.41200 ... TotTime:   79.96400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.74072 / -1.00000   ...  Max:    0.60133 / -0.09691   ... STime:   75.62800 ... TotTime:   80.18000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.92682 / -1.00000   ...  Max:    0.41523 / -0.09691   ... STime:   75.84200 ... TotTime:   80.39400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.07350 / -1.00000   ...  Max:    0.26855 / -0.09691   ... STime:   76.06000 ... TotTime:   80.61200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.30725 / -1.00000   ...  Max:    0.03480 / -0.09691   ... STime:   76.29000 ... TotTime:   80.84200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.45181 / -1.00000   ...  Max:   -0.10976 / -0.09691   ... STime:   76.50300 ... TotTime:   81.05500   0.16525        17   0.02351   4.26891   0.00000  -0.00114   0.04636   0.04522   0.01456  -0.57811  -0.56355   0.00000   0.00000  -0.00019   0.39931   0.00125   0.43993   0.00743   0.00000   0.00000   0.00000  -0.30366   1.33327  77.00400 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.40211    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.60154 / -1.00000   ...  Max:    0.80057 / -0.09691   ... STime:   78.60400 ... TotTime:   83.15600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.84111 / -1.00000   ...  Max:    0.56100 / -0.09691   ... STime:   78.83400 ... TotTime:   83.38600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.00613 / -1.00000   ...  Max:    0.39598 / -0.09691   ... STime:   79.07500 ... TotTime:   83.62700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.26567 / -1.00000   ...  Max:    0.13644 / -0.09691   ... STime:   79.31600 ... TotTime:   83.86800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.41532 / -1.00000   ...  Max:   -0.01320 / -0.09691   ... STime:   79.53200 ... TotTime:   84.08400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.56822 / -1.00000   ...  Max:   -0.16611 / -0.09691   ... STime:   79.76600 ... TotTime:   84.31800   0.16525        18   0.02351   4.26891   0.00000  -0.00115   0.08408   0.08292   0.01469  -0.55452  -0.53984   0.00000   0.00000   0.00618   0.37978   0.00052   0.46283   0.02315   0.00000   0.00000   0.00000  -0.25393   1.66753  80.26800 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.18098    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.51897 / -1.00000   ...  Max:    0.66201 / -0.09691   ... STime:   81.92600 ... TotTime:   86.47800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.79268 / -1.00000   ...  Max:    0.38830 / -0.09691   ... STime:   82.17900 ... TotTime:   86.73100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.97787 / -1.00000   ...  Max:    0.20311 / -0.09691   ... STime:   82.42200 ... TotTime:   86.97400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.09527 / -1.00000   ...  Max:    0.08571 / -0.09691   ... STime:   82.68300 ... TotTime:   87.23500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.17131 / -1.00000   ...  Max:    0.00967 / -0.09691   ... STime:   82.92400 ... TotTime:   87.47600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.23826 / -1.00000   ...  Max:   -0.05728 / -0.09691   ... STime:   83.18300 ... TotTime:   87.73500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.27131 / -1.00000   ...  Max:   -0.09032 / -0.09691   ... STime:   83.44500 ... TotTime:   87.99700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -1.30672 / -1.00000   ...  Max:   -0.12574 / -0.09691   ... STime:   83.72300 ... TotTime:   88.27500   0.16525        19   0.02351   4.26891   0.00000  -0.00113   0.06629   0.06516   0.01452  -0.55064  -0.53612   0.00000   0.00000  -0.00360   0.38832   0.00157   0.44205   0.02554   0.00000   0.00000   0.00000  -0.34334   1.45048  84.29100 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.24645    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.35763 / -1.00000   ...  Max:    0.88882 / -0.09691   ... STime:   86.12800 ... TotTime:   90.68000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.69385 / -1.00000   ...  Max:    0.55260 / -0.09691   ... STime:   86.39800 ... TotTime:   90.95000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.95705 / -1.00000   ...  Max:    0.28940 / -0.09691   ... STime:   86.64300 ... TotTime:   91.19500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.15252 / -1.00000   ...  Max:    0.09394 / -0.09691   ... STime:   86.88300 ... TotTime:   91.43500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.23497 / -1.00000   ...  Max:    0.01148 / -0.09691   ... STime:   87.13600 ... TotTime:   91.68800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.43053 / -1.00000   ...  Max:   -0.18408 / -0.09691   ... STime:   87.38000 ... TotTime:   91.93200   0.16525        20   0.02351   4.26891   0.00000  -0.00113   0.03567   0.03454   0.01445  -0.58070  -0.56625   0.00000   0.00000  -0.00106   0.41496  -0.00282   0.41753   0.01763   0.00000   0.00000   0.00000  -0.28276   1.57334  87.99200 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.38203    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.45772 / -1.00000   ...  Max:    0.92431 / -0.09691   ... STime:   90.02400 ... TotTime:   94.57600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.76085 / -1.00000   ...  Max:    0.62118 / -0.09691   ... STime:   90.27700 ... TotTime:   94.82900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -1.00837 / -1.00000   ...  Max:    0.37366 / -0.09691   ... STime:   90.54900 ... TotTime:   95.10100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.20540 / -1.00000   ...  Max:    0.17664 / -0.09691   ... STime:   90.81700 ... TotTime:   95.36900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.26372 / -1.00000   ...  Max:    0.11832 / -0.09691   ... STime:   91.08200 ... TotTime:   95.63400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.38630 / -1.00000   ...  Max:   -0.00427 / -0.09691   ... STime:   91.34400 ... TotTime:   95.89600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.49885 / -1.00000   ...  Max:   -0.11682 / -0.09691   ... STime:   91.60300 ... TotTime:   96.15500   0.16525        21   0.02351   4.26891   0.00000  -0.00114   0.04437   0.04322   0.01455  -0.56599  -0.55144   0.00000   0.00000   0.00268   0.40143   0.00125   0.43020   0.01289   0.00000   0.00000   0.00000  -0.14557   1.59411  92.18600 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.40997    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.33679 / -1.00000   ...  Max:    1.07318 / -0.09691   ... STime:   94.09500 ... TotTime:   98.64700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.76702 / -1.00000   ...  Max:    0.64294 / -0.09691   ... STime:   94.35900 ... TotTime:   98.91100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.97623 / -1.00000   ...  Max:    0.43374 / -0.09691   ... STime:   94.61300 ... TotTime:   99.16500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.08557 / -1.00000   ...  Max:    0.32440 / -0.09691   ... STime:   94.88100 ... TotTime:   99.43300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.23253 / -1.00000   ...  Max:    0.17744 / -0.09691   ... STime:   95.13200 ... TotTime:   99.68400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.37295 / -1.00000   ...  Max:    0.03701 / -0.09691   ... STime:   95.40100 ... TotTime:   99.95300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.44816 / -1.00000   ...  Max:   -0.03820 / -0.09691   ... STime:   95.67900 ... TotTime:  100.23100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -1.47576 / -1.00000   ...  Max:   -0.06579 / -0.09691   ... STime:   95.92500 ... TotTime:  100.47700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -1.50314 / -1.00000   ...  Max:   -0.09318 / -0.09691   ... STime:   96.17700 ... TotTime:  100.72900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -1.51226 / -1.00000   ...  Max:   -0.10230 / -0.09691   ... STime:   96.44100 ... TotTime:  100.99300   0.16525        22   0.02351   4.26891   0.00000  -0.00114   0.08418   0.08304   0.01458  -0.55513  -0.54055   0.00000   0.00000  -0.00054   0.38644   0.00287   0.45992   0.01033   0.00000   0.00000   0.00000  -0.06273   1.76817  97.01100 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.15461    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.42932 / -1.00000   ...  Max:    0.72529 / -0.09691   ... STime:   98.98900 ... TotTime:  103.54100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.76341 / -1.00000   ...  Max:    0.39120 / -0.09691   ... STime:   99.23700 ... TotTime:  103.78900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.90915 / -1.00000   ...  Max:    0.24547 / -0.09691   ... STime:   99.49000 ... TotTime:  104.04200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -1.07623 / -1.00000   ...  Max:    0.07838 / -0.09691   ... STime:   99.72300 ... TotTime:  104.27500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -1.16730 / -1.00000   ...  Max:   -0.01269 / -0.09691   ... STime:   99.96600 ... TotTime:  104.51800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.26610 / -1.00000   ...  Max:   -0.11149 / -0.09691   ... STime:  100.19100 ... TotTime:  104.74300   0.16525        23   0.02351   4.26891   0.00000  -0.00113   0.02483   0.02371   0.01446  -0.57577  -0.56132   0.00000   0.00000   0.00164   0.43664  -0.00334   0.43199   0.02090   0.00000   0.00000   0.00000  -0.27205   1.35704 100.71200 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.22168    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.39930 / -1.00000   ...  Max:    0.82238 / -0.09691   ... STime:  102.49000 ... TotTime:  107.04200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.63391 / -1.00000   ...  Max:    0.58777 / -0.09691   ... STime:  102.76000 ... TotTime:  107.31200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.80755 / -1.00000   ...  Max:    0.41413 / -0.09691   ... STime:  102.99100 ... TotTime:  107.54300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.86322 / -1.00000   ...  Max:    0.35845 / -0.09691   ... STime:  103.22200 ... TotTime:  107.77400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.86515 / -1.00000   ...  Max:    0.35653 / -0.09691   ... STime:  103.45500 ... TotTime:  108.00700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -0.87640 / -1.00000   ...  Max:    0.34527 / -0.09691   ... STime:  103.70500 ... TotTime:  108.25700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -0.88818 / -1.00000   ...  Max:    0.33350 / -0.09691   ... STime:  103.93400 ... TotTime:  108.48600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -0.88839 / -1.00000   ...  Max:    0.33328 / -0.09691   ... STime:  104.16600 ... TotTime:  108.71800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -0.91196 / -1.00000   ...  Max:    0.30972 / -0.09691   ... STime:  104.40700 ... TotTime:  108.95900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -0.91595 / -1.00000   ...  Max:    0.30572 / -0.09691   ... STime:  104.63400 ... TotTime:  109.18600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -0.92906 / -1.00000   ...  Max:    0.29262 / -0.09691   ... STime:  104.88700 ... TotTime:  109.43900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -0.98278 / -1.00000   ...  Max:    0.23890 / -0.09691   ... STime:  105.12100 ... TotTime:  109.67300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -1.01636 / -1.00000   ...  Max:    0.20531 / -0.09691   ... STime:  105.34900 ... TotTime:  109.90100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -1.04088 / -1.00000   ...  Max:    0.18080 / -0.09691   ... STime:  105.57600 ... TotTime:  110.12800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -1.06953 / -1.00000   ...  Max:    0.15215 / -0.09691   ... STime:  105.79500 ... TotTime:  110.34700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -1.07853 / -1.00000   ...  Max:    0.14315 / -0.09691   ... STime:  106.03700 ... TotTime:  110.58900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -1.07985 / -1.00000   ...  Max:    0.14183 / -0.09691   ... STime:  106.26600 ... TotTime:  110.81800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -1.07985 / -1.00000   ...  Max:    0.14183 / -0.09691   ... STime:  106.51200 ... TotTime:  111.06400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -1.07996 / -1.00000   ...  Max:    0.14172 / -0.09691   ... STime:  106.73200 ... TotTime:  111.28400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -1.08159 / -1.00000   ...  Max:    0.14009 / -0.09691   ... STime:  106.94700 ... TotTime:  111.49900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -1.08789 / -1.00000   ...  Max:    0.13378 / -0.09691   ... STime:  107.18500 ... TotTime:  111.73700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -1.09680 / -1.00000   ...  Max:    0.12488 / -0.09691   ... STime:  107.40100 ... TotTime:  111.95300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -1.12347 / -1.00000   ...  Max:    0.09821 / -0.09691   ... STime:  107.62200 ... TotTime:  112.17400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -1.13728 / -1.00000   ...  Max:    0.08440 / -0.09691   ... STime:  107.83300 ... TotTime:  112.38500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    25 ... Red:   -1.14505 / -1.00000   ...  Max:    0.07663 / -0.09691   ... STime:  108.04900 ... TotTime:  112.60100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    26 ... Red:   -1.20495 / -1.00000   ...  Max:    0.01673 / -0.09691   ... STime:  108.26200 ... TotTime:  112.81400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    27 ... Red:   -1.29957 / -1.00000   ...  Max:   -0.07790 / -0.09691   ... STime:  108.50300 ... TotTime:  113.05500 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    28 ... Red:   -1.44655 / -1.00000   ...  Max:   -0.22487 / -0.09691   ... STime:  108.72000 ... TotTime:  113.27200   0.16525        24   0.02351   4.26891   0.00000  -0.00113   0.04283   0.04171   0.01443  -0.59400  -0.57957   0.00000   0.00000  -0.00302   0.40494  -0.00177   0.42123   0.02045   0.00000   0.00000   0.00000  -0.15728   1.69997 109.24800 TStep: 1     / 128   ... Time:    0.16525 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.43259    /   -0.09691 ... KTRes: 0.00000    TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     1 ... Red:   -0.51840 / -1.00000   ...  Max:    0.91419 / -0.09691   ... STime:  110.97000 ... TotTime:  115.52200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     2 ... Red:   -0.75510 / -1.00000   ...  Max:    0.67749 / -0.09691   ... STime:  111.21400 ... TotTime:  115.76600 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     3 ... Red:   -0.86596 / -1.00000   ...  Max:    0.56663 / -0.09691   ... STime:  111.47100 ... TotTime:  116.02300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     4 ... Red:   -0.95371 / -1.00000   ...  Max:    0.47888 / -0.09691   ... STime:  111.72100 ... TotTime:  116.27300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     5 ... Red:   -0.99545 / -1.00000   ...  Max:    0.43713 / -0.09691   ... STime:  111.98700 ... TotTime:  116.53900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     6 ... Red:   -1.01729 / -1.00000   ...  Max:    0.41530 / -0.09691   ... STime:  112.24700 ... TotTime:  116.79900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     7 ... Red:   -1.04100 / -1.00000   ...  Max:    0.39159 / -0.09691   ... STime:  112.49600 ... TotTime:  117.04800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     8 ... Red:   -1.05660 / -1.00000   ...  Max:    0.37599 / -0.09691   ... STime:  112.74600 ... TotTime:  117.29800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:     9 ... Red:   -1.06765 / -1.00000   ...  Max:    0.36494 / -0.09691   ... STime:  113.01600 ... TotTime:  117.56800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    10 ... Red:   -1.09158 / -1.00000   ...  Max:    0.34101 / -0.09691   ... STime:  113.24900 ... TotTime:  117.80100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    11 ... Red:   -1.11718 / -1.00000   ...  Max:    0.31540 / -0.09691   ... STime:  113.50900 ... TotTime:  118.06100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    12 ... Red:   -1.15539 / -1.00000   ...  Max:    0.27720 / -0.09691   ... STime:  113.76600 ... TotTime:  118.31800 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    13 ... Red:   -1.21255 / -1.00000   ...  Max:    0.22004 / -0.09691   ... STime:  113.98500 ... TotTime:  118.53700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    14 ... Red:   -1.26171 / -1.00000   ...  Max:    0.17088 / -0.09691   ... STime:  114.25100 ... TotTime:  118.80300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    15 ... Red:   -1.30892 / -1.00000   ...  Max:    0.12367 / -0.09691   ... STime:  114.50800 ... TotTime:  119.06000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    16 ... Red:   -1.32760 / -1.00000   ...  Max:    0.10498 / -0.09691   ... STime:  114.76900 ... TotTime:  119.32100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    17 ... Red:   -1.33083 / -1.00000   ...  Max:    0.10175 / -0.09691   ... STime:  115.03500 ... TotTime:  119.58700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    18 ... Red:   -1.33489 / -1.00000   ...  Max:    0.09770 / -0.09691   ... STime:  115.27100 ... TotTime:  119.82300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    19 ... Red:   -1.34374 / -1.00000   ...  Max:    0.08884 / -0.09691   ... STime:  115.51900 ... TotTime:  120.07100 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    20 ... Red:   -1.34421 / -1.00000   ...  Max:    0.08837 / -0.09691   ... STime:  115.73500 ... TotTime:  120.28700 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    21 ... Red:   -1.35350 / -1.00000   ...  Max:    0.07909 / -0.09691   ... STime:  115.96000 ... TotTime:  120.51200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    22 ... Red:   -1.36022 / -1.00000   ...  Max:    0.07237 / -0.09691   ... STime:  116.21800 ... TotTime:  120.77000 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    23 ... Red:   -1.36648 / -1.00000   ...  Max:    0.06611 / -0.09691   ... STime:  116.45100 ... TotTime:  121.00300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    24 ... Red:   -1.38047 / -1.00000   ...  Max:    0.05212 / -0.09691   ... STime:  116.69200 ... TotTime:  121.24400 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    25 ... Red:   -1.40870 / -1.00000   ...  Max:    0.02389 / -0.09691   ... STime:  116.92700 ... TotTime:  121.47900 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    26 ... Red:   -1.43777 / -1.00000   ...  Max:   -0.00518 / -0.09691   ... STime:  117.16100 ... TotTime:  121.71300 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    27 ... Red:   -1.48926 / -1.00000   ...  Max:   -0.05667 / -0.09691   ... STime:  117.39000 ... TotTime:  121.94200 TStep:     1 / 128   ... Time:    0.16525 ... GMRES Iter:    28 ... Red:   -1.62222 / -1.00000   ...  Max:   -0.18963 / -0.09691   ... STime:  117.62700 ... TotTime:  122.17900   0.16525        25   0.02351   4.26891   0.00000  -0.00113   0.06469   0.06356   0.01447  -0.57486  -0.56040   0.00000   0.00000   0.00013   0.37353   0.00276   0.42970   0.00933  18.05793   0.84193   0.00000  -0.02870   1.79565 119.13100   0.16525        26   0.02351   4.26891   0.00000  -0.00113   0.06469   0.06356   0.01447  -0.57486  -0.56040   0.00000   0.00000   0.00013   0.37353   0.00276   0.42970   0.00933   0.00000   0.00000   0.00000  -0.02870   1.79565 119.13100 
+1000 / 12368 2000 / 12368 3000 / 12368 4000 / 12368 5000 / 12368 6000 / 12368 7000 / 12368 8000 / 12368 9000 / 12368 10000 / 12368 11000 / 12368 12000 / 12368 Working on level 2 of 4 Working on level 3 of 4 Working on level 4 of 4 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.24773    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.51243 / -1.00000   ...  Max:    0.73530 / -0.09691   ... STime:  124.76200 ... TotTime:  129.31400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.85688 / -1.00000   ...  Max:    0.39084 / -0.09691   ... STime:  124.98400 ... TotTime:  129.53600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.08481 / -1.00000   ...  Max:    0.16291 / -0.09691   ... STime:  125.23100 ... TotTime:  129.78300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.31321 / -1.00000   ...  Max:   -0.06548 / -0.09691   ... STime:  125.48200 ... TotTime:  130.03400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.43706 / -1.00000   ...  Max:   -0.18933 / -0.09691   ... STime:  125.73100 ... TotTime:  130.28300   0.33049         1   0.02351   4.26891   0.00000  -0.00125   0.39070   0.38944   0.01446   0.01204   0.02650  14.74286   0.53919  -0.00345  -0.08796  -0.00042   0.42873   0.01061  17.10542   0.73724   0.00000  -0.22717   1.58415 126.25400 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.29189    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.55886 / -1.00000   ...  Max:    0.73303 / -0.09691   ... STime:  128.04300 ... TotTime:  132.59500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.86749 / -1.00000   ...  Max:    0.42440 / -0.09691   ... STime:  127.29900 ... TotTime:  131.85100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.07596 / -1.00000   ...  Max:    0.21593 / -0.09691   ... STime:  128.53800 ... TotTime:  133.09000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.25948 / -1.00000   ...  Max:    0.03242 / -0.09691   ... STime:  128.76700 ... TotTime:  133.31900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.34403 / -1.00000   ...  Max:   -0.05213 / -0.09691   ... STime:  128.99600 ... TotTime:  133.54800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.41434 / -1.00000   ...  Max:   -0.12245 / -0.09691   ... STime:  129.22200 ... TotTime:  133.77400   0.33049         2   0.02351   4.26891   0.00000  -0.00128   0.39337   0.39210   0.01466   0.01858   0.03324  11.83382   0.35430   0.00017  -0.03457  -0.00116   0.46213   0.02786  10.86790   0.32608   0.00000  -0.11010   1.78660 129.73000 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.17876    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.46644 / -1.00000   ...  Max:    0.71232 / -0.09691   ... STime:  131.60300 ... TotTime:  136.15500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.84824 / -1.00000   ...  Max:    0.33052 / -0.09691   ... STime:  131.82200 ... TotTime:  136.37400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.99496 / -1.00000   ...  Max:    0.18380 / -0.09691   ... STime:  132.06900 ... TotTime:  136.62100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.14951 / -1.00000   ...  Max:    0.02925 / -0.09691   ... STime:  132.30900 ... TotTime:  136.86100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.22575 / -1.00000   ...  Max:   -0.04699 / -0.09691   ... STime:  132.57300 ... TotTime:  137.12500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.25088 / -1.00000   ...  Max:   -0.07212 / -0.09691   ... STime:  132.81300 ... TotTime:  137.36500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.33185 / -1.00000   ...  Max:   -0.15309 / -0.09691   ... STime:  133.06800 ... TotTime:  137.62000   0.33049         3   0.02351   4.26891   0.00000  -0.00128   0.40429   0.40301   0.01475   0.00857   0.02332  17.33397   0.81138  -0.00182  -0.10507   0.00005   0.48698   0.01252  17.85194   0.80545   0.00000   0.07899   2.16421 133.64700 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.18679    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.48289 / -1.00000   ...  Max:    0.70390 / -0.09691   ... STime:  135.74900 ... TotTime:  140.30100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.82538 / -1.00000   ...  Max:    0.36141 / -0.09691   ... STime:  136.01300 ... TotTime:  140.56500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.00349 / -1.00000   ...  Max:    0.18330 / -0.09691   ... STime:  136.28500 ... TotTime:  140.83700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.15144 / -1.00000   ...  Max:    0.03535 / -0.09691   ... STime:  136.55500 ... TotTime:  141.10700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.27095 / -1.00000   ...  Max:   -0.08416 / -0.09691   ... STime:  136.81000 ... TotTime:  141.36200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.41059 / -1.00000   ...  Max:   -0.22380 / -0.09691   ... STime:  137.08000 ... TotTime:  141.63200   0.33049         4   0.02351   4.26891   0.00000  -0.00131   0.45562   0.45431   0.01505   0.01121   0.02626  17.35217   0.78803   0.00027  -0.10291  -0.00206   0.53525   0.01158  20.09705   1.05224   0.00000  -0.22308   1.83868 137.83700 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.06507    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.37145 / -1.00000   ...  Max:    0.69363 / -0.09691   ... STime:  139.77500 ... TotTime:  144.32700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.67228 / -1.00000   ...  Max:    0.39279 / -0.09691   ... STime:  140.00400 ... TotTime:  144.55600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.76223 / -1.00000   ...  Max:    0.30284 / -0.09691   ... STime:  140.24900 ... TotTime:  144.80100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -0.87689 / -1.00000   ...  Max:    0.18818 / -0.09691   ... STime:  140.50400 ... TotTime:  145.05600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.00824 / -1.00000   ...  Max:    0.05683 / -0.09691   ... STime:  140.73900 ... TotTime:  145.29100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.11522 / -1.00000   ...  Max:   -0.05015 / -0.09691   ... STime:  140.99800 ... TotTime:  145.55000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.17697 / -1.00000   ...  Max:   -0.11190 / -0.09691   ... STime:  141.22600 ... TotTime:  145.77800   0.33049         5   0.02351   4.26891   0.00000  -0.00129   0.42588   0.42459   0.01491   0.02348   0.03839  11.09487   0.32861  -0.00178  -0.09498  -0.00109   0.52355   0.00908  21.83087   1.28476   0.00000  -0.19675   1.45871 141.74200 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.33550    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.53504 / -1.00000   ...  Max:    0.80046 / -0.09691   ... STime:  143.66300 ... TotTime:  148.21500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.89513 / -1.00000   ...  Max:    0.44037 / -0.09691   ... STime:  143.90100 ... TotTime:  148.45300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.02778 / -1.00000   ...  Max:    0.30772 / -0.09691   ... STime:  144.14600 ... TotTime:  148.69800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.13642 / -1.00000   ...  Max:    0.19909 / -0.09691   ... STime:  144.38200 ... TotTime:  148.93400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.18619 / -1.00000   ...  Max:    0.14931 / -0.09691   ... STime:  144.62700 ... TotTime:  149.17900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.21982 / -1.00000   ...  Max:    0.11568 / -0.09691   ... STime:  144.86100 ... TotTime:  149.41300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.28152 / -1.00000   ...  Max:    0.05398 / -0.09691   ... STime:  145.11600 ... TotTime:  149.66800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     8 ... Red:   -1.31401 / -1.00000   ...  Max:    0.02149 / -0.09691   ... STime:  145.39700 ... TotTime:  149.94900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     9 ... Red:   -1.36456 / -1.00000   ...  Max:   -0.02906 / -0.09691   ... STime:  145.63100 ... TotTime:  150.18300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    10 ... Red:   -1.41001 / -1.00000   ...  Max:   -0.07450 / -0.09691   ... STime:  145.91800 ... TotTime:  150.47000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    11 ... Red:   -1.45016 / -1.00000   ...  Max:   -0.11465 / -0.09691   ... STime:  146.18300 ... TotTime:  150.73500   0.33049         6   0.02351   4.26891   0.00000  -0.00133   0.46769   0.46636   0.01520   0.03105   0.04625  10.11217   0.29970  -0.00024  -0.11168   0.00637   0.54020   0.02120  14.83679   0.58540   0.00000  -0.12599   1.48572 146.69400 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.07556    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.62829 / -1.00000   ...  Max:    0.44726 / -0.09691   ... STime:  148.44900 ... TotTime:  153.00100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.92429 / -1.00000   ...  Max:    0.15127 / -0.09691   ... STime:  148.71500 ... TotTime:  153.26700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.99672 / -1.00000   ...  Max:    0.07884 / -0.09691   ... STime:  148.96800 ... TotTime:  153.52000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.07621 / -1.00000   ...  Max:   -0.00065 / -0.09691   ... STime:  149.21200 ... TotTime:  153.76400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.11454 / -1.00000   ...  Max:   -0.03898 / -0.09691   ... STime:  149.46500 ... TotTime:  154.01700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.15602 / -1.00000   ...  Max:   -0.08046 / -0.09691   ... STime:  149.78000 ... TotTime:  154.33200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.23527 / -1.00000   ...  Max:   -0.15972 / -0.09691   ... STime:  150.05400 ... TotTime:  154.60600   0.33049         7   0.02351   4.26891   0.00000  -0.00130   0.43948   0.43819   0.01494   0.01620   0.03113  14.11563   0.50727   0.00154  -0.11072  -0.00143   0.52082   0.01268  18.85944   0.91014   0.00000  -0.12838   2.03416 150.58000 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.99579    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.53608 / -1.00000   ...  Max:    0.45970 / -0.09691   ... STime:  152.42200 ... TotTime:  156.97400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.83784 / -1.00000   ...  Max:    0.15794 / -0.09691   ... STime:  152.67600 ... TotTime:  157.22800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.98826 / -1.00000   ...  Max:    0.00753 / -0.09691   ... STime:  152.90700 ... TotTime:  157.45900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.11614 / -1.00000   ...  Max:   -0.12035 / -0.09691   ... STime:  153.17200 ... TotTime:  157.72400   0.33049         8   0.02351   4.26891   0.00000  -0.00131   0.45718   0.45587   0.01503   0.01939   0.03442  13.28277   0.45853  -0.00145  -0.11866  -0.00054   0.53687   0.01685  16.83947   0.72751   0.00000  -0.11060   2.08317 153.71600 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.40021    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.27497 / -1.00000   ...  Max:    1.12525 / -0.09691   ... STime:  155.76500 ... TotTime:  160.31700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.53051 / -1.00000   ...  Max:    0.86970 / -0.09691   ... STime:  156.04800 ... TotTime:  160.60000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.87500 / -1.00000   ...  Max:    0.52521 / -0.09691   ... STime:  156.31200 ... TotTime:  160.86400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.10211 / -1.00000   ...  Max:    0.29810 / -0.09691   ... STime:  156.54300 ... TotTime:  161.09500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.26924 / -1.00000   ...  Max:    0.13097 / -0.09691   ... STime:  156.79800 ... TotTime:  161.35000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.32832 / -1.00000   ...  Max:    0.07190 / -0.09691   ... STime:  157.03700 ... TotTime:  161.58900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.37555 / -1.00000   ...  Max:    0.02466 / -0.09691   ... STime:  157.28000 ... TotTime:  161.83200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     8 ... Red:   -1.40723 / -1.00000   ...  Max:   -0.00701 / -0.09691   ... STime:  157.56300 ... TotTime:  162.11500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     9 ... Red:   -1.42502 / -1.00000   ...  Max:   -0.02481 / -0.09691   ... STime:  157.81100 ... TotTime:  162.36300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    10 ... Red:   -1.44057 / -1.00000   ...  Max:   -0.04036 / -0.09691   ... STime:  158.09200 ... TotTime:  162.64400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    11 ... Red:   -1.44497 / -1.00000   ...  Max:   -0.04476 / -0.09691   ... STime:  158.34900 ... TotTime:  162.90100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    12 ... Red:   -1.45360 / -1.00000   ...  Max:   -0.05339 / -0.09691   ... STime:  158.60200 ... TotTime:  163.15400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    13 ... Red:   -1.47396 / -1.00000   ...  Max:   -0.07375 / -0.09691   ... STime:  158.84700 ... TotTime:  163.39900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    14 ... Red:   -1.48664 / -1.00000   ...  Max:   -0.08643 / -0.09691   ... STime:  159.10800 ... TotTime:  163.66000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:    15 ... Red:   -1.50426 / -1.00000   ...  Max:   -0.10405 / -0.09691   ... STime:  159.36000 ... TotTime:  163.91200   0.33049         9   0.02351   4.26891   0.00000  -0.00130   0.41548   0.41418   0.01496  -0.00553   0.00943  44.07910   0.00000  -0.00121  -0.08367  -0.00455   0.53409   0.02186  14.50540   0.55505   0.00000  -0.05632   1.78175 159.92000 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.58058    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.40251 / -1.00000   ...  Max:    1.17807 / -0.09691   ... STime:  162.56800 ... TotTime:  167.12000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.85431 / -1.00000   ...  Max:    0.72627 / -0.09691   ... STime:  162.95800 ... TotTime:  167.51000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.15347 / -1.00000   ...  Max:    0.42711 / -0.09691   ... STime:  163.33400 ... TotTime:  167.88600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.33069 / -1.00000   ...  Max:    0.24989 / -0.09691   ... STime:  163.71600 ... TotTime:  168.26800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.48342 / -1.00000   ...  Max:    0.09716 / -0.09691   ... STime:  164.06700 ... TotTime:  168.61900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.59587 / -1.00000   ...  Max:   -0.01529 / -0.09691   ... STime:  164.42800 ... TotTime:  168.98000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     7 ... Red:   -1.72270 / -1.00000   ...  Max:   -0.14212 / -0.09691   ... STime:  164.77400 ... TotTime:  169.32600   0.33049        10   0.02351   4.26891   0.00000  -0.00137   0.46787   0.46649   0.01561   0.06797   0.08357   5.59826   0.13700  -0.00405  -0.10645  -0.01401   0.56097   0.03237  11.69375   0.41359   0.00000   0.03338   1.72802 165.37600 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.29358    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.27858 / -1.00000   ...  Max:    1.01500 / -0.09691   ... STime:  167.65900 ... TotTime:  172.21100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.59676 / -1.00000   ...  Max:    0.69682 / -0.09691   ... STime:  167.92300 ... TotTime:  172.47500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.89268 / -1.00000   ...  Max:    0.40090 / -0.09691   ... STime:  168.16900 ... TotTime:  172.72100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.19811 / -1.00000   ...  Max:    0.09547 / -0.09691   ... STime:  168.41500 ... TotTime:  172.96700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.34225 / -1.00000   ...  Max:   -0.04867 / -0.09691   ... STime:  168.68300 ... TotTime:  173.23500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     6 ... Red:   -1.41539 / -1.00000   ...  Max:   -0.12181 / -0.09691   ... STime:  168.91800 ... TotTime:  173.47000   0.33049        11   0.02351   4.26891   0.00000  -0.00130   0.45136   0.45006   0.01497   0.00854   0.02351  19.19855   1.01458   0.00337  -0.08234  -0.00443   0.51614   0.01041  20.33494   1.08823   0.00000  -0.23055   1.70778 169.48500 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.22366    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.42948 / -1.00000   ...  Max:    0.79419 / -0.09691   ... STime:  171.46500 ... TotTime:  176.01700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.73018 / -1.00000   ...  Max:    0.49348 / -0.09691   ... STime:  171.73300 ... TotTime:  176.28500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.01331 / -1.00000   ...  Max:    0.21036 / -0.09691   ... STime:  171.98400 ... TotTime:  176.53600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.30286 / -1.00000   ...  Max:   -0.07920 / -0.09691   ... STime:  172.24300 ... TotTime:  176.79500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.44465 / -1.00000   ...  Max:   -0.22099 / -0.09691   ... STime:  172.48400 ... TotTime:  177.03600   0.33049        12   0.02351   4.26891   0.00000  -0.00130   0.44967   0.44837   0.01498   0.01677   0.03174  14.16563   0.51298  -0.00232  -0.11279   0.00153   0.53134   0.01374  18.49997   0.87375   0.00000  -0.19581   1.90149 173.00800 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.89588    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.53238 / -1.00000   ...  Max:    0.36349 / -0.09691   ... STime:  174.84000 ... TotTime:  179.39200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.86193 / -1.00000   ...  Max:    0.03394 / -0.09691   ... STime:  175.08200 ... TotTime:  179.63400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.02987 / -1.00000   ...  Max:   -0.13400 / -0.09691   ... STime:  175.33600 ... TotTime:  179.88800   0.33049        13   0.02351   4.26891   0.00000  -0.00130   0.44675   0.44545   0.01494   0.02074   0.03568  12.52205   0.40943  -0.00076  -0.11587  -0.00043   0.52501   0.01740  16.23254   0.67377   0.00000  -0.23931   1.85118 175.85100 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.08714    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.47979 / -1.00000   ...  Max:    0.60734 / -0.09691   ... STime:  177.80700 ... TotTime:  182.35900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -1.00097 / -1.00000   ...  Max:    0.08617 / -0.09691   ... STime:  178.09200 ... TotTime:  182.64400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.23197 / -1.00000   ...  Max:   -0.14483 / -0.09691   ... STime:  178.34900 ... TotTime:  182.90100   0.33049        14   0.02351   4.26891   0.00000  -0.00130   0.43867   0.43737   0.01495   0.01554   0.03049  14.38683   0.52680   0.00119  -0.10169  -0.00145   0.51904   0.01158  19.56187   0.98958   0.00000  -0.33971   1.71999 178.92500 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.13278    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.58592 / -1.00000   ...  Max:    0.54686 / -0.09691   ... STime:  181.04500 ... TotTime:  185.59700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.95203 / -1.00000   ...  Max:    0.18075 / -0.09691   ... STime:  181.31700 ... TotTime:  185.86900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.11570 / -1.00000   ...  Max:    0.01709 / -0.09691   ... STime:  181.59000 ... TotTime:  186.14200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.29406 / -1.00000   ...  Max:   -0.16128 / -0.09691   ... STime:  181.83500 ... TotTime:  186.38700   0.33049        15   0.02351   4.26891   0.00000  -0.00131   0.43407   0.43276   0.01500   0.00731   0.02231  19.45511   1.09609   0.00027  -0.10529  -0.00013   0.52280   0.00889  21.88637   1.30812   0.00000  -0.29999   1.65991 182.38600 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.90491    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.49911 / -1.00000   ...  Max:    0.40581 / -0.09691   ... STime:  184.33300 ... TotTime:  188.88500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.75438 / -1.00000   ...  Max:    0.15053 / -0.09691   ... STime:  184.56500 ... TotTime:  189.11700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.94630 / -1.00000   ...  Max:   -0.04138 / -0.09691   ... STime:  184.83400 ... TotTime:  189.38600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.13603 / -1.00000   ...  Max:   -0.23111 / -0.09691   ... STime:  185.11200 ... TotTime:  189.66400   0.33049        16   0.02351   4.26891   0.00000  -0.00131   0.42694   0.42563   0.01502   0.00646   0.02147  19.88448   1.20115   0.00068  -0.09868   0.00095   0.53091   0.00865  22.43303   1.38602   0.00000  -0.34836   1.57706 185.60900 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.92387    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.51579 / -1.00000   ...  Max:    0.40808 / -0.09691   ... STime:  187.51400 ... TotTime:  192.06600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.87038 / -1.00000   ...  Max:    0.05348 / -0.09691   ... STime:  187.76200 ... TotTime:  192.31400 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.05037 / -1.00000   ...  Max:   -0.12650 / -0.09691   ... STime:  188.00200 ... TotTime:  192.55400   0.33049        17   0.02351   4.26891   0.00000  -0.00131   0.45706   0.45576   0.01503   0.02042   0.03545  12.89445   0.43523  -0.00172  -0.11492  -0.00082   0.53659   0.01816  16.16671   0.67436   0.00000  -0.11853   1.94229 188.51000 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.89930    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.35244 / -1.00000   ...  Max:    0.54687 / -0.09691   ... STime:  190.49400 ... TotTime:  195.04600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.91163 / -1.00000   ...  Max:   -0.01232 / -0.09691   ... STime:  190.75000 ... TotTime:  195.30200 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.10085 / -1.00000   ...  Max:   -0.20154 / -0.09691   ... STime:  191.01700 ... TotTime:  195.56900   0.33049        18   0.02351   4.26891   0.00000  -0.00130   0.43867   0.43737   0.01494   0.01508   0.03002  14.61124   0.54285   0.00036  -0.10206  -0.00152   0.52233   0.01281  18.81927   0.90589   0.00000  -0.35083   1.69599 191.53800 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.17644    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.46349 / -1.00000   ...  Max:    0.71295 / -0.09691   ... STime:  193.44600 ... TotTime:  197.99800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.82741 / -1.00000   ...  Max:    0.34902 / -0.09691   ... STime:  193.69800 ... TotTime:  198.25000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.04187 / -1.00000   ...  Max:    0.13457 / -0.09691   ... STime:  193.98300 ... TotTime:  198.53500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.25075 / -1.00000   ...  Max:   -0.07431 / -0.09691   ... STime:  194.29700 ... TotTime:  198.84900 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.37737 / -1.00000   ...  Max:   -0.20094 / -0.09691   ... STime:  194.59100 ... TotTime:  199.14300   0.33049        19   0.02351   4.26891   0.00000  -0.00131   0.43814   0.43683   0.01501   0.01163   0.02664  16.44928   0.70224   0.00103  -0.10749  -0.00075   0.52602   0.00606  24.97074   1.94288   0.00000  -0.29094   1.69078 195.22300 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.09713    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.53372 / -1.00000   ...  Max:    0.56341 / -0.09691   ... STime:  197.47600 ... TotTime:  202.02800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.82960 / -1.00000   ...  Max:    0.26753 / -0.09691   ... STime:  197.77600 ... TotTime:  202.32800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.00668 / -1.00000   ...  Max:    0.09045 / -0.09691   ... STime:  198.04100 ... TotTime:  202.59300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.21887 / -1.00000   ...  Max:   -0.12174 / -0.09691   ... STime:  198.28500 ... TotTime:  202.83700   0.33049        20   0.02351   4.26891   0.00000  -0.00132   0.46358   0.46226   0.01511   0.02025   0.03536  13.11097   0.45138  -0.00100  -0.11858  -0.00053   0.54153   0.00837  23.06336   1.48954   0.00000  -0.19543   1.83970 198.80500 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.81853    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.46960 / -1.00000   ...  Max:    0.34893 / -0.09691   ... STime:  200.78600 ... TotTime:  205.33800 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.83160 / -1.00000   ...  Max:   -0.01307 / -0.09691   ... STime:  201.04100 ... TotTime:  205.59300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.02183 / -1.00000   ...  Max:   -0.20329 / -0.09691   ... STime:  201.27000 ... TotTime:  205.82200   0.33049        21   0.02351   4.26891   0.00000  -0.00131   0.45027   0.44896   0.01502   0.02212   0.03714  12.12317   0.38984  -0.00201  -0.10370  -0.00127   0.53305   0.01105  20.44609   1.09363   0.00000  -0.14885   1.97714 201.82600 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.01318    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.37081 / -1.00000   ...  Max:    0.64237 / -0.09691   ... STime:  203.81100 ... TotTime:  208.36300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.91601 / -1.00000   ...  Max:    0.09717 / -0.09691   ... STime:  204.03800 ... TotTime:  208.59000 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.04205 / -1.00000   ...  Max:   -0.02887 / -0.09691   ... STime:  204.31100 ... TotTime:  208.86300 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.17012 / -1.00000   ...  Max:   -0.15694 / -0.09691   ... STime:  204.55100 ... TotTime:  209.10300   0.33049        22   0.02351   4.26891   0.00000  -0.00130   0.44259   0.44129   0.01501   0.01956   0.03457  12.80314   0.42595   0.00043  -0.10885  -0.00022   0.52812   0.01088  20.39976   1.09024   0.00000  -0.38068   1.60930 205.07400 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.15753    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.57869 / -1.00000   ...  Max:    0.57884 / -0.09691   ... STime:  206.96300 ... TotTime:  211.51500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.94907 / -1.00000   ...  Max:    0.20845 / -0.09691   ... STime:  207.24400 ... TotTime:  211.79600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -1.14366 / -1.00000   ...  Max:    0.01387 / -0.09691   ... STime:  207.49900 ... TotTime:  212.05100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.30335 / -1.00000   ...  Max:   -0.14582 / -0.09691   ... STime:  207.76100 ... TotTime:  212.31300   0.33049        23   0.02351   4.26891   0.00000  -0.00131   0.44234   0.44103   0.01504   0.00824   0.02329  18.99527   1.00946   0.00068  -0.10371  -0.00050   0.53225   0.01043  20.89396   1.15512   0.00000  -0.11044   1.95450 208.25800 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.07043    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.43046 / -1.00000   ...  Max:    0.63997 / -0.09691   ... STime:  210.15500 ... TotTime:  214.70700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.72505 / -1.00000   ...  Max:    0.34538 / -0.09691   ... STime:  210.40400 ... TotTime:  214.95600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.99381 / -1.00000   ...  Max:    0.07662 / -0.09691   ... STime:  210.65300 ... TotTime:  215.20500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.08938 / -1.00000   ...  Max:   -0.01896 / -0.09691   ... STime:  210.91900 ... TotTime:  215.47100 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     5 ... Red:   -1.17514 / -1.00000   ...  Max:   -0.10471 / -0.09691   ... STime:  211.19000 ... TotTime:  215.74200   0.33049        24   0.02351   4.26891   0.00000  -0.00131   0.45348   0.45217   0.01502   0.02290   0.03792  11.95810   0.38199  -0.00193  -0.11902  -0.00175   0.52917   0.01510  17.56980   0.78905   0.00000  -0.22290   1.65275 211.73500 TStep: 2     / 128   ... Time:    0.33049 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.90013    /   -0.09691 ... KTRes: 0.00000    TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     1 ... Red:   -0.56803 / -1.00000   ...  Max:    0.33210 / -0.09691   ... STime:  213.70300 ... TotTime:  218.25500 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     2 ... Red:   -0.82124 / -1.00000   ...  Max:    0.07889 / -0.09691   ... STime:  213.95500 ... TotTime:  218.50700 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     3 ... Red:   -0.99390 / -1.00000   ...  Max:   -0.09377 / -0.09691   ... STime:  214.20400 ... TotTime:  218.75600 TStep:     2 / 128   ... Time:    0.33049 ... GMRES Iter:     4 ... Red:   -1.13104 / -1.00000   ...  Max:   -0.23091 / -0.09691   ... STime:  214.49100 ... TotTime:  219.04300   0.33049        25   0.02351   4.26891   0.00000  -0.00129   0.45022   0.44893   0.01492   0.02238   0.03730  12.07035   0.38527  -0.00031  -0.11888  -0.00086   0.52326   0.01582  17.01971   0.73600   0.00000  -0.31639   1.56723 216.24300   0.33049        26   0.02351   4.26891   0.00000  -0.00129   0.45022   0.44893   0.01492   0.02238   0.03730  12.07035   0.38527  -0.00031  -0.11888  -0.00086   0.52326   0.01582  17.01971   0.73600   0.00000  -0.31639   1.56723 216.24300 
+1000 / 12368 2000 / 12368 3000 / 12368 4000 / 12368 5000 / 12368 6000 / 12368 7000 / 12368 8000 / 12368 9000 / 12368 10000 / 12368 11000 / 12368 12000 / 12368 Working on level 2 of 4 Working on level 3 of 4 Working on level 4 of 4 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 0.86412    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.52036 / -1.00000   ...  Max:    0.34376 / -0.09691   ... STime:  222.79400 ... TotTime:  227.34600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.83013 / -1.00000   ...  Max:    0.03399 / -0.09691   ... STime:  223.06900 ... TotTime:  227.62100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.94312 / -1.00000   ...  Max:   -0.07900 / -0.09691   ... STime:  223.37700 ... TotTime:  227.92900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.16597 / -1.00000   ...  Max:   -0.30185 / -0.09691   ... STime:  223.65100 ... TotTime:  228.20300   0.49574         1   0.02351   4.26891   0.00000  -0.00142   0.50407   0.50265   0.01491   0.02384   0.03875  13.00787   0.45334   0.00229  -0.18533   0.00082   0.52093   0.00933  21.49163   1.23736   0.00000  -0.24906   1.71654 224.17600 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.40512    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.56310 / -1.00000   ...  Max:    0.84202 / -0.09691   ... STime:  226.24100 ... TotTime:  230.79300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.97759 / -1.00000   ...  Max:    0.42753 / -0.09691   ... STime:  226.50700 ... TotTime:  231.05900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.18883 / -1.00000   ...  Max:    0.21629 / -0.09691   ... STime:  226.77200 ... TotTime:  231.32400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.39129 / -1.00000   ...  Max:    0.01383 / -0.09691   ... STime:  227.04200 ... TotTime:  231.59400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.49018 / -1.00000   ...  Max:   -0.08506 / -0.09691   ... STime:  227.30400 ... TotTime:  231.85600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.55158 / -1.00000   ...  Max:   -0.14646 / -0.09691   ... STime:  227.57300 ... TotTime:  232.12500   0.49574         2   0.02351   4.26891   0.00000  -0.00144   0.54912   0.54767   0.01511   0.04075   0.05586   9.82973   0.31477   0.00186  -0.28546   0.00077   0.55915   0.03164  11.95967   0.42035   0.00000  -0.11525   1.85996 228.23400 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.30408    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.33080 / -1.00000   ...  Max:    0.97328 / -0.09691   ... STime:  230.42800 ... TotTime:  234.98000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.54158 / -1.00000   ...  Max:    0.76250 / -0.09691   ... STime:  230.76500 ... TotTime:  235.31700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.89586 / -1.00000   ...  Max:    0.40821 / -0.09691   ... STime:  231.09900 ... TotTime:  235.65100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.20008 / -1.00000   ...  Max:    0.10399 / -0.09691   ... STime:  231.40600 ... TotTime:  235.95800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.32896 / -1.00000   ...  Max:   -0.02489 / -0.09691   ... STime:  231.71500 ... TotTime:  236.26700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.36849 / -1.00000   ...  Max:   -0.06441 / -0.09691   ... STime:  232.02400 ... TotTime:  236.57600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -1.40368 / -1.00000   ...  Max:   -0.09960 / -0.09691   ... STime:  232.32500 ... TotTime:  236.87700   0.49574         3   0.02351   4.26891   0.00000  -0.00143   0.47467   0.47324   0.01498   0.00610   0.02108  22.52219   1.57182   0.00245  -0.15967   0.00016   0.49050   0.01651  15.57564   0.61975   0.00000  -0.07234   2.04904 232.84600 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.30965    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.33671 / -1.00000   ...  Max:    0.97294 / -0.09691   ... STime:  234.85700 ... TotTime:  239.40900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.57845 / -1.00000   ...  Max:    0.73120 / -0.09691   ... STime:  235.10800 ... TotTime:  239.66000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.87877 / -1.00000   ...  Max:    0.43088 / -0.09691   ... STime:  235.39000 ... TotTime:  239.94200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.11612 / -1.00000   ...  Max:    0.19353 / -0.09691   ... STime:  235.65900 ... TotTime:  240.21100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.31943 / -1.00000   ...  Max:   -0.00978 / -0.09691   ... STime:  235.95300 ... TotTime:  240.50500 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.51124 / -1.00000   ...  Max:   -0.20160 / -0.09691   ... STime:  236.21000 ... TotTime:  240.76200   0.49574         4   0.02351   4.26891   0.00000  -0.00144   0.50566   0.50422   0.01511   0.02845   0.04355  11.61020   0.38237   0.00201  -0.13350   0.00410   0.51437   0.01507  17.04534   0.74689   0.00000  -0.15659   1.94129 236.78200 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.27438    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.48760 / -1.00000   ...  Max:    0.78678 / -0.09691   ... STime:  238.76900 ... TotTime:  243.32100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.84566 / -1.00000   ...  Max:    0.42871 / -0.09691   ... STime:  239.03200 ... TotTime:  243.58400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.13800 / -1.00000   ...  Max:    0.13638 / -0.09691   ... STime:  238.29800 ... TotTime:  242.85000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.38842 / -1.00000   ...  Max:   -0.11404 / -0.09691   ... STime:  239.54900 ... TotTime:  244.10100   0.49574         5   0.02351   4.26891   0.00000  -0.00145   0.52007   0.51861   0.01519   0.02766   0.04286  12.13471   0.41590   0.00069  -0.16497   0.00385   0.53905   0.01319  18.99190   0.93722   0.00000  -0.21509   1.84793 240.06400 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.35706    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.70396 / -1.00000   ...  Max:    0.65310 / -0.09691   ... STime:  242.14700 ... TotTime:  246.69900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -1.06679 / -1.00000   ...  Max:    0.29027 / -0.09691   ... STime:  242.41300 ... TotTime:  246.96500 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.31370 / -1.00000   ...  Max:    0.04336 / -0.09691   ... STime:  242.73700 ... TotTime:  247.28900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.51412 / -1.00000   ...  Max:   -0.15705 / -0.09691   ... STime:  242.98700 ... TotTime:  247.53900   0.49574         6   0.02351   4.26891   0.00000  -0.00145   0.55580   0.55435   0.01524   0.03132   0.04656  11.93786   0.41954   0.00607  -0.24489  -0.00176   0.55258   0.02161  14.99723   0.60109   0.00000  -0.05827   2.04495 243.51500 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.13441    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.37402 / -1.00000   ...  Max:    0.76039 / -0.09691   ... STime:  245.83800 ... TotTime:  250.39000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.75504 / -1.00000   ...  Max:    0.37937 / -0.09691   ... STime:  246.13700 ... TotTime:  250.68900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.97552 / -1.00000   ...  Max:    0.15889 / -0.09691   ... STime:  246.42400 ... TotTime:  250.97600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.15881 / -1.00000   ...  Max:   -0.02440 / -0.09691   ... STime:  246.76100 ... TotTime:  251.31300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.23812 / -1.00000   ...  Max:   -0.10371 / -0.09691   ... STime:  247.08600 ... TotTime:  251.63800   0.49574         7   0.02351   4.26891   0.00000  -0.00144   0.48950   0.48806   0.01509   0.03048   0.04557  10.74071   0.33437   0.00089  -0.11743   0.00112   0.50509   0.02018  14.32025   0.53778   0.00000  -0.00136   2.08330 247.74600 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.30526    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.48820 / -1.00000   ...  Max:    0.81705 / -0.09691   ... STime:  250.14800 ... TotTime:  254.70000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.86705 / -1.00000   ...  Max:    0.43820 / -0.09691   ... STime:  250.44400 ... TotTime:  254.99600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.13449 / -1.00000   ...  Max:    0.17077 / -0.09691   ... STime:  250.77000 ... TotTime:  255.32200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.37949 / -1.00000   ...  Max:   -0.07423 / -0.09691   ... STime:  251.04400 ... TotTime:  255.59600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.51882 / -1.00000   ...  Max:   -0.21356 / -0.09691   ... STime:  251.31800 ... TotTime:  255.87000   0.49574         8   0.02351   4.26891   0.00000  -0.00146   0.50703   0.50558   0.01521   0.01184   0.02705  18.74174   0.92357   0.00318  -0.14703   0.00168   0.52821   0.01363  18.31447   0.87087   0.00000  -0.08445   2.01922 251.85200 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.29476    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.38222 / -1.00000   ...  Max:    0.91254 / -0.09691   ... STime:  253.83500 ... TotTime:  258.38700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.67476 / -1.00000   ...  Max:    0.62000 / -0.09691   ... STime:  254.10500 ... TotTime:  258.65700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.86010 / -1.00000   ...  Max:    0.43466 / -0.09691   ... STime:  254.37800 ... TotTime:  258.93000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -0.97441 / -1.00000   ...  Max:    0.32036 / -0.09691   ... STime:  254.63300 ... TotTime:  259.18500 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.19391 / -1.00000   ...  Max:    0.10085 / -0.09691   ... STime:  254.87500 ... TotTime:  259.42700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.29965 / -1.00000   ...  Max:   -0.00489 / -0.09691   ... STime:  255.12700 ... TotTime:  259.67900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -1.41295 / -1.00000   ...  Max:   -0.11819 / -0.09691   ... STime:  255.36700 ... TotTime:  259.91900   0.49574         9   0.02351   4.26891   0.00000  -0.00146   0.51749   0.51603   0.01522   0.02522   0.04044  12.79545   0.45169   0.00296  -0.15213  -0.00186   0.53382   0.00543  25.84691   2.23248   0.00000  -0.23391   1.74956 255.89300 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.41680    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.54907 / -1.00000   ...  Max:    0.86773 / -0.09691   ... STime:  257.87000 ... TotTime:  262.42200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.84015 / -1.00000   ...  Max:    0.57665 / -0.09691   ... STime:  258.10700 ... TotTime:  262.65900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.02756 / -1.00000   ...  Max:    0.38924 / -0.09691   ... STime:  258.37000 ... TotTime:  262.92200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.29061 / -1.00000   ...  Max:    0.12619 / -0.09691   ... STime:  258.62200 ... TotTime:  263.17400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.49886 / -1.00000   ...  Max:   -0.08206 / -0.09691   ... STime:  258.91000 ... TotTime:  263.46200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.63586 / -1.00000   ...  Max:   -0.21906 / -0.09691   ... STime:  259.16900 ... TotTime:  263.72100   0.49574        10   0.02351   4.26891   0.00000  -0.00147   0.54017   0.53870   0.01533   0.04138   0.05672   9.52361   0.29992   0.00810  -0.16362   0.00166   0.56055   0.02082  15.50508   0.64205   0.00000  -0.06282   1.96927 259.68500 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.24479    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.37193 / -1.00000   ...  Max:    0.87285 / -0.09691   ... STime:  261.68100 ... TotTime:  266.23300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.66163 / -1.00000   ...  Max:    0.58316 / -0.09691   ... STime:  261.93800 ... TotTime:  266.49000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.85432 / -1.00000   ...  Max:    0.39047 / -0.09691   ... STime:  262.21200 ... TotTime:  266.76400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -0.94546 / -1.00000   ...  Max:    0.29932 / -0.09691   ... STime:  262.46000 ... TotTime:  267.01200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -0.98166 / -1.00000   ...  Max:    0.26313 / -0.09691   ... STime:  262.71900 ... TotTime:  267.27100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -0.98922 / -1.00000   ...  Max:    0.25556 / -0.09691   ... STime:  262.97400 ... TotTime:  267.52600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -0.99747 / -1.00000   ...  Max:    0.24732 / -0.09691   ... STime:  263.23200 ... TotTime:  267.78400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     8 ... Red:   -1.02640 / -1.00000   ...  Max:    0.21839 / -0.09691   ... STime:  263.48000 ... TotTime:  268.03200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     9 ... Red:   -1.05180 / -1.00000   ...  Max:    0.19298 / -0.09691   ... STime:  263.73600 ... TotTime:  268.28800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    10 ... Red:   -1.08376 / -1.00000   ...  Max:    0.16102 / -0.09691   ... STime:  263.99000 ... TotTime:  268.54200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    11 ... Red:   -1.11463 / -1.00000   ...  Max:    0.13016 / -0.09691   ... STime:  264.26600 ... TotTime:  268.81800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    12 ... Red:   -1.15776 / -1.00000   ...  Max:    0.08703 / -0.09691   ... STime:  264.52900 ... TotTime:  269.08100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    13 ... Red:   -1.24459 / -1.00000   ...  Max:    0.00020 / -0.09691   ... STime:  264.77300 ... TotTime:  269.32500 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    14 ... Red:   -1.31111 / -1.00000   ...  Max:   -0.06632 / -0.09691   ... STime:  265.01200 ... TotTime:  269.56400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    15 ... Red:   -1.35202 / -1.00000   ...  Max:   -0.10724 / -0.09691   ... STime:  265.25400 ... TotTime:  269.80600   0.49574        11   0.02351   4.26891   0.00000  -0.00145   0.53166   0.53021   0.01518   0.01703   0.03221  16.50385   0.70585  -0.00060  -0.20584   0.00107   0.53924   0.02171  14.61829   0.56979   0.00000  -0.20321   1.84099 265.77700 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.25013    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.41836 / -1.00000   ...  Max:    0.83177 / -0.09691   ... STime:  267.71900 ... TotTime:  272.27100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.71384 / -1.00000   ...  Max:    0.53628 / -0.09691   ... STime:  267.97800 ... TotTime:  272.53000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.90633 / -1.00000   ...  Max:    0.34379 / -0.09691   ... STime:  268.22200 ... TotTime:  272.77400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.04011 / -1.00000   ...  Max:    0.21002 / -0.09691   ... STime:  268.47100 ... TotTime:  273.02300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.09147 / -1.00000   ...  Max:    0.15865 / -0.09691   ... STime:  268.75400 ... TotTime:  273.30600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.10657 / -1.00000   ...  Max:    0.14355 / -0.09691   ... STime:  269.01700 ... TotTime:  273.56900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -1.12139 / -1.00000   ...  Max:    0.12873 / -0.09691   ... STime:  269.29100 ... TotTime:  273.84300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     8 ... Red:   -1.16905 / -1.00000   ...  Max:    0.08108 / -0.09691   ... STime:  269.56000 ... TotTime:  274.11200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     9 ... Red:   -1.22556 / -1.00000   ...  Max:    0.02456 / -0.09691   ... STime:  269.82700 ... TotTime:  274.37900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    10 ... Red:   -1.25444 / -1.00000   ...  Max:   -0.00431 / -0.09691   ... STime:  270.09900 ... TotTime:  274.65100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    11 ... Red:   -1.31059 / -1.00000   ...  Max:   -0.06047 / -0.09691   ... STime:  270.37500 ... TotTime:  274.92700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    12 ... Red:   -1.39542 / -1.00000   ...  Max:   -0.14529 / -0.09691   ... STime:  270.62600 ... TotTime:  275.17800   0.49574        12   0.02351   4.26891   0.00000  -0.00145   0.49134   0.48988   0.01519   0.01610   0.03129  15.70153   0.63779   0.00330  -0.10565  -0.00191   0.51655   0.01546  16.85232   0.73414   0.00000  -0.07261   2.07548 271.15700 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.26910    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.37931 / -1.00000   ...  Max:    0.88979 / -0.09691   ... STime:  273.46400 ... TotTime:  278.01600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.73638 / -1.00000   ...  Max:    0.53271 / -0.09691   ... STime:  273.74900 ... TotTime:  278.30100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.92089 / -1.00000   ...  Max:    0.34821 / -0.09691   ... STime:  274.03600 ... TotTime:  278.58800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.07984 / -1.00000   ...  Max:    0.18925 / -0.09691   ... STime:  274.32900 ... TotTime:  278.88100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.31163 / -1.00000   ...  Max:   -0.04254 / -0.09691   ... STime:  274.64300 ... TotTime:  279.19500 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.38277 / -1.00000   ...  Max:   -0.11367 / -0.09691   ... STime:  274.98500 ... TotTime:  279.53700   0.49574        13   0.02351   4.26891   0.00000  -0.00146   0.53374   0.53227   0.01528   0.01718   0.03246  16.44282   0.70550   0.00434  -0.17571   0.00326   0.54484   0.01493  18.03424   0.84590   0.00000  -0.02566   2.10541 275.72800 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.28866    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.44981 / -1.00000   ...  Max:    0.83886 / -0.09691   ... STime:  277.78900 ... TotTime:  282.34100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.75590 / -1.00000   ...  Max:    0.53277 / -0.09691   ... STime:  278.02800 ... TotTime:  282.58000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.05184 / -1.00000   ...  Max:    0.23682 / -0.09691   ... STime:  278.27400 ... TotTime:  282.82600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.23010 / -1.00000   ...  Max:    0.05857 / -0.09691   ... STime:  278.52200 ... TotTime:  283.07400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.30795 / -1.00000   ...  Max:   -0.01928 / -0.09691   ... STime:  278.79500 ... TotTime:  283.34700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.33427 / -1.00000   ...  Max:   -0.04561 / -0.09691   ... STime:  279.07900 ... TotTime:  283.63100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -1.41152 / -1.00000   ...  Max:   -0.12286 / -0.09691   ... STime:  279.32500 ... TotTime:  283.87700   0.49574        14   0.02351   4.26891   0.00000  -0.00144   0.52285   0.52141   0.01513   0.02337   0.03850  13.58023   0.49763   0.00036  -0.19785   0.00093   0.55399  -0.00060  38.12810   0.00000   0.00000  -0.07403   2.08791 279.83800 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.23678    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.48880 / -1.00000   ...  Max:    0.74798 / -0.09691   ... STime:  281.75900 ... TotTime:  286.31100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.84308 / -1.00000   ...  Max:    0.39369 / -0.09691   ... STime:  282.02500 ... TotTime:  286.57700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -1.05532 / -1.00000   ...  Max:    0.18146 / -0.09691   ... STime:  282.26700 ... TotTime:  286.81900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.22261 / -1.00000   ...  Max:    0.01417 / -0.09691   ... STime:  282.52200 ... TotTime:  287.07400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.38752 / -1.00000   ...  Max:   -0.15074 / -0.09691   ... STime:  282.77000 ... TotTime:  287.32200   0.49574        15   0.02351   4.26891   0.00000  -0.00146   0.54848   0.54702   0.01532   0.03781   0.05313  10.32352   0.33844   0.00632  -0.16877  -0.00220   0.54698   0.02632  13.13516   0.48346   0.00000  -0.34279   1.61705 282.29500 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.18322    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.46101 / -1.00000   ...  Max:    0.72221 / -0.09691   ... STime:  285.47500 ... TotTime:  290.02700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.74822 / -1.00000   ...  Max:    0.43500 / -0.09691   ... STime:  285.74100 ... TotTime:  290.29300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.91633 / -1.00000   ...  Max:    0.26688 / -0.09691   ... STime:  285.98900 ... TotTime:  290.54100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.01792 / -1.00000   ...  Max:    0.16530 / -0.09691   ... STime:  286.26600 ... TotTime:  290.81800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.02823 / -1.00000   ...  Max:    0.15498 / -0.09691   ... STime:  286.54400 ... TotTime:  291.09600 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     6 ... Red:   -1.03773 / -1.00000   ...  Max:    0.14549 / -0.09691   ... STime:  286.81600 ... TotTime:  291.36800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     7 ... Red:   -1.03993 / -1.00000   ...  Max:    0.14329 / -0.09691   ... STime:  287.07200 ... TotTime:  291.62400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     8 ... Red:   -1.04299 / -1.00000   ...  Max:    0.14022 / -0.09691   ... STime:  287.31000 ... TotTime:  291.86200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     9 ... Red:   -1.06977 / -1.00000   ...  Max:    0.11345 / -0.09691   ... STime:  287.55100 ... TotTime:  292.10300 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    10 ... Red:   -1.08680 / -1.00000   ...  Max:    0.09642 / -0.09691   ... STime:  287.80700 ... TotTime:  292.35900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    11 ... Red:   -1.10705 / -1.00000   ...  Max:    0.07617 / -0.09691   ... STime:  288.04800 ... TotTime:  292.60000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    12 ... Red:   -1.16334 / -1.00000   ...  Max:    0.01988 / -0.09691   ... STime:  288.31500 ... TotTime:  292.86700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    13 ... Red:   -1.19601 / -1.00000   ...  Max:   -0.01279 / -0.09691   ... STime:  288.55900 ... TotTime:  293.11100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    14 ... Red:   -1.21723 / -1.00000   ...  Max:   -0.03401 / -0.09691   ... STime:  288.81500 ... TotTime:  293.36700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    15 ... Red:   -1.23741 / -1.00000   ...  Max:   -0.05420 / -0.09691   ... STime:  289.10600 ... TotTime:  293.65800 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    16 ... Red:   -1.24468 / -1.00000   ...  Max:   -0.06147 / -0.09691   ... STime:  289.40500 ... TotTime:  293.95700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    17 ... Red:   -1.25607 / -1.00000   ...  Max:   -0.07285 / -0.09691   ... STime:  289.66700 ... TotTime:  294.21900 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    18 ... Red:   -1.26495 / -1.00000   ...  Max:   -0.08173 / -0.09691   ... STime:  289.93200 ... TotTime:  294.48400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    19 ... Red:   -1.27364 / -1.00000   ...  Max:   -0.09042 / -0.09691   ... STime:  290.19900 ... TotTime:  294.75100 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:    20 ... Red:   -1.28623 / -1.00000   ...  Max:   -0.10302 / -0.09691   ... STime:  290.46700 ... TotTime:  295.01900   0.49574        16   0.02351   4.26891   0.00000  -0.00144   0.46983   0.46839   0.01505   0.04587   0.06092   7.71226   0.20468   0.00070  -0.10901   0.00172   0.49854   0.02018  14.15300   0.52391   0.00000  -0.34279   1.48205 290.99300 TStep: 3     / 128   ... Time:    0.49574 ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max: 1.33409    /   -0.09691 ... KTRes: 0.00000    TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     1 ... Red:   -0.36994 / -1.00000   ...  Max:    0.96416 / -0.09691   ... STime:  293.00000 ... TotTime:  297.55200 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     2 ... Red:   -0.69977 / -1.00000   ...  Max:    0.63432 / -0.09691   ... STime:  293.27800 ... TotTime:  297.83000 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     3 ... Red:   -0.93980 / -1.00000   ...  Max:    0.39429 / -0.09691   ... STime:  293.56500 ... TotTime:  298.11700 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     4 ... Red:   -1.16543 / -1.00000   ...  Max:    0.16866 / -0.09691   ... STime:  293.80200 ... TotTime:  298.35400 TStep:     3 / 128   ... Time:    0.49574 ... GMRES Iter:     5 ... Red:   -1.26541 / -1.00000   ...  Max:    0.06868 / -0.09691   ... STime:  294.05500 ... TotTime:  298.60700 TStep:     3 / 128   ... Time:    0.49574 ... GMR

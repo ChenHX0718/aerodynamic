@@ -1,0 +1,106 @@
+{
+  "schema_version": "2.0",
+  "signature": "0c86b8b7b3ca125857746dd021bac2bf869aa7cf8956bb4132789bd0a9195ad2",
+  "status": "SUCCESS",
+  "request": {
+    "identity": {
+      "model_sha256": "5849e2de526d07fc62f64120058ff1d6cfdcc63ef791dd8d20720cffcb25793b",
+      "openvsp_version": "OpenVSP 3.51.3",
+      "convergence_configuration_sha256": "0c8c2bdc5288b9b41b1cb2e4713d13294362373fd41a0f6075a1a2b3594c5094"
+    },
+    "condition": {
+      "speed_mps": 8.0,
+      "alpha_deg": 2.0,
+      "beta_deg": 0.0,
+      "rho_kg_m3": 1.225,
+      "dynamic_viscosity_pa_s": 1.7894e-05,
+      "speed_of_sound_mps": 340.294,
+      "mach": 0.023509083322068566,
+      "reynolds_cref": 816027.7187884208,
+      "dynamic_pressure_pa": 39.2
+    },
+    "control_deflections_deg": {
+      "aileron": 0.0,
+      "elevator": 2.0,
+      "rudder": 0.0
+    },
+    "wake_iterations": 5,
+    "mesh_source": "current_openvsp_model",
+    "analysis_type": "polar",
+    "include_thick": true,
+    "usage": {
+      "purpose": "pretrim",
+      "state": "cruise_trim",
+      "label": "iter_01_fd_elevator_plus"
+    }
+  },
+  "payload": {
+    "coefficients": {
+      "CX": {
+        "raw_field": "VSPAERO_Polar.CFxtot",
+        "raw_value": 0.011292577935,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.011292577935,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      },
+      "CY": {
+        "raw_field": "VSPAERO_Polar.CFytot",
+        "raw_value": 0.00391956263,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.00391956263,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "CZ": {
+        "raw_field": "VSPAERO_Polar.CFztot",
+        "raw_value": 0.295059821458,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.295059821458,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      },
+      "CL": {
+        "raw_field": "VSPAERO_Polar.CLtot",
+        "raw_value": 0.294485973701,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.294485973701,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "CD": {
+        "raw_field": "VSPAERO_Polar.CDtot",
+        "raw_value": 0.021583138067,
+        "raw_unit": "dimensionless",
+        "standard_value": 0.021583138067,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "Cl": {
+        "raw_field": "VSPAERO_Polar.CMxtot",
+        "raw_value": 0.000596882298,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.000596882298,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      },
+      "Cm": {
+        "raw_field": "VSPAERO_Polar.CMytot",
+        "raw_value": -0.122748564167,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.122748564167,
+        "standard_unit": "dimensionless",
+        "conversion": "none"
+      },
+      "Cn": {
+        "raw_field": "VSPAERO_Polar.CMztot",
+        "raw_value": 0.000388202182,
+        "raw_unit": "dimensionless",
+        "standard_value": -0.000388202182,
+        "standard_unit": "dimensionless",
+        "conversion": "CX=-CFx, CY=CFy, CZ=-CFz, Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn"
+      }
+    }
+  },
+  "solver_duration_sec": 52.597777399932966
+}

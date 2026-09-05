@@ -19,6 +19,7 @@ def flatten_case(result: dict[str, Any]) -> dict[str, Any]:
     row: dict[str, Any] = {
         "case_id": result.get("case_id", ""),
         "mode": result.get("mode", ""),
+        "grid_source": result.get("grid_source", ""),
         "status": result.get("status", ""),
         "error": result.get("error", ""),
     }
@@ -44,8 +45,8 @@ def flatten_case(result: dict[str, Any]) -> dict[str, Any]:
         ):
             row[name] = trim.get(name)
         derivative_package = result.get("derivatives", {})
-        for name, record in derivative_package.get("production_fd_derivatives", {}).items():
-            row[f"production_fd_{name}"] = record.get("derivative_value")
+        for name, record in derivative_package.get("production_derivatives", {}).items():
+            row[f"production_{name}"] = record.get("value")
         for name, record in derivative_package.get("native_derivative_diagnostics", {}).items():
             row[f"native_diagnostic_{name}"] = record.get("diagnostic_value")
         validation = result.get("validation", {})
@@ -64,7 +65,7 @@ def _derivative_rows(
     for result in trim_results:
         speed = result.get("inputs", {}).get("speed_mps")
         derivative_package = result.get("derivatives", {})
-        production = derivative_package.get("production_fd_derivatives", {})
+        production = derivative_package.get("production_derivatives", {})
         native = derivative_package.get("native_derivative_diagnostics", {})
         items = derivative_package.get("required_derivatives_manifest", {}).get("items", [])
         for item in items:
@@ -82,14 +83,15 @@ def _derivative_rows(
                 "required": item.get("required"),
                 "derivative_value": item.get("value"),
                 "source": item.get("source"),
+                "source_field": item.get("source_field"),
                 "units": item.get("units"),
                 "definition": item.get("definition"),
                 "method": item.get("method"),
                 "selected_fd_step": item.get("selected_fd_step"),
                 "selected_fd_step_unit": item.get("selected_fd_step_unit"),
-                "convergence_status": record.get("convergence_status"),
+                "convergence_status": record.get("convergence_status", record.get("validation_status")),
                 "validation_status": item.get("validation_status"),
-                "wake_level": item.get("wake_level"),
+                "wake_iterations": item.get("wake_iterations"),
                 "production_included": item.get("production_included"),
                 "gate_action": item.get("gate_action"),
                 "minus_sample_available": all(
@@ -107,7 +109,8 @@ def build_database(
     *, metadata: dict[str, Any], reference: dict[str, Any], geometry: dict[str, Any],
     manifest: dict[str, Any], grid_results: list[dict[str, Any]],
     trim_results: list[dict[str, Any]], validation: dict[str, Any],
-    summary: dict[str, Any],
+    summary: dict[str, Any], grid_mode: str = "uniform",
+    adaptive_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "metadata": metadata,
@@ -122,7 +125,19 @@ def build_database(
             "r_derivatives": "per r_hat; r_hat=r*bref/(2*V)",
             "forces": "N", "moments": "N*m", "speed": "m/s",
         },
-        "grid": {"results": grid_results, "flat_table": [flatten_case(item) for item in grid_results]},
+        "grid": {
+            "mode": grid_mode,
+            "results": grid_results,
+            "flat_table": [flatten_case(item) for item in grid_results],
+            "adaptive_summary": None if adaptive_report is None else {
+                key: value for key, value in adaptive_report.items()
+                if key not in {"cells", "refinement_history"}
+            },
+            "cells": [] if adaptive_report is None else adaptive_report.get("cells", []),
+            "refinement_history": (
+                [] if adaptive_report is None else adaptive_report.get("refinement_history", [])
+            ),
+        },
         "trim": {"results": trim_results, "flat_table": [flatten_case(item) for item in trim_results]},
         "derivative_table": _derivative_rows(trim_results, metadata["coordinate_system"]),
         "validation": validation,
@@ -173,6 +188,7 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             "unit": str(row["unit"]),
             "perturbation": str(row["perturbation"]),
             "definition": str(row["definition"]),
+            "method": str(row["method"]),
         }
         for row in manifest_rows
     }
@@ -180,13 +196,13 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
     def derivative_arrays(categories: set[str]) -> dict[str, np.ndarray]:
         return {
             str(row["name"]): _row_array([
-                item["derivatives"]["production_fd_derivatives"][str(row["name"])]["derivative_value"]
+                item["derivatives"]["production_derivatives"][str(row["name"])]["value"]
                 for item in accepted
             ])
             for row in manifest_rows
             if str(row["category"]) in categories
             and all(
-                str(row["name"]) in item["derivatives"]["production_fd_derivatives"]
+                str(row["name"]) in item["derivatives"]["production_derivatives"]
                 for item in accepted
             )
         }
@@ -238,10 +254,23 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             ], numeric=False)
             for row in manifest_rows
         },
-        "rate_derivative_limitation": (
-            "p/q/r centered steady-rate finite differences are unavailable in OpenVSP/VSPAERO 3.51.3; "
-            "native values are diagnostic-only and excluded from production derivative arrays"
-        ),
+    }
+    grid_results = database.get("grid", {}).get("results", [])
+    grid = {
+        "mode": database.get("grid", {}).get("mode", "uniform"),
+        "V_mps": _row_array([item["inputs"]["speed_mps"] for item in grid_results]),
+        "alpha_deg": _row_array([item["inputs"]["alpha_deg"] for item in grid_results]),
+        "beta_deg": _row_array([item["inputs"]["beta_deg"] for item in grid_results]),
+        "grid_source": _row_array([item.get("grid_source", "seed") for item in grid_results], numeric=False),
+        **{
+            name: _row_array([
+                item.get("outputs", {}).get("coefficients", {}).get(name, {}).get(
+                    "standard_value", math.nan
+                )
+                for item in grid_results
+            ])
+            for name in ("CL", "CD", "Cm", "CY", "Cl", "Cn")
+        },
     }
     return {
         "meta": {
@@ -265,6 +294,7 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
         "reference": database["reference"],
         "flight_points": flight_points,
         "trim": trim,
+        "grid": grid,
         "longitudinal": derivative_arrays({"longitudinal"}),
         "lateral": derivative_arrays({"lateral"}),
         "controls": {
@@ -355,12 +385,25 @@ def export_database(
                 raise RuntimeError("MAT verification failed: AERO.meta.schema_version is not 1.0")
             if not hasattr(aero, "longitudinal") or not hasattr(aero.longitudinal, "Cm_alpha"):
                 raise RuntimeError("MAT verification failed: AERO.longitudinal.Cm_alpha is unreadable")
+            for container, name in (
+                (aero.longitudinal, "CL_q"),
+                (aero.longitudinal, "Cm_q"),
+                (aero.lateral, "CY_p"),
+                (aero.lateral, "Cl_p"),
+                (aero.lateral, "Cn_p"),
+                (aero.lateral, "CY_r"),
+                (aero.lateral, "Cl_r"),
+                (aero.lateral, "Cn_r"),
+            ):
+                if not hasattr(container, name):
+                    raise RuntimeError(f"MAT verification failed: production rate derivative {name} is unreadable")
             paths["mat"] = mat_path
             paths["mat_status"] = "PASS"
         else:
-            if mat_path.is_file():
-                mat_path.unlink()
-            paths["mat_status"] = "FAIL (no complete accepted TRIM dataset)"
+            paths["mat_status"] = (
+                "FAIL (no complete accepted TRIM dataset; any prior MAT artifact was retained "
+                "and is not evidence for this run)"
+            )
     else:
         paths["mat_status"] = "NOT_REQUESTED"
 

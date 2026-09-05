@@ -12,6 +12,17 @@ operating_conditions:
 
 grid:
   mode: uniform
+  adaptive:
+    quantities: [CL, CD, Cm, CY, Cl, Cn]
+    tolerance:
+      near_zero_reference: 0.05
+      pass_relative: 0.03
+      warn_relative: 0.08
+      pass_absolute: 0.005
+      warn_absolute: 0.02
+    max_depth: 3
+    max_cases: 100
+    min_spacing: {speed_mps: 0.25, alpha_deg: 0.25, beta_deg: 0.25}
 
 atmosphere:
   rho_kg_m3: 1.225
@@ -31,6 +42,7 @@ geometry_sets:
 solver:
   wake_iterations: 3
   ncpu: 4
+  run_unsteady_diagnostics: false
 
 numerical_convergence:
   wake:

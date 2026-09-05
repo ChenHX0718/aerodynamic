@@ -68,6 +68,11 @@ PERTURBATIONS: dict[str, str] = {
 
 ROLE_SUFFIX = {"aileron": "a", "elevator": "e", "rudder": "r"}
 RATE_CASE = {"p": "Roll__Rate", "q": "Pitch_Rate", "r": "Yaw___Rate"}
+UNSTEADY_FIELDS: dict[str, tuple[str, str, bool]] = {
+    "p": ("p", "p", False),
+    "q": ("q+alpha_dot", "q_plus_alpha_dot", True),
+    "r": ("r-beta_dot", "r_minus_beta_dot", True),
+}
 
 
 def measurement(
@@ -158,6 +163,39 @@ def map_control_derivatives(
             )
         controls[role] = {"group_name": group_name, "derivatives": derivatives}
     return controls
+
+
+def map_unsteady_derivatives(raw_stab: dict[str, Any], mode: str) -> dict[str, dict[str, Any]]:
+    """Map P/Q/R damping-analysis outputs without treating combined terms as classical rates."""
+    if mode not in UNSTEADY_FIELDS:
+        raise ValueError(f"Unsupported unsteady stability mode: {mode}")
+    raw_suffix, standard_suffix, combined = UNSTEADY_FIELDS[mode]
+    prefixes = {
+        "CL": "CL", "CD": "CD", "CY": "CFy",
+        "Cl": "CMl", "Cm": "CMm", "Cn": "CMn",
+    }
+    mapped: dict[str, dict[str, Any]] = {}
+    for coefficient, raw_prefix in prefixes.items():
+        raw_field = f"{raw_prefix}_{raw_suffix}"
+        if raw_field not in raw_stab:
+            continue
+        name = f"{coefficient}_{standard_suffix}_unsteady"
+        mapped[name] = {
+            **measurement(
+                raw_field=f"VSPAERO_Stab.{raw_field}",
+                raw_value=float(raw_stab[raw_field]),
+                raw_unit="VSPAERO damping derivative",
+                standard_value=float(raw_stab[raw_field]),
+                standard_unit="VSPAERO damping derivative",
+                conversion="VSPAERO standard aerodynamic coefficient axes; no classical-rate substitution",
+            ),
+            "analysis": mode.upper(),
+            "source_expression": raw_suffix,
+            "combined_derivative": combined,
+            "diagnostic_only": True,
+            "production_included": False,
+        }
+    return mapped
 
 
 def standard_values(items: dict[str, dict[str, Any]]) -> dict[str, float]:

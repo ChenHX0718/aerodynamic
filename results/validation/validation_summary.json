@@ -5,18 +5,82 @@
     "openvsp_version": "OpenVSP 3.51.3",
     "geometry_status": "PASS",
     "grid": {
-      "requested": 4,
-      "completed": 4,
+      "mode": "adaptive",
+      "requested": 3,
+      "seed_requested": 2,
+      "completed": 3,
       "failed": 0,
-      "skipped": 4,
-      "status": "PASS"
+      "skipped": 0,
+      "status": "PASS",
+      "adaptive": {
+        "mode": "adaptive",
+        "active_dimensions": [
+          "speed_mps"
+        ],
+        "initial_seed_point_count": 2,
+        "initial_cell_count": 1,
+        "final_unique_point_count": 3,
+        "new_solver_runs": 3,
+        "new_solver_duration_sec": 2678.945822800277,
+        "persistent_cache_hits": 0,
+        "deduplicated_point_reuses": 2,
+        "cache_hits": 2,
+        "accepted_cell_count": 1,
+        "refined_cell_count": 0,
+        "max_depth_reached": 0,
+        "max_interpolation_error": 1.0649999999999202e-05,
+        "per_coefficient_worst_error": {
+          "CL": {
+            "absolute_error": 1.0000000000287557e-07,
+            "relative_error": 8.828696796319808e-07,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          },
+          "CD": {
+            "absolute_error": 1.0649999999999202e-05,
+            "relative_error": 0.00021299999999998404,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          },
+          "Cm": {
+            "absolute_error": 1.800000000003188e-06,
+            "relative_error": 3.600000000006376e-05,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          },
+          "CY": {
+            "absolute_error": 1.5000000000000365e-07,
+            "relative_error": 3.000000000000073e-06,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          },
+          "Cl": {
+            "absolute_error": 5.000000000002832e-08,
+            "relative_error": 1.0000000000005664e-06,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          },
+          "Cn": {
+            "absolute_error": 9.999999999994822e-08,
+            "relative_error": 1.9999999999989644e-06,
+            "status": "PASS",
+            "cell_id": "cell_000001"
+          }
+        },
+        "termination_reason": "all final cells satisfy interpolation tolerance",
+        "status": "PASS",
+        "solver_gate_status": "PASS",
+        "derivative_gate_status": "WARN",
+        "production_gate_status": "WARN",
+        "adaptive_grid_eligible": true
+      }
     },
     "trim": {
       "requested": 1,
       "completed": 1,
       "failed": 0,
-      "skipped": 1,
-      "status": "WARN"
+      "skipped": 0,
+      "status": "PASS"
     },
     "derivatives": {
       "required_derivatives": 23,
@@ -26,16 +90,21 @@
       "missing": 0,
       "invalid": 0,
       "validation_failed": 0,
-      "derivative_set_status": "WARN",
-      "overall_status": "WARN"
+      "PASS": 23,
+      "WARN_NUMERICAL": 0,
+      "FAIL": 0,
+      "derivative_set_status": "PASS",
+      "overall_status": "PASS"
     },
     "fuselage_effect_status": "PASS",
-    "fuselage_validation_skipped": true,
+    "fuselage_validation_skipped": false,
     "portability_status": "PASS",
+    "solver_gate_status": "PASS",
+    "derivative_gate_status": "WARN",
+    "production_gate_status": "WARN",
     "final_status": "WARN",
     "limitations": [
-      "OpenVSP 3.51.3 public Sweep API has no negative p/q/r single-point input; rate derivatives are native forward differences and are marked WARN.",
-      "The delivered mesh and wake settings are smoke-test settings, not production convergence evidence."
+      "Q and R unsteady damping analyses report combined q+alpha_dot and r-beta_dot terms; they are exported as diagnostics and are not decomposed or substituted for classical rate derivatives."
     ]
   },
   "flight_points": [
@@ -43,32 +112,55 @@
       "speed_mps": 8.0,
       "solver_status": "PASS",
       "trim_status": "PASS",
-      "numerical_status": "WARN",
-      "derivative_status": "WARN",
+      "numerical_status": "PASS",
+      "derivative_status": "PASS",
       "physics_status": "PASS",
-      "overall_status": "WARN",
+      "overall_status": "PASS",
       "required_derivatives": {
         "required": 23,
-        "calculated": 23,
-        "missing": 0,
-        "invalid": 0,
-        "validation_failed": 0,
-        "validation_warned": 9,
-        "missing_names": [],
-        "invalid_names": [],
-        "failed_names": [],
-        "warned_names": [
+        "PASS": 23,
+        "WARN_NUMERICAL": 0,
+        "FAIL": 0,
+        "production_included": 23,
+        "gate_status": "PASS",
+        "status_policy": {
+          "PASS": "ACCEPT",
+          "WARN_NUMERICAL": "ACCEPT_WITH_WARNING",
+          "FAIL": "REJECT"
+        },
+        "pass_names": [
+          "CL_alpha",
+          "CD_alpha",
+          "Cm_alpha",
           "CL_q",
           "Cm_q",
+          "CY_beta",
+          "Cl_beta",
+          "Cn_beta",
           "CY_p",
           "Cl_p",
           "Cn_p",
           "CY_r",
           "Cl_r",
           "Cn_r",
-          "CY_delta_r"
+          "CL_delta_e",
+          "CD_delta_e",
+          "Cm_delta_e",
+          "CY_delta_a",
+          "Cl_delta_a",
+          "Cn_delta_a",
+          "CY_delta_r",
+          "Cl_delta_r",
+          "Cn_delta_r"
         ],
-        "status": "WARN"
+        "warn_numerical_names": [],
+        "fail_names": [],
+        "calculated": 23,
+        "missing": 0,
+        "invalid": 0,
+        "validation_failed": 0,
+        "validation_warned": 0,
+        "status": "PASS"
       }
     }
   ]

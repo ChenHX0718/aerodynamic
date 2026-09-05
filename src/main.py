@@ -5,7 +5,6 @@ import hashlib
 import json
 import math
 import platform
-import shutil
 import traceback
 from copy import deepcopy
 from datetime import datetime
@@ -14,12 +13,15 @@ from typing import Any
 
 from case_generator import (
     CaseSpec,
+    expand_axis,
     generate_grid_cases,
     generate_trim_cases,
     load_completed_result,
     stable_signature,
     trim_case_id,
+    grid_case_id,
 )
+from adaptive_grid import run_adaptive_grid, write_adaptive_report
 from config_loader import ConfigError, load_openvsp_config, load_project_config, locate_openvsp
 from coordinate_system import (
     COORDINATE_CONVENTION,
@@ -29,6 +31,7 @@ from coordinate_system import (
     map_stability_baseline,
     map_stability_case,
     map_stability_derivatives,
+    map_unsteady_derivatives,
 )
 from export_results import build_database, export_database
 from finite_difference import calculate_trim_derivatives, combine_status
@@ -54,9 +57,9 @@ from validation import (
 from vspaero_runner import AeroRunResult, VSPAERORunner
 
 
-INTERNAL_SCHEMA_VERSION = "6.0.0"
+INTERNAL_SCHEMA_VERSION = "8.0.0"
 AUTOTUNE_SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "6.0"
+TOOL_VERSION = "8.0"
 COEFFICIENT_NAMES = ("CL", "CD", "Cm", "CY", "Cl", "Cn")
 
 
@@ -100,7 +103,8 @@ def _reset_raw(case_dir: Path) -> Path:
     if not raw_dir.is_relative_to(case_dir.resolve()):
         raise RuntimeError(f"Unsafe raw output path: {raw_dir}")
     if raw_dir.exists():
-        shutil.rmtree(raw_dir)
+        archive = case_dir / f"raw_previous_{datetime.now().strftime('%Y%m%dT%H%M%S%f')}"
+        raw_dir.rename(archive)
     raw_dir.mkdir(parents=True)
     return raw_dir
 
@@ -162,6 +166,54 @@ def _analysis_payload(raw_run: AeroRunResult, controls: dict[str, str]) -> dict[
     return payload
 
 
+def _run_unsteady_diagnostics(
+    *, runner: VSPAERORunner, condition: dict[str, float], raw_dir: Path,
+    controls: dict[str, float], wake_iterations: int,
+) -> dict[str, Any]:
+    analyses: dict[str, Any] = {}
+    duration = 0.0
+    for mode in ("p", "q", "r"):
+        try:
+            raw = runner.run(
+                condition, raw_dir, f"unsteady_{mode}", stability=True,
+                stability_mode=mode, include_thick=True,
+                control_deflections_deg=controls, wake_iterations=wake_iterations,
+            )
+            duration += raw.duration_sec
+            derivatives = map_unsteady_derivatives(raw.raw_data, mode)
+            status = "PASS" if len(derivatives) == len(COEFFICIENT_NAMES) else "FAIL"
+            analyses[mode] = {
+                "status": status,
+                "analysis": f"STABILITY_{mode.upper()}_ANALYSIS",
+                "derivatives": derivatives,
+                "solver_duration_sec": raw.duration_sec,
+                "source_directory": str(raw.case_dir),
+                "source_result_id": raw.data_result_id,
+                "reason": (
+                    "all six diagnostic force/moment fields parsed"
+                    if status == "PASS" else "one or more diagnostic fields are missing"
+                ),
+            }
+        except Exception as exc:
+            analyses[mode] = {
+                "status": "FAIL",
+                "analysis": f"STABILITY_{mode.upper()}_ANALYSIS",
+                "derivatives": {},
+                "reason": f"{type(exc).__name__}: {exc}",
+            }
+    return {
+        "status": combine_status([item["status"] for item in analyses.values()]),
+        "production_included": False,
+        "separation_rule": (
+            "P is an unsteady damping diagnostic; Q is q+alpha_dot; R is r-beta_dot. "
+            "None of these fields overwrite classical production p/q/r derivatives."
+        ),
+        "analyses": analyses,
+        "run_count": 3,
+        "solver_duration_sec": duration,
+    }
+
+
 def _signature_context(
     config: dict[str, Any], openvsp_version: str, model_sha256: str,
     reference: dict[str, float], geometry: GeometrySelection,
@@ -197,6 +249,7 @@ def _grid_case(
     reference: dict[str, float], cases_root: Path,
     signature_context: dict[str, Any], control_names: dict[str, str],
     production_settings: dict[str, Any] | None,
+    grid_source: str = "seed",
 ) -> tuple[dict[str, Any], bool]:
     if spec.alpha_deg is None:
         raise RuntimeError("GRID case has no alpha")
@@ -219,6 +272,7 @@ def _grid_case(
     if config["_resume_enabled"]:
         cached = load_completed_result(result_path, signature)
         if cached is not None:
+            cached["grid_source"] = grid_source
             return cached, True
     raw_dir = _reset_raw(case_dir)
     started = _now()
@@ -233,6 +287,7 @@ def _grid_case(
             "signature": signature,
             "case_id": spec.case_id,
             "mode": spec.mode,
+            "grid_source": grid_source,
             "status": "PASS",
             "timestamp": started,
             "inputs": condition,
@@ -246,6 +301,7 @@ def _grid_case(
             "signature": signature,
             "case_id": spec.case_id,
             "mode": spec.mode,
+            "grid_source": grid_source,
             "status": "FAIL",
             "timestamp": started,
             "inputs": condition,
@@ -430,7 +486,8 @@ def _trim_case(
             "outputs": outputs,
             "trim": trim_record,
             "derivatives": {
-                "production_fd_derivatives": {},
+                "production_derivatives": {},
+                "unsteady_derivative_diagnostics": {},
                 "native_derivative_diagnostics": {},
                 "required_derivatives_manifest": {"items": [], "summary": {}},
                 "run_count": 0,
@@ -476,6 +533,30 @@ def _trim_case(
                 derivative_config=derivative_config,
                 run_polar=run_polar,
             )
+            if bool(config["solver"].get("run_unsteady_diagnostics", False)):
+                unsteady = _run_unsteady_diagnostics(
+                    runner=runner, condition=last_condition, raw_dir=raw_dir,
+                    controls=controls, wake_iterations=production_wake,
+                )
+            else:
+                unsteady = {
+                    "status": "NOT_REQUESTED",
+                    "production_included": False,
+                    "analyses": {},
+                    "run_count": 0,
+                    "solver_duration_sec": 0.0,
+                    "reason": (
+                        "optional P/Q/R diagnostics disabled; OpenVSP 3.51.3 hard-codes "
+                        "128 time steps for these stability modes"
+                    ),
+                    "separation_rule": (
+                        "classical production p/q/r derivatives come from steady VSPAERO_Stab; "
+                        "Q q+alpha_dot and R r-beta_dot outputs never replace them"
+                    ),
+                }
+            derivative_package["unsteady_derivative_diagnostics"] = unsteady
+            derivative_package["run_count"] += int(unsteady["run_count"])
+            derivative_package["solver_duration_sec"] += float(unsteady["solver_duration_sec"])
             result["derivatives"] = derivative_package
             result["solver"]["duration_sec"] += derivative_package["solver_duration_sec"]
         else:
@@ -495,7 +576,8 @@ def _trim_case(
             "inputs": last_condition,
             "outputs": {},
             "derivatives": {
-                "production_fd_derivatives": {},
+                "production_derivatives": {},
+                "unsteady_derivative_diagnostics": {},
                 "native_derivative_diagnostics": {},
                 "required_derivatives_manifest": {"items": [], "summary": {}},
             },
@@ -604,11 +686,12 @@ def _summary_text(summary: dict[str, Any], output_dir: Path) -> str:
         f"Validation failed        : {derivative['validation_failed']}",
         f"PASS                     : {derivative.get('PASS', 0)}",
         f"WARN_NUMERICAL           : {derivative.get('WARN_NUMERICAL', 0)}",
-        f"METHOD_LIMITATION        : {derivative.get('METHOD_LIMITATION', 0)}",
         f"FAIL                     : {derivative.get('FAIL', 0)}",
         f"DERIVATIVE_SET           : {derivative['derivative_set_status']}",
         f"Fuselage effect          : {summary['fuselage_effect_status']}",
         f"Portability              : {summary['portability_status']}",
+        f"Solver / GRID Gate       : {summary['solver_gate_status']}",
+        f"Derivative Gate          : {summary['derivative_gate_status']}",
         f"Production Gate          : {summary['production_gate_status']}",
         f"DATASET                   : {summary['final_status']}",
         "",
@@ -720,46 +803,118 @@ def run_workflow(
         return {"success": status != "FAIL", "summary": {"final_status": status}, "report": report}
 
     results_root = config["_paths"]["results"]
+    grid_mode = str(config["grid"]["mode"]).lower()
     production_settings = None
     gate_status = "NOT_REQUESTED"
+    solver_gate_status = "NOT_REQUESTED"
+    derivative_gate_status = "NOT_REQUESTED"
     gate_config = config["numerical_convergence"]["production_gate"]
+    if (
+        command in {"all", "grid"}
+        and grid_mode == "adaptive"
+        and not bool(gate_config["enabled"])
+    ):
+        raise RuntimeError(
+            "Adaptive GRID requires an enabled Solver / GRID Gate and cannot be forced."
+        )
     if command in {"all", "grid", "trim"} and bool(gate_config["enabled"]):
         production_settings = load_production_settings(config["_paths"]["production_settings"])
-        adaptive = str(config.get("grid", {}).get("mode", "uniform")).lower() == "adaptive"
-        gate = production_gate(
-            production_settings, force=force, adaptive=adaptive,
-            expected_identity=convergence_identity(config, context["version"]),
+        adaptive = grid_mode == "adaptive"
+        expected_identity = convergence_identity(config, context["version"])
+        delivery_gate = production_gate(
+            production_settings, force=force, adaptive=False,
+            expected_identity=expected_identity,
         )
-        gate_status = str(gate["status"])
-        if not gate["allowed"]:
-            raise RuntimeError(
-                f"Production Gate {gate['status']}: {gate['reason']}. "
-                "Run 'python run.py numerical-convergence' first, or use --force with an explicit audit record."
+        adaptive_gate = production_gate(
+            production_settings, force=False, adaptive=True,
+            expected_identity=expected_identity,
+        )
+        gate_status = str(delivery_gate["status"])
+        solver_gate_status = str(adaptive_gate["status"])
+        derivative_gate_status = str(
+            (production_settings or {}).get("derivative_gate", {}).get("status", "FAIL")
+        )
+        required_gates = []
+        if command in {"all", "grid"} and adaptive:
+            required_gates.append(adaptive_gate)
+        if command in {"all", "trim"} or (command == "grid" and not adaptive):
+            required_gates.append(delivery_gate)
+        denied = next((item for item in required_gates if not item["allowed"]), None)
+        if denied is not None:
+            suffix = (
+                "Run 'python run.py numerical-convergence' first. Adaptive GRID cannot be forced."
+                if denied["gate"] == "solver_gate"
+                else "Run 'python run.py numerical-convergence' first, or use --force with an explicit audit record."
             )
-        print(f"Production Gate: {gate['status']}{' (FORCED)' if gate['forced'] else ''}")
-        if gate["forced"]:
+            raise RuntimeError(
+                f"{denied['gate']} {denied['status']}: {denied['reason']}. {suffix}"
+            )
+        print(
+            f"Gates: solver={solver_gate_status}, derivative={derivative_gate_status}, "
+            f"production={gate_status}"
+        )
+        if delivery_gate["forced"]:
             _write_json(results_root / "numerical_convergence" / "production_force_override.json", {
-                "timestamp": _now(), "command": command, "gate": gate,
+                "timestamp": _now(), "command": command, "gate": delivery_gate,
                 "config_file": config["_paths"]["config_file"],
             })
     cases_root = results_root / "cases"
-    grid_specs = generate_grid_cases(config) if command in {"all", "grid"} else []
+    grid_requested = command in {"all", "grid"}
+    grid_specs = generate_grid_cases(config) if grid_requested and grid_mode == "uniform" else []
     trim_specs = generate_trim_cases(config) if command in {"all", "trim"} else []
     grid_results: list[dict[str, Any]] = []
+    adaptive_report: dict[str, Any] | None = None
     trim_results: list[dict[str, Any]] = []
     grid_skipped = 0
     trim_skipped = 0
 
-    for index, spec in enumerate(grid_specs, 1):
-        result, skipped = _grid_case(
-            spec, runner=context["runner"], config=config, reference=context["reference"],
-            cases_root=cases_root, signature_context=context["signature_context"],
-            control_names=context["control_names"],
-            production_settings=production_settings,
+    if grid_requested and grid_mode == "adaptive":
+        conditions = config["operating_conditions"]
+        axes = {
+            "speed_mps": expand_axis(conditions["speed"], "operating_conditions.speed"),
+            "alpha_deg": expand_axis(conditions["alpha"], "operating_conditions.alpha"),
+            "beta_deg": expand_axis(conditions["beta"], "operating_conditions.beta"),
+        }
+
+        def evaluate_grid_point(point: dict[str, float], source: str) -> tuple[dict[str, Any], bool]:
+            spec = CaseSpec(
+                grid_case_id(point["speed_mps"], point["alpha_deg"], point["beta_deg"]),
+                "GRID_DATABASE", point["speed_mps"], point["alpha_deg"], point["beta_deg"],
+            )
+            return _grid_case(
+                spec, runner=context["runner"], config=config, reference=context["reference"],
+                cases_root=cases_root, signature_context=context["signature_context"],
+                control_names=context["control_names"], production_settings=production_settings,
+                grid_source=source,
+            )
+
+        grid_results, adaptive_report = run_adaptive_grid(
+            axes=axes, settings=config["grid"]["adaptive"], evaluator=evaluate_grid_point,
         )
-        grid_results.append(result)
-        grid_skipped += int(skipped)
-        print(f"GRID {index}/{len(grid_specs)} V={spec.speed_mps:g}: {'CACHED' if skipped else result['status']}")
+        adaptive_report.update({
+            "solver_gate_status": solver_gate_status,
+            "derivative_gate_status": derivative_gate_status,
+            "production_gate_status": gate_status,
+            "adaptive_grid_eligible": solver_gate_status == "PASS",
+        })
+        write_adaptive_report(results_root / "adaptive_grid", adaptive_report, grid_results)
+        grid_skipped = int(adaptive_report["persistent_cache_hits"])
+        print(
+            f"Adaptive GRID: {adaptive_report['status']} "
+            f"({adaptive_report['final_unique_point_count']} unique points, "
+            f"{adaptive_report['refined_cell_count']} refined cells)"
+        )
+    else:
+        for index, spec in enumerate(grid_specs, 1):
+            result, skipped = _grid_case(
+                spec, runner=context["runner"], config=config, reference=context["reference"],
+                cases_root=cases_root, signature_context=context["signature_context"],
+                control_names=context["control_names"],
+                production_settings=production_settings, grid_source="seed",
+            )
+            grid_results.append(result)
+            grid_skipped += int(skipped)
+            print(f"GRID {index}/{len(grid_specs)} V={spec.speed_mps:g}: {'CACHED' if skipped else result['status']}")
 
     for index, spec in enumerate(trim_specs, 1):
         result, skipped = _trim_case(
@@ -795,15 +950,19 @@ def run_workflow(
         "required_derivatives": len(config["_manifest"]["_required"]),
         "flight_points": 0, "required_instances": 0, "calculated": 0,
         "missing": 0, "invalid": 0, "validation_failed": 0,
-        "PASS": 0, "WARN_NUMERICAL": 0, "METHOD_LIMITATION": 0, "FAIL": 0,
+        "PASS": 0, "WARN_NUMERICAL": 0, "FAIL": 0,
         "derivative_set_status": "NOT_REQUESTED", "overall_status": "PASS",
     }
     grid_failed = [item for item in grid_results if item.get("status") != "PASS"]
     trim_failed = [item for item in trim_results if item.get("status") == "FAIL"]
-    grid_status = "FAIL" if grid_failed else "PASS"
+    point_status = "FAIL" if grid_failed else "PASS"
+    grid_status = combine_status([
+        point_status,
+        adaptive_report["status"] if adaptive_report is not None else "PASS",
+    ])
     trim_status = trim_dataset["overall_status"] if trim_results else "NOT_REQUESTED"
     final_parts = [fuselage_validation["status"], "PASS" if portability["portable"] else "FAIL"]
-    if grid_results:
+    if grid_requested:
         final_parts.append(grid_status)
     if trim_results:
         final_parts.append(trim_status)
@@ -824,21 +983,36 @@ def run_workflow(
         "value": portability["hard_coded_paths_found"], "limit": 0,
         "message": "no scattered absolute paths outside config/openvsp.yaml",
     })
-    if gate_status != "NOT_REQUESTED":
-        validation_rows.append({
-            "speed_mps": "", "level": "DATASET", "check": "production numerical gate",
-            "status": gate_status, "value": gate_status, "limit": "PASS/WARN",
-            "message": "Wake, boundary, FD-step, and required-derivative policy gate; mesh excluded",
-        })
+    for check, status, message in (
+        ("solver / GRID numerical gate", solver_gate_status, "identity, Wake schedule/convergence and boundary continuity"),
+        ("derivative gate", derivative_gate_status, "FD convergence and 23-source completeness/validity"),
+        ("production gate", gate_status, "combination of solver and derivative gates"),
+    ):
+        if status != "NOT_REQUESTED":
+            validation_rows.append({
+                "speed_mps": "", "level": "DATASET", "check": check,
+                "status": status, "value": status, "limit": "PASS/WARN",
+                "message": message,
+            })
 
     summary = {
         "command": command,
         "openvsp_version": context["version"],
         "geometry_status": "PASS",
         "grid": {
-            "requested": len(grid_specs), "completed": len(grid_specs) - len(grid_failed),
+            "mode": grid_mode,
+            "requested": len(grid_results) if grid_requested else 0,
+            "seed_requested": (
+                adaptive_report["initial_seed_point_count"]
+                if adaptive_report is not None else len(grid_specs)
+            ),
+            "completed": len(grid_results) - len(grid_failed),
             "failed": len(grid_failed), "skipped": grid_skipped,
-            "status": grid_status if grid_specs else "NOT_REQUESTED",
+            "status": grid_status if grid_requested else "NOT_REQUESTED",
+            "adaptive": None if adaptive_report is None else {
+                key: value for key, value in adaptive_report.items()
+                if key not in {"cells", "refinement_history"}
+            },
         },
         "trim": {
             "requested": len(trim_specs), "completed": len(trim_specs) - len(trim_failed),
@@ -849,11 +1023,12 @@ def run_workflow(
         "fuselage_effect_status": fuselage_validation["status"],
         "fuselage_validation_skipped": fuselage_skipped,
         "portability_status": "PASS" if portability["portable"] else "FAIL",
+        "solver_gate_status": solver_gate_status,
+        "derivative_gate_status": derivative_gate_status,
         "production_gate_status": gate_status,
         "final_status": final_status,
         "limitations": [
-            "OpenVSP/VSPAERO 3.51.3 cannot form true centered steady-rate derivatives; p/q/r items are METHOD_LIMITATION and native values remain diagnostic-only.",
-            "Adaptive GRID exposes the mode and midpoint-error evaluator but does not yet perform automatic refinement.",
+            "Q and R unsteady damping analyses report combined q+alpha_dot and r-beta_dot terms; they are exported as diagnostics and are not decomposed or substituted for classical rate derivatives.",
         ],
     }
     metadata = {
@@ -893,6 +1068,8 @@ def run_workflow(
             "portability": portability, "dataset_status": final_status,
         },
         summary=summary,
+        grid_mode=grid_mode,
+        adaptive_report=adaptive_report,
     )
     summary_text = _summary_text(summary, results_root)
     paths = export_database(database, results_root, config["export"], config["validation"], summary_text)

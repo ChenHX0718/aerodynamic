@@ -28,7 +28,7 @@ Setting ImplicitWake to: 0
 Setting ImplicitWakeStartIteration_ to: 0 
 Setting FarDist to: -1.000000 
 Setting NumWakeNodes to: 8 
-Setting WakeIters to: 3 
+Setting WakeIters to: 12 
 Setting WakeRelax to: 1.000000 
 Setting ForwardGMRESConvergenceFactor to: 1.000000e+00 
 Setting AdjointGMRESConvergenceFactor_ to: 1.000000e+00 
@@ -60,7 +60,7 @@ CLMax2D_        = 1.000000
 Symmetry        = 0  
 FarDist         = -1.000000 
 NumWakeNodes    = 8  
-WakeIters       = 3  
+WakeIters       = 12  
 NumberOfControlGroups = 3 
 ControlSurfaceGroup_[1].Name(): Aileron 
 There are 2 control surfaces in group: 1 
@@ -94,199 +94,199 @@ VSPAERO v.7.2.2 --- Compiled on: Aug 17 2026 at 21:02:54 PST
 Initializing OPENMP for 4 threads 
 NumberOfThreads_: 4 
 _OPENMP Version string: 200203
-NumNodes: 1747 
-MaxNumberOfGridLevels_: 20 
-NumLoops: 1526 
+NumNodes: 4799 
+MaxNumberOfGridLevels_: 24 
+NumLoops: 4540 
 NumNodesInList: 103 
-KuttaNodeList_[1]: 931 
-KuttaNodeList_[2]: 922 
-KuttaNodeList_[3]: 913 
-KuttaNodeList_[4]: 900 
-KuttaNodeList_[5]: 901 
-KuttaNodeList_[6]: 890 
-KuttaNodeList_[7]: 880 
-KuttaNodeList_[8]: 870 
-KuttaNodeList_[9]: 860 
-KuttaNodeList_[10]: 850 
-KuttaNodeList_[11]: 840 
-KuttaNodeList_[12]: 830 
-KuttaNodeList_[13]: 820 
-KuttaNodeList_[14]: 810 
-KuttaNodeList_[15]: 800 
-KuttaNodeList_[16]: 790 
-KuttaNodeList_[17]: 780 
-KuttaNodeList_[18]: 770 
-KuttaNodeList_[19]: 760 
-KuttaNodeList_[20]: 750 
-KuttaNodeList_[21]: 736 
-KuttaNodeList_[22]: 737 
-KuttaNodeList_[23]: 727 
-KuttaNodeList_[24]: 718 
-KuttaNodeList_[25]: 709 
-KuttaNodeList_[26]: 700 
-KuttaNodeList_[27]: 691 
-KuttaNodeList_[28]: 682 
-KuttaNodeList_[29]: 673 
-KuttaNodeList_[30]: 664 
-KuttaNodeList_[31]: 655 
-KuttaNodeList_[32]: 646 
-KuttaNodeList_[33]: 637 
-KuttaNodeList_[34]: 628 
-KuttaNodeList_[35]: 620 
-KuttaNodeList_[36]: 611 
-KuttaNodeList_[37]: 602 
-KuttaNodeList_[38]: 593 
-KuttaNodeList_[39]: 584 
-KuttaNodeList_[40]: 575 
-KuttaNodeList_[41]: 566 
-KuttaNodeList_[42]: 557 
-KuttaNodeList_[43]: 548 
-KuttaNodeList_[44]: 539 
-KuttaNodeList_[45]: 530 
-KuttaNodeList_[46]: 521 
-KuttaNodeList_[47]: 512 
-KuttaNodeList_[48]: 503 
-KuttaNodeList_[49]: 494 
-KuttaNodeList_[50]: 485 
-KuttaNodeList_[51]: 476 
+KuttaNodeList_[1]: 3315 
+KuttaNodeList_[2]: 3282 
+KuttaNodeList_[3]: 3249 
+KuttaNodeList_[4]: 3204 
+KuttaNodeList_[5]: 3205 
+KuttaNodeList_[6]: 3170 
+KuttaNodeList_[7]: 3136 
+KuttaNodeList_[8]: 3102 
+KuttaNodeList_[9]: 3068 
+KuttaNodeList_[10]: 3034 
+KuttaNodeList_[11]: 3000 
+KuttaNodeList_[12]: 2966 
+KuttaNodeList_[13]: 2932 
+KuttaNodeList_[14]: 2898 
+KuttaNodeList_[15]: 2864 
+KuttaNodeList_[16]: 2830 
+KuttaNodeList_[17]: 2796 
+KuttaNodeList_[18]: 2762 
+KuttaNodeList_[19]: 2728 
+KuttaNodeList_[20]: 2694 
+KuttaNodeList_[21]: 2648 
+KuttaNodeList_[22]: 2649 
+KuttaNodeList_[23]: 2615 
+KuttaNodeList_[24]: 2582 
+KuttaNodeList_[25]: 2549 
+KuttaNodeList_[26]: 2516 
+KuttaNodeList_[27]: 2483 
+KuttaNodeList_[28]: 2450 
+KuttaNodeList_[29]: 2417 
+KuttaNodeList_[30]: 2384 
+KuttaNodeList_[31]: 2351 
+KuttaNodeList_[32]: 2318 
+KuttaNodeList_[33]: 2285 
+KuttaNodeList_[34]: 2252 
+KuttaNodeList_[35]: 2220 
+KuttaNodeList_[36]: 2187 
+KuttaNodeList_[37]: 2154 
+KuttaNodeList_[38]: 2121 
+KuttaNodeList_[39]: 2088 
+KuttaNodeList_[40]: 2055 
+KuttaNodeList_[41]: 2022 
+KuttaNodeList_[42]: 1989 
+KuttaNodeList_[43]: 1956 
+KuttaNodeList_[44]: 1923 
+KuttaNodeList_[45]: 1890 
+KuttaNodeList_[46]: 1857 
+KuttaNodeList_[47]: 1824 
+KuttaNodeList_[48]: 1791 
+KuttaNodeList_[49]: 1758 
+KuttaNodeList_[50]: 1725 
+KuttaNodeList_[51]: 1692 
 KuttaNodeList_[52]: 1 
 KuttaNodeList_[53]: 2 
-KuttaNodeList_[54]: 19 
-KuttaNodeList_[55]: 28 
-KuttaNodeList_[56]: 37 
-KuttaNodeList_[57]: 46 
-KuttaNodeList_[58]: 55 
-KuttaNodeList_[59]: 64 
-KuttaNodeList_[60]: 73 
-KuttaNodeList_[61]: 82 
-KuttaNodeList_[62]: 91 
-KuttaNodeList_[63]: 100 
-KuttaNodeList_[64]: 109 
-KuttaNodeList_[65]: 118 
-KuttaNodeList_[66]: 127 
-KuttaNodeList_[67]: 136 
-KuttaNodeList_[68]: 145 
-KuttaNodeList_[69]: 154 
-KuttaNodeList_[70]: 163 
-KuttaNodeList_[71]: 172 
-KuttaNodeList_[72]: 181 
-KuttaNodeList_[73]: 190 
-KuttaNodeList_[74]: 199 
-KuttaNodeList_[75]: 208 
-KuttaNodeList_[76]: 217 
-KuttaNodeList_[77]: 226 
-KuttaNodeList_[78]: 235 
-KuttaNodeList_[79]: 244 
-KuttaNodeList_[80]: 253 
-KuttaNodeList_[81]: 262 
-KuttaNodeList_[82]: 272 
-KuttaNodeList_[83]: 271 
-KuttaNodeList_[84]: 285 
-KuttaNodeList_[85]: 295 
-KuttaNodeList_[86]: 305 
-KuttaNodeList_[87]: 315 
-KuttaNodeList_[88]: 325 
-KuttaNodeList_[89]: 335 
-KuttaNodeList_[90]: 345 
-KuttaNodeList_[91]: 355 
-KuttaNodeList_[92]: 365 
-KuttaNodeList_[93]: 375 
-KuttaNodeList_[94]: 385 
-KuttaNodeList_[95]: 395 
-KuttaNodeList_[96]: 405 
-KuttaNodeList_[97]: 415 
-KuttaNodeList_[98]: 425 
-KuttaNodeList_[99]: 436 
-KuttaNodeList_[100]: 435 
-KuttaNodeList_[101]: 448 
-KuttaNodeList_[102]: 457 
-KuttaNodeList_[103]: 466 
+KuttaNodeList_[54]: 67 
+KuttaNodeList_[55]: 100 
+KuttaNodeList_[56]: 133 
+KuttaNodeList_[57]: 166 
+KuttaNodeList_[58]: 199 
+KuttaNodeList_[59]: 232 
+KuttaNodeList_[60]: 265 
+KuttaNodeList_[61]: 298 
+KuttaNodeList_[62]: 331 
+KuttaNodeList_[63]: 364 
+KuttaNodeList_[64]: 397 
+KuttaNodeList_[65]: 430 
+KuttaNodeList_[66]: 463 
+KuttaNodeList_[67]: 496 
+KuttaNodeList_[68]: 529 
+KuttaNodeList_[69]: 562 
+KuttaNodeList_[70]: 595 
+KuttaNodeList_[71]: 628 
+KuttaNodeList_[72]: 661 
+KuttaNodeList_[73]: 694 
+KuttaNodeList_[74]: 727 
+KuttaNodeList_[75]: 760 
+KuttaNodeList_[76]: 793 
+KuttaNodeList_[77]: 826 
+KuttaNodeList_[78]: 859 
+KuttaNodeList_[79]: 892 
+KuttaNodeList_[80]: 925 
+KuttaNodeList_[81]: 958 
+KuttaNodeList_[82]: 992 
+KuttaNodeList_[83]: 991 
+KuttaNodeList_[84]: 1037 
+KuttaNodeList_[85]: 1071 
+KuttaNodeList_[86]: 1105 
+KuttaNodeList_[87]: 1139 
+KuttaNodeList_[88]: 1173 
+KuttaNodeList_[89]: 1207 
+KuttaNodeList_[90]: 1241 
+KuttaNodeList_[91]: 1275 
+KuttaNodeList_[92]: 1309 
+KuttaNodeList_[93]: 1343 
+KuttaNodeList_[94]: 1377 
+KuttaNodeList_[95]: 1411 
+KuttaNodeList_[96]: 1445 
+KuttaNodeList_[97]: 1479 
+KuttaNodeList_[98]: 1513 
+KuttaNodeList_[99]: 1548 
+KuttaNodeList_[100]: 1547 
+KuttaNodeList_[101]: 1592 
+KuttaNodeList_[102]: 1625 
+KuttaNodeList_[103]: 1658 
 NumNodesInList: 45 
-KuttaNodeList_[104]: 1361 
-KuttaNodeList_[105]: 1349 
-KuttaNodeList_[106]: 1347 
-KuttaNodeList_[107]: 1336 
-KuttaNodeList_[108]: 1326 
-KuttaNodeList_[109]: 1315 
-KuttaNodeList_[110]: 1305 
-KuttaNodeList_[111]: 1296 
-KuttaNodeList_[112]: 1286 
-KuttaNodeList_[113]: 1276 
-KuttaNodeList_[114]: 1266 
-KuttaNodeList_[115]: 1256 
-KuttaNodeList_[116]: 1246 
-KuttaNodeList_[117]: 1236 
-KuttaNodeList_[118]: 1226 
-KuttaNodeList_[119]: 1215 
-KuttaNodeList_[120]: 1205 
-KuttaNodeList_[121]: 1196 
-KuttaNodeList_[122]: 1182 
-KuttaNodeList_[123]: 1179 
-KuttaNodeList_[124]: 1171 
-KuttaNodeList_[125]: 1159 
-KuttaNodeList_[126]: 943 
-KuttaNodeList_[127]: 941 
-KuttaNodeList_[128]: 959 
-KuttaNodeList_[129]: 969 
-KuttaNodeList_[130]: 971 
-KuttaNodeList_[131]: 985 
-KuttaNodeList_[132]: 994 
-KuttaNodeList_[133]: 1004 
-KuttaNodeList_[134]: 1014 
-KuttaNodeList_[135]: 1024 
-KuttaNodeList_[136]: 1034 
-KuttaNodeList_[137]: 1044 
-KuttaNodeList_[138]: 1054 
-KuttaNodeList_[139]: 1064 
-KuttaNodeList_[140]: 1074 
-KuttaNodeList_[141]: 1084 
-KuttaNodeList_[142]: 1094 
-KuttaNodeList_[143]: 1104 
-KuttaNodeList_[144]: 1114 
-KuttaNodeList_[145]: 1124 
-KuttaNodeList_[146]: 1135 
-KuttaNodeList_[147]: 1138 
-KuttaNodeList_[148]: 1149 
+KuttaNodeList_[104]: 4103 
+KuttaNodeList_[105]: 4079 
+KuttaNodeList_[106]: 4077 
+KuttaNodeList_[107]: 4058 
+KuttaNodeList_[108]: 4040 
+KuttaNodeList_[109]: 4022 
+KuttaNodeList_[110]: 4004 
+KuttaNodeList_[111]: 3986 
+KuttaNodeList_[112]: 3968 
+KuttaNodeList_[113]: 3950 
+KuttaNodeList_[114]: 3932 
+KuttaNodeList_[115]: 3914 
+KuttaNodeList_[116]: 3897 
+KuttaNodeList_[117]: 3879 
+KuttaNodeList_[118]: 3861 
+KuttaNodeList_[119]: 3843 
+KuttaNodeList_[120]: 3824 
+KuttaNodeList_[121]: 3807 
+KuttaNodeList_[122]: 3782 
+KuttaNodeList_[123]: 3779 
+KuttaNodeList_[124]: 3762 
+KuttaNodeList_[125]: 3741 
+KuttaNodeList_[126]: 3350 
+KuttaNodeList_[127]: 3348 
+KuttaNodeList_[128]: 3384 
+KuttaNodeList_[129]: 3402 
+KuttaNodeList_[130]: 3404 
+KuttaNodeList_[131]: 3429 
+KuttaNodeList_[132]: 3446 
+KuttaNodeList_[133]: 3464 
+KuttaNodeList_[134]: 3482 
+KuttaNodeList_[135]: 3500 
+KuttaNodeList_[136]: 3518 
+KuttaNodeList_[137]: 3536 
+KuttaNodeList_[138]: 3554 
+KuttaNodeList_[139]: 3572 
+KuttaNodeList_[140]: 3590 
+KuttaNodeList_[141]: 3608 
+KuttaNodeList_[142]: 3626 
+KuttaNodeList_[143]: 3644 
+KuttaNodeList_[144]: 3662 
+KuttaNodeList_[145]: 3680 
+KuttaNodeList_[146]: 3700 
+KuttaNodeList_[147]: 3701 
+KuttaNodeList_[148]: 3724 
 NumNodesInList: 39 
-KuttaNodeList_[149]: 1369 
-KuttaNodeList_[150]: 1370 
-KuttaNodeList_[151]: 1387 
-KuttaNodeList_[152]: 1396 
-KuttaNodeList_[153]: 1405 
-KuttaNodeList_[154]: 1414 
-KuttaNodeList_[155]: 1415 
-KuttaNodeList_[156]: 1429 
-KuttaNodeList_[157]: 1440 
-KuttaNodeList_[158]: 1450 
-KuttaNodeList_[159]: 1460 
-KuttaNodeList_[160]: 1470 
-KuttaNodeList_[161]: 1480 
-KuttaNodeList_[162]: 1490 
-KuttaNodeList_[163]: 1500 
-KuttaNodeList_[164]: 1510 
-KuttaNodeList_[165]: 1520 
-KuttaNodeList_[166]: 1530 
-KuttaNodeList_[167]: 1541 
-KuttaNodeList_[168]: 1551 
-KuttaNodeList_[169]: 1561 
-KuttaNodeList_[170]: 1572 
-KuttaNodeList_[171]: 1583 
-KuttaNodeList_[172]: 1594 
-KuttaNodeList_[173]: 1604 
-KuttaNodeList_[174]: 1614 
-KuttaNodeList_[175]: 1624 
-KuttaNodeList_[176]: 1634 
-KuttaNodeList_[177]: 1644 
-KuttaNodeList_[178]: 1654 
-KuttaNodeList_[179]: 1664 
-KuttaNodeList_[180]: 1674 
-KuttaNodeList_[181]: 1684 
-KuttaNodeList_[182]: 1694 
-KuttaNodeList_[183]: 1704 
-KuttaNodeList_[184]: 1715 
-KuttaNodeList_[185]: 1714 
-KuttaNodeList_[186]: 1728 
-KuttaNodeList_[187]: 1737 
+KuttaNodeList_[149]: 4119 
+KuttaNodeList_[150]: 4120 
+KuttaNodeList_[151]: 4153 
+KuttaNodeList_[152]: 4170 
+KuttaNodeList_[153]: 4187 
+KuttaNodeList_[154]: 4206 
+KuttaNodeList_[155]: 4204 
+KuttaNodeList_[156]: 4230 
+KuttaNodeList_[157]: 4249 
+KuttaNodeList_[158]: 4267 
+KuttaNodeList_[159]: 4285 
+KuttaNodeList_[160]: 4303 
+KuttaNodeList_[161]: 4321 
+KuttaNodeList_[162]: 4339 
+KuttaNodeList_[163]: 4357 
+KuttaNodeList_[164]: 4375 
+KuttaNodeList_[165]: 4393 
+KuttaNodeList_[166]: 4411 
+KuttaNodeList_[167]: 4430 
+KuttaNodeList_[168]: 4448 
+KuttaNodeList_[169]: 4466 
+KuttaNodeList_[170]: 4485 
+KuttaNodeList_[171]: 4504 
+KuttaNodeList_[172]: 4523 
+KuttaNodeList_[173]: 4541 
+KuttaNodeList_[174]: 4559 
+KuttaNodeList_[175]: 4577 
+KuttaNodeList_[176]: 4595 
+KuttaNodeList_[177]: 4613 
+KuttaNodeList_[178]: 4631 
+KuttaNodeList_[179]: 4649 
+KuttaNodeList_[180]: 4667 
+KuttaNodeList_[181]: 4685 
+KuttaNodeList_[182]: 4703 
+KuttaNodeList_[183]: 4721 
+KuttaNodeList_[184]: 4740 
+KuttaNodeList_[185]: 4739 
+KuttaNodeList_[186]: 4764 
+KuttaNodeList_[187]: 4781 
 VSPGEOM defined NumKuttaNodes: 187 
 Found 5 VSPGEOM Surfaces 
 Found 5 VSPGEOM Surfaces 
@@ -367,11 +367,11 @@ SurfaceIsThick_[5]: 0
 Component: 1 with ID: 1 is thin 
 Component: 2 with ID: 2 is thin 
 Component: 3 with ID: 3 is thin 
-Pure tri mesh has 3108 tris 
-After building ...pure tri mesh has 3108 tris 
+Pure tri mesh has 9152 tris 
+After building ...pure tri mesh has 9152 tris 
 Looking for E:\aerodynamic\results\validation\fuselage_effect\raw\thin_only\test_aircraft.ControlSurfaces.taglist control surface definition file ... 
 There is control surface information... 
-Control surface has 51 loops 
+Control surface has 187 loops 
 xyz1: 0.817373 2.906375 0.850284 
 xyz2: 0.648633 5.021980 0.895011 
 HingeNode_1_: 0.408686 1.453188 0.425142 
@@ -380,7 +380,7 @@ xyz1: 0.812238 2.909316 0.751202
 xyz2: 0.644817 5.024165 0.821369 
 HingeNode_1_: 0.814805 2.907846 0.800743 
 HingeNode_2_: 0.646725 5.023073 0.858190 
-Control surface has 51 loops 
+Control surface has 187 loops 
 xyz1: 0.817373 -2.906375 0.850284 
 xyz2: 0.648633 -5.021980 0.895011 
 HingeNode_1_: 0.408686 -1.453188 0.425142 
@@ -389,7 +389,7 @@ xyz1: 0.812238 -2.909316 0.751202
 xyz2: 0.644817 -5.024165 0.821369 
 HingeNode_1_: 0.814805 -2.907846 0.800743 
 HingeNode_2_: 0.646725 -5.023073 0.858190 
-Control surface has 54 loops 
+Control surface has 105 loops 
 xyz1: 4.714873 0.133600 0.385314 
 xyz2: 4.866715 1.586500 0.373570 
 HingeNode_1_: 2.357437 0.066800 0.192657 
@@ -398,7 +398,7 @@ xyz1: 4.714873 0.133600 0.314686
 xyz2: 4.866715 1.586500 0.326430 
 HingeNode_1_: 4.714873 0.133600 0.350000 
 HingeNode_2_: 4.866715 1.586500 0.350000 
-Control surface has 54 loops 
+Control surface has 105 loops 
 xyz1: 4.714873 -0.133600 0.385314 
 xyz2: 4.866715 -1.586500 0.373570 
 HingeNode_1_: 2.357437 -0.066800 0.192657 
@@ -407,7 +407,7 @@ xyz1: 4.714873 -0.133600 0.314686
 xyz2: 4.866715 -1.586500 0.326430 
 HingeNode_1_: 4.714873 -0.133600 0.350000 
 HingeNode_2_: 4.866715 -1.586500 0.350000 
-Control surface has 113 loops 
+Control surface has 206 loops 
 xyz1: 4.142692 -0.078872 0.272400 
 xyz2: 5.506970 -0.014439 1.821000 
 HingeNode_1_: 2.071346 -0.039436 0.136200 
@@ -421,10 +421,10 @@ NumberOfComponentGroups_: 1
 AllComponentsAreFixed_: 0 
 ThereIsRelativeComponentMotion_: 0 
 There are thin 3 components 
-Number of thin  tris:        3108 
+Number of thin  tris:        9152 
 Number of thick tris:        0 
-Number of thin + thick tris: 3108 
-Number actual total tris:    3108 
+Number of thin + thick tris: 9152 
+Number actual total tris:    9152 
 There are thin components... renumbering for edge data structures 
 NumberOfThickTris: 0 
 ComponentIDForComponent(1): 1 
@@ -433,9 +433,9 @@ ComponentIDForComponent(3): 3
 ComponentIsThick(1): 0 
 ComponentIsThick(2): 0 
 ComponentIsThick(3): 0 
-Surface 1 has 1660 tris and is being stored in temp mesh: 1 
-Surface 2 has 756 tris and is being stored in temp mesh: 2 
-Surface 3 has 692 tris and is being stored in temp mesh: 3 
+Surface 1 has 6428 tris and is being stored in temp mesh: 1 
+Surface 2 has 1424 tris and is being stored in temp mesh: 2 
+Surface 3 has 1300 tris and is being stored in temp mesh: 3 
 Created 3 thin surface mesh structures 
 Created 3 total mesh structures 
 Searching for thin/thick or thin/thin intersections... 
@@ -446,19 +446,19 @@ NumberOfKuttaEdges: 184
 Working on VortexSheet: 1 
 KuttaNodeList[k].IsKuttaNode: 1 
 IncidentKuttaEdgesOnNode_[k]: 1 
-Found a starting wake sheet node... 466 
+Found a starting wake sheet node... 1658 
 Working on CurrentComponentID: 1 
 VortexSheet: 1 finished... which has 103 kutta nodes ... and 103 out of 187 kutta nodes are now allocated 
 Working on VortexSheet: 2 
 KuttaNodeList[k].IsKuttaNode: 1 
 IncidentKuttaEdgesOnNode_[k]: 1 
-Found a starting wake sheet node... 1149 
+Found a starting wake sheet node... 3724 
 Working on CurrentComponentID: 2 
 VortexSheet: 2 finished... which has 45 kutta nodes ... and 148 out of 187 kutta nodes are now allocated 
 Working on VortexSheet: 3 
 KuttaNodeList[k].IsKuttaNode: 1 
 IncidentKuttaEdgesOnNode_[k]: 1 
-Found a starting wake sheet node... 1369 
+Found a starting wake sheet node... 4119 
 Working on CurrentComponentID: 3 
 VortexSheet: 3 finished... which has 39 kutta nodes ... and 187 out of 187 kutta nodes are now allocated 
 Creating wake grids... 
@@ -475,49 +475,49 @@ NumberOfWakeNodes: 1496
 NumberOfWakeLoops: 1288 
 Merging fine wake grids... 
 Merging coarse wake grids... 
-Loop: 1252 
+Loop: 4021 
 Mag: 0.000000 
-Node1: 943 --> 4.900000 0.000000 0.350000 
-Node2: 940 --> 4.858024 0.000000 0.350000 
-Node3: 945 --> 4.775492 0.000000 0.350000 
-Loop: 1257 
+Node1: 3357 --> 4.775492 0.000000 0.350000 
+Node2: 3355 --> 4.823165 0.000000 0.350000 
+Node3: 3353 --> 4.858024 0.000000 0.350000 
+Loop: 4029 
 Mag: 0.000000 
-Node1: 958 --> 4.000000 0.000000 0.350000 
-Node2: 955 --> 4.029931 0.000000 0.350000 
-Node3: 953 --> 4.110864 0.000000 0.350000 
+Node1: 3383 --> 4.000000 0.000000 0.350000 
+Node2: 3380 --> 4.008195 0.000000 0.350000 
+Node3: 3379 --> 4.029931 0.000000 0.350000 
 Model is a VSPGEOM VLM geometry 
 NumberOfComponents_: 3
-Total NumberOfNodes:      3243 
-Total NumberOfLoops:      5684 
-Total NumberOfEdges:      8934 
+Total NumberOfNodes:      6295 
+Total NumberOfLoops:      11728 
+Total NumberOfEdges:      18040 
 Total NumberOfKuttaNodes: 187 
 NumberOfSurfaces_:        5 
-Total surface area: 22.807608 
-Minimum loop area constraint set to: 22.807608 
+Total surface area: 22.808393 
+Minimum loop area constraint set to: 22.808393 
 Agglomerating mesh... 
-Grid:0 --> # loops:       5684 ...# Edges:       8934 ...# Nodes:       3243  
-There are: 3243 coarse grid nodes 
-There are: 6064 coarse grid edges 
-There are: 2814 coarse grid loops 
+Grid:0 --> # loops:      11728 ...# Edges:      18040 ...# Nodes:       6295  
+There are: 6295 coarse grid nodes 
+There are: 12140 coarse grid edges 
+There are: 5828 coarse grid loops 
 Number of Kutta Nodes: 187 
-Grid:1 --> # loops:       2814 ...# Edges:       6064 ...# Nodes:       3243  
-There are: 2601 coarse grid nodes 
-There are: 3472 coarse grid edges 
-There are: 864 coarse grid loops 
+Grid:1 --> # loops:       5828 ...# Edges:      12140 ...# Nodes:       6295  
+There are: 4901 coarse grid nodes 
+There are: 6537 coarse grid edges 
+There are: 1619 coarse grid loops 
 Number of Kutta Nodes: 187 
-Merged: 1043 edges that were colinear 
-Grid:2 --> # loops:        864 ...# Edges:       2429 ...# Nodes:       1558 
-There are: 1418 coarse grid nodes 
-There are: 1820 coarse grid edges 
-There are: 395 coarse grid loops 
+Merged: 2474 edges that were colinear 
+Grid:2 --> # loops:       1619 ...# Edges:       4063 ...# Nodes:       2427 
+There are: 2070 coarse grid nodes 
+There are: 2673 coarse grid edges 
+There are: 586 coarse grid loops 
 Number of Kutta Nodes: 187 
-Merged: 230 edges that were colinear 
-Grid:3 --> # loops:        395 ...# Edges:       1590 ...# Nodes:       1188 
-There are: 1097 coarse grid nodes 
-There are: 1341 coarse grid edges 
-There are: 240 coarse grid loops 
+Merged: 549 edges that were colinear 
+Grid:3 --> # loops:        586 ...# Edges:       2124 ...# Nodes:       1521 
+There are: 1380 coarse grid nodes 
+There are: 1694 coarse grid edges 
+There are: 297 coarse grid loops 
 Number of Kutta Nodes: 187 
-Merged: 45 edges that were colinear 
+Merged: 119 edges that were colinear 
 NumberOfGridLevels_: 3 
 NumberOfSurfaces_: 5 
 WakeAngle: 1.000000 0.000000 0.000000 
@@ -691,7 +691,7 @@ j: 2 --> U1,2: 0.181818 0.196970
 j: 3 --> U1,2: 0.196970 0.212121 
 j: 4 --> U1,2: 0.212121 0.227273 
 j: 5 --> U1,2: 0.227273 0.229123 
-j: 6 --> U1,2: 0.229123 0.242424 
+j: 6 --> U1,2: 0.242424 0.229123 
 j: 7 --> U1,2: 0.242424 0.257576 
 j: 8 --> U1,2: 0.257576 0.272727 
 j: 9 --> U1,2: 0.272727 0.287879 
@@ -732,30 +732,30 @@ Xmax_ - Xmin_: 6.174385
 Ymax_ - Ymin_: 10.575827 
 Zmax_ - Zmin_: 1.780000 
 
-Minimum loop area: 5.914692e-07 
-Character Minimum loop length: 1.087630e-03 
+Minimum loop area: 5.916368e-07 
+Character Minimum loop length: 1.087784e-03 
 Setting surface edge cutoff to: 1.000000e-05 
 Number Of Trailing Vortices: 187 
 Model type: VLM 
-Number Of Vortex Loop Equations: 1526 
+Number Of Vortex Loop Equations: 4540 
 Number Of Wake Node Equations:   4488 
 Number Of Stall Equations:       184 
-Total Number Of Equations:       6198 
+Total Number Of Equations:       9212 
 No high lift data file found... 
 Creating vortex loop matrix preconditioners data structure... 
 Starting at level: 3 with a target of 500 loops 
-Level: 3 has MaxLoops of: 20 
+Level: 3 has MaxLoops of: 22 
 Using level: 3 to create matrix preconditioners. 
-Created: 4 Matrix preconditioners 
-Min matrix: 9 Loops 
-Max matrix: 509 Loops 
-Avg matrix: 381 Loops 
+Created: 9 Matrix preconditioners 
+Min matrix: 494 Loops 
+Max matrix: 512 Loops 
+Avg matrix: 504 Loops 
 
-Using 1526 out of 1526 surface loops 
+Using 4540 out of 4540 surface loops 
 Creating wake nodes matrix preconditioners data structure... 
 Starting... Creating vorticity gradient data structure .. 
 Finished... Creating vorticity gradient data structure .. 
-VSPGeom().Grid(MGLevel_).NumberOfLoops(): 2814 
+VSPGeom().Grid(MGLevel_).NumberOfLoops(): 5828 
 NumberOfEngineFaces_: 0 
 VSPGeom().NumberOfSurfaces(): 5 
 Done with setup... 
@@ -770,7 +770,7 @@ SigmaAvg_: 0.099119
 Creating interaction lists... 
 
 Forward sweep... 
-1000 / 2814 2000 / 2814 Working on level 2 of 3 Working on level 3 of 3 Forward Mode: total multipole speed up ratio: 2.267319 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Forward Mode: total multipole speed up ratio: 5.285923 
 Surface: 1 ... ComponentID: 1 ... Name: Wing_C ... SurfaceGIDList: FINPJLCHBA 
 Surface: 2 ... ComponentID: 1 ... Name: Wing_C ... SurfaceGIDList: FINPJLCHBA 
 Surface: 3 ... ComponentID: 2 ... Name: Tail_C ... SurfaceGIDList: WUTDECXIUE 
@@ -781,9 +781,18 @@ Solving... Mach: 0.023509 ... Alpha: 0.000000 ... Beta: 0.000000
                                                                     Surface Integration Forces and Moments -->                                                  Wake Induced Forces -->  
                                                                     Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-Surf-  Wake-Wake-Wake-Wake-Wake-Wake-Wake-Wake 
     Iter    Mach       AoA      Beta       CLo       CLi      CLtot     CDo        CDi      CDtot      L/D        E       CMxtot    CMytot    Cmztot    CLiw       CDiw    LoDwake    Ewake      T/QS      L2Res    MaxRes  Wall_Time 
-Wake Iter:     1 / 3     ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:    1.13571 / -0.09691   ... KTRes: 0.00000    Wake Iter:     1 / 3     ... GMRES Iter:     1 ... Red:   -0.69495 / -1.00000   ...  Max:    0.44076 / -0.09691   Wake Iter:     1 / 3     ... GMRES Iter:     2 ... Red:   -1.00849 / -1.00000   ...  Max:    0.12722 / -0.09691   Wake Iter:     1 / 3     ... GMRES Iter:     3 ... Red:   -1.28582 / -1.00000   ...  Max:   -0.15011 / -0.09691           1   0.02351   0.00000   0.00000  -0.00000   0.00000  -0.00000   0.01480   0.00000   0.01480   0.00000   0.00000   0.00000  -0.00005   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000  -0.77422  -0.10064   0.40800 
-1000 / 2814 2000 / 2814 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     2 / 3     ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -0.15011 / -0.09691   ... KTRes: 0.00000    Wake Iter:     2 / 3     ... GMRES Iter:     1 ... Red:   -0.37336 / -1.00000   ...  Max:   -0.52347 / -0.09691   Wake Iter:     2 / 3     ... GMRES Iter:     2 ... Red:   -0.69539 / -1.00000   ...  Max:   -0.84550 / -0.09691   Wake Iter:     2 / 3     ... GMRES Iter:     3 ... Red:   -0.97138 / -1.00000   ...  Max:   -1.12149 / -0.09691   Wake Iter:     2 / 3     ... GMRES Iter:     4 ... Red:   -1.37593 / -1.00000   ...  Max:   -1.52603 / -0.09691           2   0.02351   0.00000   0.00000  -0.00000   0.13829   0.13828   0.01494   0.00104   0.01598   8.65218   0.78074   0.00007  -0.03026  -0.00014   0.13813   0.00085   8.74854   0.95762   0.00000  -1.22344   0.21220   1.38100 
-1000 / 2814 2000 / 2814 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     3 / 3     ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.45064 / -0.09691   ... KTRes: 0.00000    Wake Iter:     3 / 3     ... GMRES Iter:     1 ... Red:   -0.06808 / -1.00000   ...  Max:   -1.51872 / -0.09691   Wake Iter:     3 / 3     ... GMRES Iter:     2 ... Red:   -0.41767 / -1.00000   ...  Max:   -1.86831 / -0.09691   Wake Iter:     3 / 3     ... GMRES Iter:     3 ... Red:   -0.62408 / -1.00000   ...  Max:   -2.07472 / -0.09691   Wake Iter:     3 / 3     ... GMRES Iter:     4 ... Red:   -1.07309 / -1.00000   ...  Max:   -2.52373 / -0.09691           3   0.02351   0.00000   0.00000  -0.00000   0.13840   0.13840   0.01495   0.00105   0.01599   8.65363   0.77883   0.00000  -0.02274  -0.00000   0.13833   0.00085   8.75415   0.95310   0.00000  -1.66597  -0.16214   2.61700 
+Wake Iter:     1 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:    1.18522 / -0.09691   ... KTRes: 0.00000    Wake Iter:     1 / 12    ... GMRES Iter:     1 ... Red:   -0.43611 / -1.00000   ...  Max:    0.74910 / -0.09691   Wake Iter:     1 / 12    ... GMRES Iter:     2 ... Red:   -0.66911 / -1.00000   ...  Max:    0.51611 / -0.09691   Wake Iter:     1 / 12    ... GMRES Iter:     3 ... Red:   -1.01087 / -1.00000   ...  Max:    0.17435 / -0.09691   Wake Iter:     1 / 12    ... GMRES Iter:     4 ... Red:   -1.33271 / -1.00000   ...  Max:   -0.14750 / -0.09691           1   0.02351   0.00000   0.00000  -0.00000   0.00000  -0.00000   0.01480   0.00000   0.01480   0.00000   0.00000   0.00000  -0.00005  -0.00000   0.00000   0.00000   0.00000   0.00000   0.00000  -0.56135  -0.04473   1.02100 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     2 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -0.14750 / -0.09691   ... KTRes: 0.00000    Wake Iter:     2 / 12    ... GMRES Iter:     1 ... Red:   -0.15253 / -1.00000   ...  Max:   -0.30003 / -0.09691   Wake Iter:     2 / 12    ... GMRES Iter:     2 ... Red:   -0.36410 / -1.00000   ...  Max:   -0.51160 / -0.09691   Wake Iter:     2 / 12    ... GMRES Iter:     3 ... Red:   -0.65072 / -1.00000   ...  Max:   -0.79821 / -0.09691   Wake Iter:     2 / 12    ... GMRES Iter:     4 ... Red:   -0.86711 / -1.00000   ...  Max:   -1.01461 / -0.09691   Wake Iter:     2 / 12    ... GMRES Iter:     5 ... Red:   -1.07966 / -1.00000   ...  Max:   -1.22715 / -0.09691           2   0.02351   0.00000   0.00000  -0.00000   0.15399   0.15399   0.01498   0.00169   0.01667   9.23981   0.59807   0.00083  -0.02887  -0.00020   0.15393   0.00105   9.60029   0.95552   0.00000  -0.06569   1.91481   3.42100 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     3 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.18904 / -0.09691   ... KTRes: 0.00000    Wake Iter:     3 / 12    ... GMRES Iter:     1 ... Red:   -0.20295 / -1.00000   ...  Max:   -1.39199 / -0.09691   Wake Iter:     3 / 12    ... GMRES Iter:     2 ... Red:   -0.44467 / -1.00000   ...  Max:   -1.63371 / -0.09691   Wake Iter:     3 / 12    ... GMRES Iter:     3 ... Red:   -0.59584 / -1.00000   ...  Max:   -1.78489 / -0.09691   Wake Iter:     3 / 12    ... GMRES Iter:     4 ... Red:   -0.92294 / -1.00000   ...  Max:   -2.11198 / -0.09691   Wake Iter:     3 / 12    ... GMRES Iter:     5 ... Red:   -1.04906 / -1.00000   ...  Max:   -2.23811 / -0.09691           3   0.02351   0.00000   0.00000  -0.00000   0.15448   0.15447   0.01498   0.00160   0.01658   9.31566   0.63443   0.00000  -0.02467  -0.00001   0.15438   0.00106   9.62558   0.95989   0.00000  -0.90181   1.07754   6.03500 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     4 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.77287 / -0.09691   ... KTRes: 0.00000    Wake Iter:     4 / 12    ... GMRES Iter:     1 ... Red:   -0.43794 / -1.00000   ...  Max:   -2.21082 / -0.09691   Wake Iter:     4 / 12    ... GMRES Iter:     2 ... Red:   -0.67683 / -1.00000   ...  Max:   -2.44970 / -0.09691   Wake Iter:     4 / 12    ... GMRES Iter:     3 ... Red:   -0.89404 / -1.00000   ...  Max:   -2.66691 / -0.09691   Wake Iter:     4 / 12    ... GMRES Iter:     4 ... Red:   -1.13841 / -1.00000   ...  Max:   -2.91128 / -0.09691           4   0.02351   0.00000   0.00000  -0.00000   0.15493   0.15492   0.01498   0.00161   0.01659   9.33858   0.63575  -0.00000  -0.02443  -0.00000   0.15488   0.00106   9.65056   0.95852   0.00000  -1.94256  -0.13418   8.35100 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     5 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.74265 / -0.09691   ... KTRes: 0.00000    Wake Iter:     5 / 12    ... GMRES Iter:     1 ... Red:   -0.57568 / -1.00000   ...  Max:   -2.31832 / -0.09691   Wake Iter:     5 / 12    ... GMRES Iter:     2 ... Red:   -0.87215 / -1.00000   ...  Max:   -2.61479 / -0.09691   Wake Iter:     5 / 12    ... GMRES Iter:     3 ... Red:   -1.06164 / -1.00000   ...  Max:   -2.80429 / -0.09691           5   0.02351   0.00000   0.00000  -0.00000   0.15489   0.15488   0.01498   0.00161   0.01659   9.33659   0.63569  -0.00000  -0.02436   0.00000   0.15481   0.00106   9.64728   0.95872   0.00000  -2.24474  -0.99857  10.86100 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     6 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -2.05312 / -0.09691   ... KTRes: 0.00000    Wake Iter:     6 / 12    ... GMRES Iter:     1 ... Red:   -0.80661 / -1.00000   ...  Max:   -2.85973 / -0.09691   Wake Iter:     6 / 12    ... GMRES Iter:     2 ... Red:   -0.94752 / -1.00000   ...  Max:   -3.00064 / -0.09691   Wake Iter:     6 / 12    ... GMRES Iter:     3 ... Red:   -1.14643 / -1.00000   ...  Max:   -3.19955 / -0.09691           6   0.02351   0.00000   0.00000  -0.00000   0.15484   0.15483   0.01498   0.00160   0.01659   9.33491   0.63614  -0.00000  -0.02433   0.00000   0.15478   0.00106   9.64534   0.95859   0.00000  -1.92436  -0.54235  13.09100 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     7 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.32872 / -0.09691   ... KTRes: 0.00000    Wake Iter:     7 / 12    ... GMRES Iter:     1 ... Red:   -0.78490 / -1.00000   ...  Max:   -2.11361 / -0.09691   Wake Iter:     7 / 12    ... GMRES Iter:     2 ... Red:   -1.02561 / -1.00000   ...  Max:   -2.35433 / -0.09691           7   0.02351   0.00000   0.00000  -0.00000   0.15473   0.15472   0.01498   0.00160   0.01658   9.33158   0.63762  -0.00000  -0.02427   0.00000   0.15476   0.00106   9.64702   0.96220   0.00000  -1.84178  -0.54822  15.23200 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     8 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.37780 / -0.09691   ... KTRes: 0.00000    Wake Iter:     8 / 12    ... GMRES Iter:     1 ... Red:   -0.91932 / -1.00000   ...  Max:   -2.29712 / -0.09691   Wake Iter:     8 / 12    ... GMRES Iter:     2 ... Red:   -1.23348 / -1.00000   ...  Max:   -2.61128 / -0.09691           8   0.02351   0.00000   0.00000  -0.00000   0.15489   0.15489   0.01498   0.00161   0.01659   9.33553   0.63472  -0.00001  -0.02436   0.00000   0.15482   0.00106   9.64749   0.95863   0.00000  -1.92547  -0.30955  17.31800 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:     9 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -1.92341 / -0.09691   ... KTRes: 0.00000    Wake Iter:     9 / 12    ... GMRES Iter:     1 ... Red:   -0.89929 / -1.00000   ...  Max:   -2.82270 / -0.09691   Wake Iter:     9 / 12    ... GMRES Iter:     2 ... Red:   -1.24199 / -1.00000   ...  Max:   -3.16540 / -0.09691           9   0.02351   0.00000   0.00000  -0.00000   0.15488   0.15488   0.01498   0.00161   0.01659   9.33472   0.63466  -0.00000  -0.02434  -0.00000   0.15482   0.00106   9.64760   0.95881   0.00000  -2.17217  -0.91731  19.45800 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:    10 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -2.01755 / -0.09691   ... KTRes: 0.00000    Wake Iter:    10 / 12    ... GMRES Iter:     1 ... Red:   -0.53969 / -1.00000   ...  Max:   -2.55723 / -0.09691   Wake Iter:    10 / 12    ... GMRES Iter:     2 ... Red:   -0.85976 / -1.00000   ...  Max:   -2.87731 / -0.09691   Wake Iter:    10 / 12    ... GMRES Iter:     3 ... Red:   -1.09615 / -1.00000   ...  Max:   -3.11370 / -0.09691          10   0.02351   0.00000   0.00000  -0.00000   0.15493   0.15492   0.01498   0.00161   0.01659   9.33607   0.63401   0.00000  -0.02437  -0.00000   0.15482   0.00106   9.64786   0.95880   0.00000  -2.10548  -0.76528  21.65500 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:    11 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -2.16485 / -0.09691   ... KTRes: 0.00000    Wake Iter:    11 / 12    ... GMRES Iter:     1 ... Red:   -0.49702 / -1.00000   ...  Max:   -2.66187 / -0.09691   Wake Iter:    11 / 12    ... GMRES Iter:     2 ... Red:   -0.76543 / -1.00000   ...  Max:   -2.93027 / -0.09691   Wake Iter:    11 / 12    ... GMRES Iter:     3 ... Red:   -1.00259 / -1.00000   ...  Max:   -3.16744 / -0.09691          11   0.02351   0.00000   0.00000  -0.00000   0.15490   0.15490   0.01498   0.00161   0.01659   9.33647   0.63503  -0.00000  -0.02436   0.00000   0.15481   0.00106   9.64745   0.95894   0.00000  -2.10659  -0.72097  23.85200 
+1000 / 5828 2000 / 5828 3000 / 5828 4000 / 5828 5000 / 5828 Working on level 2 of 3 Working on level 3 of 3 Wake Iter:    12 / 12    ... GMRES Iter:     0 ... Red:    0.00000 / -1.00000   ...  Max:   -2.09848 / -0.09691   ... KTRes: 0.00000    Wake Iter:    12 / 12    ... GMRES Iter:     1 ... Red:   -0.56339 / -1.00000   ...  Max:   -2.66186 / -0.09691   Wake Iter:    12 / 12    ... GMRES Iter:     2 ... Red:   -0.84549 / -1.00000   ...  Max:   -2.94397 / -0.09691   Wake Iter:    12 / 12    ... GMRES Iter:     3 ... Red:   -1.06029 / -1.00000   ...  Max:   -3.15877 / -0.09691          12   0.02351   0.00000   0.00000  -0.00000   0.15485   0.15485   0.01498   0.00161   0.01659   9.33456   0.63544  -0.00000  -0.02434   0.00000   0.15479   0.00106   9.64597   0.95889   0.00000  -2.06092  -0.60624  26.51500 
 
-Total setup and solve time: 6.808000 seconds 
+Total setup and solve time: 31.836000 seconds 
 Done

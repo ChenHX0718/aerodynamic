@@ -20,6 +20,7 @@ if str(SRC) not in sys.path:
 
 from case_generator import expand_axis, generate_grid_cases, generate_trim_cases
 from config_loader import load_project_config
+from adaptive_grid import interpolation_error
 from coordinate_system import map_polar_coefficients
 from export_results import _aero_mat, flatten_case
 from finite_difference import (
@@ -32,7 +33,6 @@ from numerical_convergence import (
     WAKE_FD_NAMES,
     boundary_continuity_result,
     derivative_bundle_wake,
-    midpoint_interpolation_error,
     minimum_converged_level,
     production_gate,
     promote_discrete_level,
@@ -115,6 +115,13 @@ class ConventionAndNumericsTests(unittest.TestCase):
                 "controls": {},
             },
         }
+        for row in config["_manifest"]["derivatives"]:
+            if row["perturbation"] in {"p", "q", "r"}:
+                base["native_derivative_diagnostics"]["stability"][row["name"]] = {
+                    "standard_value": -0.25,
+                    "standard_unit": row["unit"],
+                    "raw_field": f"VSPAERO_Stab.{row['name'].replace('CY_', 'CFy_').replace('Cl_', 'CMl_').replace('Cm_', 'CMm_').replace('Cn_', 'CMn_')}",
+                }
 
         def run_polar(state, _label, deflections):
             alpha = math.radians(state["alpha_deg"])
@@ -145,15 +152,14 @@ class ConventionAndNumericsTests(unittest.TestCase):
             manifest=config["_manifest"], derivative_config=derivative_config,
             run_polar=run_polar,
         )
-        production = package["production_fd_derivatives"]["CL_alpha"]
+        production = package["production_derivatives"]["CL_alpha"]
         native = package["native_derivative_diagnostics"]["CL_alpha"]
-        self.assertAlmostEqual(production["derivative_value"], 1.0)
+        self.assertAlmostEqual(production["value"], 1.0)
         self.assertEqual(native["diagnostic_value"], 999.0)
         self.assertFalse(native["enters_production_gate"])
         summary = package["required_derivatives_manifest"]["summary"]
         self.assertEqual(summary["required"], 23)
-        self.assertEqual(summary["PASS"], 15)
-        self.assertEqual(summary["METHOD_LIMITATION"], 8)
+        self.assertEqual(summary["PASS"], 23)
         self.assertEqual(summary["FAIL"], 0)
 
         trim_result = {
@@ -182,7 +188,7 @@ class ConventionAndNumericsTests(unittest.TestCase):
             "solver": {"duration_sec": 0.0},
         }
         flat = flatten_case(trim_result)
-        self.assertAlmostEqual(flat["production_fd_CL_alpha"], 1.0)
+        self.assertAlmostEqual(flat["production_CL_alpha"], 1.0)
         self.assertEqual(flat["native_diagnostic_CL_alpha"], 999.0)
         mat = _aero_mat({
             "metadata": {
@@ -198,7 +204,7 @@ class ConventionAndNumericsTests(unittest.TestCase):
             },
         }, [trim_result])
         self.assertIn("CL_alpha", mat["longitudinal"])
-        self.assertNotIn("Cl_p", mat["lateral"])
+        self.assertIn("Cl_p", mat["lateral"])
         self.assertIn("Cl_p", mat["native_derivative_diagnostics"])
 
 
@@ -453,16 +459,24 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
         self.assertEqual(noisy_small["selected_fd_step"], 2.0)
 
     def test_production_gate_and_adaptive_interface(self) -> None:
-        settings = {"production_gate": {"status": "WARN", "reason": "review"}}
+        settings = {
+            "solver_gate": {"status": "PASS", "reason": "wake valid"},
+            "derivative_gate": {"status": "WARN", "reason": "review"},
+            "production_gate": {"status": "WARN", "reason": "review"},
+        }
         self.assertTrue(production_gate(settings)["allowed"])
-        self.assertFalse(production_gate(settings, adaptive=True)["allowed"])
+        self.assertTrue(production_gate(settings, adaptive=True)["allowed"])
+        self.assertFalse(production_gate(
+            {**settings, "solver_gate": {"status": "WARN", "reason": "wake sensitive"}},
+            adaptive=True,
+        )["allowed"])
         self.assertFalse(production_gate(
             {**settings, "identity": {"model_sha256": "old"}},
             expected_identity={"model_sha256": "new"},
         )["allowed"])
         self.assertTrue(production_gate(None, force=True)["forced"])
-        midpoint = midpoint_interpolation_error(
-            {"CL": 0.0}, {"CL": 1.0}, {"CL": 0.505}, ["CL"], self.tolerance
+        midpoint = interpolation_error(
+            {"CL": 0.5}, {"CL": 0.505}, ["CL"], self.tolerance
         )
         self.assertEqual(midpoint["status"], "PASS")
 
@@ -485,10 +499,19 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
                 controls = control_deflections_deg or {}
                 rudder = math.radians(float(controls.get("rudder", 0.0)))
                 if not stability:
+                    alpha = math.radians(float(condition["alpha_deg"]))
+                    beta = math.radians(float(condition.get("beta_deg", 0.0)))
+                    aileron = math.radians(float(controls.get("aileron", 0.0)))
+                    elevator = math.radians(float(controls.get("elevator", 0.0)))
                     raw_data = {
-                        "CFxtot": -0.01, "CFytot": 0.4 * rudder, "CFztot": -0.2,
-                        "CLtot": 0.2, "CDtot": 0.01,
-                        "CMxtot": 0.1 * rudder, "CMytot": 0.0, "CMztot": -0.2 * rudder,
+                        "CFxtot": -0.01,
+                        "CFytot": -0.3 * beta + 0.1 * aileron - 0.4 * rudder,
+                        "CFztot": -0.2,
+                        "CLtot": 0.2 + alpha + 0.2 * elevator,
+                        "CDtot": 0.01 + 0.1 * alpha + 0.01 * elevator,
+                        "CMxtot": 0.1 * beta + 0.2 * aileron - 0.02 * rudder,
+                        "CMytot": -0.5 * alpha - elevator,
+                        "CMztot": -0.2 * beta - 0.01 * aileron - 0.2 * rudder,
                     }
                     return SimpleNamespace(raw_data=raw_data, duration_sec=0.001)
                 q_s = float(condition["dynamic_pressure_pa"]) * reference["sref_m2"]
@@ -505,7 +528,11 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
                     role: {"derivatives": {}} for role in ("aileron", "elevator", "rudder")
                 }
                 for index, row in enumerate(manifest["derivatives"], 1):
-                    measurement = {"standard_value": -0.1 - 0.001 * index}
+                    measurement = {
+                        "standard_value": -0.1 - 0.001 * index,
+                        "standard_unit": row["unit"],
+                        "raw_field": f"VSPAERO_Stab.{row['name']}",
+                    }
                     perturbation = str(row["perturbation"])
                     if perturbation in control_derivatives:
                         control_derivatives[perturbation]["derivatives"][str(row["name"])] = measurement
@@ -534,7 +561,11 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
                 analysis_mapper=lambda raw: raw.payload,
             )
             output = Path(temporary) / "numerical_convergence"
-            self.assertEqual(report["production_gate_status"], "WARN")
+            self.assertEqual(report["solver_gate_status"], "PASS")
+            self.assertEqual(report["derivative_gate_status"], "PASS")
+            self.assertEqual(report["production_gate_status"], "PASS")
+            self.assertEqual(report["production_derivative_integrity"]["status"], "PASS")
+            self.assertEqual(report["physics_sign_sanity"]["status"], "PASS")
             self.assertNotIn(16, runner.wakes)
             for name in (
                 "numerical_convergence_report.md", "numerical_convergence_report.json",
@@ -553,8 +584,8 @@ class NumericalConvergenceLogicTests(unittest.TestCase):
                 item for item in report["required_derivatives_manifest"]["items"]
                 if item["name"] == "Cm_q"
             )
-            self.assertEqual(cm_q["validation_status"], "METHOD_LIMITATION")
-            self.assertFalse(cm_q["production_included"])
+            self.assertEqual(cm_q["validation_status"], "PASS")
+            self.assertTrue(cm_q["production_included"])
             resumed = run_numerical_convergence(
                 config=config, runner=FakeRunner(), reference=reference, manifest=manifest,
                 analysis_mapper=lambda raw: raw.payload,
@@ -595,48 +626,62 @@ class DeliveredResultTests(unittest.TestCase):
             raise unittest.SkipTest("Run python run.py all before checking delivered results")
         cls.database = json.loads(path.read_text(encoding="utf-8"))
         results = cls.database.get("trim", {}).get("results", [])
-        if not results or results[0].get("schema_version") != "6.0.0":
+        if not results or results[0].get("schema_version") != "8.0.0":
             raise unittest.SkipTest("Run the current workflow before checking delivered results")
 
     def test_final_status_and_case_counts(self) -> None:
         summary = self.database["summary"]
         self.assertEqual(summary["command"], "all")
         self.assertIn(summary["final_status"], {"PASS", "WARN"})
-        self.assertEqual(summary["grid"]["completed"], 4)
+        grid_results = self.database["grid"]["results"]
+        self.assertEqual(summary["grid"]["completed"], len(grid_results))
+        if self.database["grid"]["mode"] == "adaptive":
+            adaptive = self.database["grid"]["adaptive_summary"]
+            self.assertGreaterEqual(len(grid_results), adaptive["initial_seed_point_count"])
+            self.assertTrue(all(
+                item.get("grid_source") in {"seed", "adaptive_midpoint"}
+                for item in grid_results
+            ))
+        else:
+            self.assertEqual(len(grid_results), 4)
         self.assertEqual(summary["trim"]["completed"], 1)
-        self.assertEqual(summary["derivatives"]["calculated"], 15)
-        self.assertEqual(summary["derivatives"]["METHOD_LIMITATION"], 8)
+        self.assertEqual(summary["derivatives"]["calculated"], 23)
         self.assertEqual(summary["derivatives"]["missing"], 0)
         self.assertEqual(summary["derivatives"]["invalid"], 0)
         self.assertEqual(summary["derivatives"]["validation_failed"], 0)
 
     def test_grid_and_trim_numerics(self) -> None:
         grid = self.database["grid"]["results"]
-        self.assertEqual(len(grid), 4)
+        self.assertGreaterEqual(len(grid), 1)
         self.assertTrue(all(row["status"] == "PASS" for row in grid))
         trim = self.database["trim"]["results"][0]
         self.assertLessEqual(abs(trim["trim"]["trim_force_residual_n"]), 1.0)
         self.assertLessEqual(abs(trim["trim"]["trim_moment_residual_nm"]), 1.0)
         self.assertNotEqual(trim["trim"]["elevator_trim_deg"], 0.0)
-        records = trim["derivatives"]["production_fd_derivatives"]
-        self.assertEqual(len(records), 15)
-        self.assertTrue(all(math.isfinite(float(row["derivative_value"])) for row in records.values()))
+        records = trim["derivatives"]["production_derivatives"]
+        self.assertEqual(len(records), 23)
+        self.assertTrue(all(math.isfinite(float(row["value"])) for row in records.values()))
 
-    def test_centered_samples_and_explicit_rate_limitation(self) -> None:
+    def test_centered_samples_and_production_rate_derivatives(self) -> None:
         package = self.database["trim"]["results"][0]["derivatives"]
-        records = package["production_fd_derivatives"]
+        records = {
+            name: record for name, record in package["production_derivatives"].items()
+            if record["method"] == "centered_finite_difference"
+        }
         self.assertGreaterEqual(len(records["CL_alpha"]["samples"]), 3)
         self.assertTrue(all(
             sample["plus"] is not None and sample["minus"] is not None
             for sample in records["CL_alpha"]["samples"].values()
         ))
-        self.assertNotIn("Cl_p", records)
+        self.assertIn("Cl_p", package["production_derivatives"])
+        self.assertNotIn("production_fd_derivatives", package)
+        self.assertNotIn("production_rate_derivatives", package)
         self.assertTrue(package["native_derivative_diagnostics"]["Cl_p"]["diagnostic_only"])
         manifest_item = next(
             item for item in package["required_derivatives_manifest"]["items"]
             if item["name"] == "Cl_p"
         )
-        self.assertEqual(manifest_item["validation_status"], "METHOD_LIMITATION")
+        self.assertEqual(manifest_item["validation_status"], "PASS")
 
     def test_multilevel_validation_and_fuselage(self) -> None:
         validation = self.database["validation"]
@@ -659,7 +704,7 @@ class DeliveredResultTests(unittest.TestCase):
         self.assertEqual(str(aero.meta.schema_version), "1.0")
         self.assertTrue(hasattr(aero.flight_points, "V_mps"))
         self.assertTrue(hasattr(aero.longitudinal, "Cm_alpha"))
-        self.assertFalse(hasattr(aero.lateral, "Cl_p"))
+        self.assertTrue(hasattr(aero.lateral, "Cl_p"))
         self.assertTrue(hasattr(aero.native_derivative_diagnostics, "Cl_p"))
         self.assertTrue(hasattr(aero.controls.elevator, "Cm_delta_e"))
         self.assertNotEqual(str(aero.validation.overall_status), "FAIL")

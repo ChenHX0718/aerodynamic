@@ -1,81 +1,56 @@
 # Numerical Convergence / Validation Report
 
-Generated: 2026-09-03T16:47:10+08:00
+Generated: 2026-09-04T21:36:26+08:00
 
-Production gate: **FAIL (incomplete targeted scope)**
+Solver / GRID gate: **PASS**
+Derivative gate: **WARN**
+Production gate: **WARN**
 
 Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.
 
-The solver used the mesh currently saved in the OpenVSP model. No script-side mesh override or mesh-convergence gate was applied.
+The workflow uses the mesh currently saved in the OpenVSP model and only checks that required VSPAERO cases and outputs are valid.
 
-## Verification scope
+## Wake convergence map
 
-This was a real, targeted affected-path verification at medium_alpha (V=9 m/s, alpha=6 deg, beta=0 deg), not the full representative-state convergence matrix or the full production database.
+| State | V (m/s) | alpha (deg) | beta (deg) | Production Wake | Base | FD derivatives | Wake 16 verification | Native diagnostic | Status | Why |
+|---|---:|---:|---:|---:|---|---|---|---|---|---|
+| linear_low_alpha | 8 | 0 | 0 | 12 | PASS | PASS | NOT_NEEDED | DIAGNOSTIC_ONLY | PASS | boundary continuity required upgrade from Wake 3 to Wake 12 |
+| cruise_trim | 8 | 4.03401 | 0 | 12 | PASS | PASS | NOT_NEEDED | DIAGNOSTIC_ONLY | PASS | boundary continuity required upgrade from Wake 3 to Wake 12 |
+| medium_alpha | 9 | 6 | 0 | 12 | PASS | PASS | NOT_NEEDED | DIAGNOSTIC_ONLY | PASS | boundary continuity required upgrade from Wake 3 to Wake 12 |
+| high_alpha_beta | 9 | 10 | 2 | 12 | PASS | WARN | FAIL | DIAGNOSTIC_ONLY | WARN | Wake 12->16 remains outside PASS tolerance; production Wake remains 12 with a numerical warning |
 
-Real cached cases: **43**; failed cases: **0**; summed solver time: **6203.1 s**. The separate real smoke test is **PASS** (324.0 s).
-
-Because the configured representative-state set and boundary checks were intentionally not run, no production Wake schedule was generated and the production gate remains FAIL. This is an incompleteness result, not a fabricated numerical failure.
-
-## Wake verification
-
-Production candidates are 3, 5, 8, and 12. Wake 16 is verification-only and the production implementation invokes it only when the 8->12 transition is not PASS.
-
-For this targeted test, the 12->16 branch was exercised directly without evaluating Wake 8. The six base coefficients are all PASS; the aggregate status of the 15 required production centered-FD derivatives is WARN (13 PASS, 2 WARN). Production Wake remains 12.
-
-| Quantity | Wake 12 | Wake 16 | Status |
-|---|---:|---:|---|
-| CL | 0.606044868 | 0.605791904 | PASS |
-| CD | 0.0425207211 | 0.0424617001 | PASS |
-| CY | 0.00395872447 | 0.0046137886 | PASS |
-| Cl | -0.000751092592 | -0.000809039854 | PASS |
-| Cm | -0.154363768 | -0.154099578 | PASS |
-| Cn | -0.000441416808 | -0.000550066401 | PASS |
-| CL_alpha | 4.69883435 | 4.75097062 | PASS |
-| CD_alpha | 0.430432713 | 0.43959433 | PASS |
-| Cm_alpha | -1.14961664 | -1.17565284 | PASS |
-| CL_delta_e | 0.479440744 | 0.485587144 | PASS |
-| CD_delta_e | 0.0430071107 | 0.0452742097 | PASS |
-| Cm_delta_e | -1.34823952 | -1.35465134 | PASS |
-| CY_beta | -0.346936734 | -0.374627 | WARN |
-| Cl_beta | -0.120375517 | -0.117030723 | PASS |
-| Cn_beta | 0.0412013795 | 0.0460783288 | PASS |
-| CY_delta_a | -0.0129013913 | 0.00371521207 | WARN |
-| Cl_delta_a | -0.288788662 | -0.293383487 | PASS |
-| Cn_delta_a | 0.00941427177 | 0.00816519025 | PASS |
-| CY_delta_r | -0.158260001 | -0.150662177 | PASS |
-| Cl_delta_r | 0.00372398339 | 0.011948838 | PASS |
-| Cn_delta_r | 0.0687303566 | 0.0689082037 | PASS |
+Wake 16 is verification-only. It is run only when the 8->12 transition is not PASS, never enters the production candidate list, and never changes a production Wake above 12.
 
 ## FD step selection
 
 | Derivative | Selected step (deg) | Status | Value | Method |
 |---|---:|---|---:|---|
-| CL_alpha | 0.5 | PASS | 4.69883435 | centered_finite_difference |
-| CD_alpha | 0.5 | PASS | 0.430432713 | centered_finite_difference |
-| Cm_alpha | 0.5 | PASS | -1.14961664 | centered_finite_difference |
-| CY_beta | 0.5 | PASS | -0.346936734 | centered_finite_difference |
-| Cl_beta | 0.5 | PASS | -0.120375517 | centered_finite_difference |
-| Cn_beta | 0.5 | PASS | 0.0412013795 | centered_finite_difference |
-| CY_delta_a | 1 | PASS | -0.0129013913 | centered_finite_difference |
-| Cl_delta_a | 1 | PASS | -0.288788662 | centered_finite_difference |
-| Cn_delta_a | 1 | PASS | 0.00941427177 | centered_finite_difference |
-| CL_delta_e | 1 | PASS | 0.479440744 | centered_finite_difference |
-| CD_delta_e | 1 | PASS | 0.0430071107 | centered_finite_difference |
-| Cm_delta_e | 1 | PASS | -1.34823952 | centered_finite_difference |
-| CY_delta_r | 1 | PASS | -0.158260001 | centered_finite_difference |
-| Cl_delta_r | 1 | PASS | 0.00372398339 | centered_finite_difference |
-| Cn_delta_r | 1 | PASS | 0.0687303566 | centered_finite_difference |
+| CL_alpha | 0.5 | PASS | 4.70066 | centered_finite_difference |
+| CD_alpha | 0.5 | PASS | 0.278141 | centered_finite_difference |
+| Cm_alpha | 0.5 | PASS | -1.12786 | centered_finite_difference |
+| CY_beta | 0.5 | PASS | -0.35414 | centered_finite_difference |
+| Cl_beta | 0.5 | PASS | -0.101309 | centered_finite_difference |
+| Cn_beta | 0.5 | PASS | 0.0424109 | centered_finite_difference |
+| CY_delta_a | 1 | PASS | -0.0144281 | centered_finite_difference |
+| Cl_delta_a | 1 | PASS | -0.279475 | centered_finite_difference |
+| Cn_delta_a | 1 | PASS | 0.00861439 | centered_finite_difference |
+| CL_delta_e | 1 | PASS | 0.503424 | centered_finite_difference |
+| CD_delta_e | 1 | PASS | 0.00655276 | centered_finite_difference |
+| Cm_delta_e | 1 | PASS | -1.42531 | centered_finite_difference |
+| CY_delta_r | 1 | PASS | -0.157917 | centered_finite_difference |
+| Cl_delta_r | 1 | PASS | 0.00428823 | centered_finite_difference |
+| Cn_delta_r | 1 | PASS | 0.0674172 | centered_finite_difference |
 
-Each derivative independently selects a centered-FD step. Production data, native diagnostics, and the required-derivative manifest are separate fields and files.
+Alpha, beta, and control derivatives select their own centered-FD steps. Classical p/q/r derivatives come from the steady VSPAERO stability table using p_hat/q_hat/r_hat denominators. P/Q/R unsteady damping outputs remain separate diagnostics.
 
 ## Required derivatives manifest
 
-Required: **23**; PASS: **15**; WARN_NUMERICAL: **0**; METHOD_LIMITATION: **8**; FAIL: **0**.
+Required: **23**; PASS: **23**; WARN_NUMERICAL: **0**; FAIL: **0**.
 
-PASS is accepted, WARN_NUMERICAL and METHOD_LIMITATION are accepted with warning, and FAIL is rejected. Native VSPAERO derivatives are diagnostic-only: they do not enter the Wake gate, production derivative set, TRIM Jacobian, or overwrite centered-FD values.
+## Boundary continuity
 
-Cm_q is METHOD_LIMITATION because OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady-q input; its native value is retained only as a diagnostic reference.
+Status: **WARN**. Checks performed: 3.
 
 ## Cache / resume
 
-A resume probe reused **22** cases with **0** misses. Stored case counts by Wake: {'12': 32, '16': 11}.
+Enabled: **True**; cache hits: **295**; new solver runs: **0**; failed real cases: **0**; solver time: **0.0 s**; wall time: **20.0 s**.

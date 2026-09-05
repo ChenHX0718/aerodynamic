@@ -1,116 +1,136 @@
 # OpenVSP 无人机气动数据库：快速使用
 
-本工具使用 OpenVSP/VSPAERO 3.51.3 生成 GRID 气动数据、真实中心差分导数和纵向 TRIM 数据。正式导数以 centered finite difference（FD）为准；VSPAERO native derivatives 仅作诊断参考。
+本工具使用 OpenVSP/VSPAERO 3.51.3 生成规则或自适应 GRID、纵向 TRIM，以及 23 项可追溯的 production 气动导数，并导出 CSV、JSON 和 MATLAB `.mat`。
 
 ## 1. 首次准备
 
-1. 安装 OpenVSP 3.51.3，并确认目录中有 `vsp.exe` 和 `vspaero.exe`。
-2. 把 OpenVSP 路径写入 `config/openvsp.yaml`，或设置 `OPENVSP_ROOT`。
-3. 运行 `setup.bat`创建项目环境。
-4. 运行 `run_aero.bat check`检查模型、几何集、参考量和舵面映射。
+1. 安装 OpenVSP 3.51.3，确认安装目录包含 `vsp.exe` 和 `vspaero.exe`。
+2. 在 `config/openvsp.yaml` 配置安装目录，或设置 `OPENVSP_ROOT`。
+3. 运行 `setup.bat` 创建环境。
+4. 运行 `run_aero.bat check` 检查模型、几何集、参考量和舵面映射。
+5. 运行 `run_aero.bat numerical-convergence` 生成与当前模型、OpenVSP 和验证配置匹配的三层 Gate。
 
-## 2. 准备新的 OpenVSP 无人机模型
+模型的 Tessellation/mesh 由用户在 OpenVSP 中负责。脚本使用 `.vsp3` 当前网格，不覆盖 Tess_U/Tess_W，也不宣称完成网格独立性认证。
 
-在 OpenVSP 中完成以下内容后再保存 `.vsp3`：
+## 2. 选择 uniform 或 adaptive GRID
 
-- 设置机翼、平尾、垂尾和机身几何；
-- 在 VSPAERO Reference 中确认 `Sref`/`bref`/`cref` 和重心 `Xcg`/`Ycg`/`Zcg`；
-- 建立 Aileron、Elevator、Rudder Control Surface Groups，检查 gain、铰链和正偏角方向；
-- 把薄面升力体和厚体机身放入不同 Set；
-- 由用户根据几何曲率、前后缘、舵面铰链和计算成本设置 Tess_U、Tess_W 及聚类参数。
+在 `config/aircraft.yaml` 中设置：
 
-网格现在完全由用户在 OpenVSP 建模阶段负责。脚本不覆盖模型网格，不运行 COARSE/MEDIUM/FINE，不认证 Tessellation convergence，也不因网格“未收敛”导致 Production Gate FAIL。脚本仍会检查当前网格能否生成完整 VSPAERO case 及有限数值输出。
+```yaml
+grid:
+  mode: uniform       # 或 adaptive
+```
 
-## 3. 更换飞机时修改哪里
+- `uniform`：计算 `operating_conditions.speed/alpha/beta` 的完整笛卡尔积。
+- `adaptive`：相同轴值仅作为 seed grid；每个 cell 额外计算真实几何中点，用 corner 的线性、双线性或三线性插值预测中心，再与真实 VSPAERO 结果比较。非线性超限时只沿当前归一化跨度最大的轴局部二分；跨度相同按 V、alpha、beta 排序。
+- 某轴只有一个值时自动成为 inactive 轴，因此同一实现支持 1D、2D 和 3D。
 
-主配置是 `config/aircraft.yaml`，导数清单是 `config/required_derivatives.yaml`。
+自适应设置示例：
 
-| 配置 | 含义 |
-|---|---|
-| `aircraft.model` | 新 `.vsp3` 模型路径 |
-| `geometry_sets` | 薄面/厚体集合和几何选择器 |
-| `reference` | 参考面积、展长、弦长和重心是从模型还是配置读取 |
-| `controls` | 副翼/升降舵/方向舵组名、中立位和限位 |
-| `trim.mass_kg` | 飞机质量，决定配平升力 |
-| `operating_conditions` | GRID 的速度、迎角和侧滑角范围 |
-| `trim.operating_conditions` | TRIM 速度和侧滑角 |
-| `numerical_convergence.wake.representative_states` | Wake 验证的少量代表工况 |
-| `numerical_convergence.wake.candidates` | 正式 Wake 候选，默认 3/5/8/12 |
-| `numerical_convergence.wake.verification_only_level` | 仅用于验证 12 的 Wake=16 |
-| `derivatives.fd_step_candidates_deg` | alpha/beta/各舵面分别使用的 FD 步长候选 |
-| `derivatives.trim_jacobian_steps_deg` | TRIM Jacobian 的 alpha/elevator 中心差分步长 |
-| `derivatives.convergence` | FD 步长稳定性的绝对+相对容差 |
-| `required_derivatives.yaml` | 23 项 required 导数和 METHOD_LIMITATION 接受策略 |
+```yaml
+grid:
+  mode: adaptive
+  adaptive:
+    quantities: [CL, CD, Cm, CY, Cl, Cn]
+    tolerance:
+      near_zero_reference: 0.05
+      pass_relative: 0.03
+      warn_relative: 0.08
+      pass_absolute: 0.005
+      warn_absolute: 0.02
+    max_depth: 3
+    max_cases: 100
+    min_spacing: {speed_mps: 0.25, alpha_deg: 0.25, beta_deg: 0.25}
+```
 
-不要为了获得 PASS 放宽容差、删除 required 导数或改动符号。
+- `tolerance`：真实中点与插值中心的独立绝对+相对误差门限，不与 Wake 容差混用。
+- `max_depth`：一个 seed cell 最多局部二分层数。
+- `max_cases`：seed、corner 和 midpoint 去重后的真实求解点总上限。
+- `min_spacing`：二分后允许的最小轴间距。
 
-## 4. 运行 Numerical Validation
+PASS cell 接受；WARN/FAIL cell 继续细分。达到任一限制仍有 WARN 时整体 WARN，仍有 FAIL 时整体 FAIL，绝不会因达到上限自动 PASS。所有实际点都复用既有 `_grid_case` 求解、Wake schedule、坐标映射、签名和缓存。
+
+## 3. p/q/r 导数如何获得
+
+23 项 required derivatives 使用两类可信方法：
+
+- 15 项 alpha、beta、aileron、elevator、rudder 导数：真实正负扰动的 `centered_finite_difference`；
+- 8 项 `CL_q, Cm_q, CY_p, Cl_p, Cn_p, CY_r, Cl_r, Cn_r`：OpenVSP steady stability `.stab` 的 `vspaero_steady_rate_derivative`。
+
+OpenVSP 3.51.3 求解器对 steady `.stab` 中 p/q/r 的分母分别使用：
+
+```text
+p_hat = p * bref / (2V)
+q_hat = q * cref / (2V)
+r_hat = r * bref / (2V)
+```
+
+因此这些 8 项直接进入唯一权威的 `production_derivatives`，不会仅因方法不同而 WARN。用户不需要手工运行 P/Q/R Analysis。
+
+P/Q/R unsteady analysis 是附加诊断；Q/R 可输出 `q+alpha_dot`、`r-beta_dot` 等组合量，它们只进入 `unsteady_derivative_diagnostics`，不会覆盖经典 `Cm_q`、`Cn_r`。当前模型在 OpenVSP 3.51.3 默认自动时步下实测为 128 个时间步，成本较高，故默认 `solver.run_unsteady_diagnostics: false`；确需诊断时可显式开启。
+
+## 4. 理解三个 Gate
+
+`results/numerical_convergence/production_numerical_settings.yaml` 分别保存：
+
+- `solver_gate`：当前 model/OpenVSP/config identity、基础系数 Wake 收敛、Wake schedule 和边界连续性；
+- `derivative_gate`：导数 Wake 与 FD step 收敛、23 项 source/method/unit/finite 完整性和导数验证；
+- `production_gate`：前两者组合，控制最终数据库/AUTOTUNE 交付。
+
+规则如下：
+
+- Adaptive GRID 只要求 `solver_gate == PASS`；即使 derivative gate 为 WARN，仍可做自适应求解，但最终 production dataset 保持 WARN。
+- `solver_gate` 为 WARN 或 FAIL 时禁止 Adaptive GRID，`--force` 不能绕过。
+- Uniform GRID/TRIM 继续接受 PASS/WARN；production FAIL 默认阻止，显式 `--force` 只留下审计记录，不改 Gate 的真实状态。
+
+导数状态仅有 `PASS`、`WARN_NUMERICAL`、`FAIL`。缺失、非有限、单位或映射错误必须 FAIL。
+
+## 5. 运行
 
 ```bat
 run_aero.bat numerical-convergence
-```
-
-此命令会：
-
-- 在代表工况比较 Wake 3/5/8/12；
-- 以六个基础系数和 required Wake FD derivatives 作为正式 Wake Gate；
-- 当 8→12 未 PASS 时，仅对该代表工况运行 Wake=16；
-- 在一个代表点为 alpha、beta、elevator、aileron、rudder 导数独立选择 FD step；
-- 生成 required derivatives manifest 和 Production Gate。
-
-如果 12→16 PASS，状态可判为已验证，但 Production Wake 仍是 12。如果 12→16 仍未 PASS，保持 WARN；Wake=16 不加入 GRID 或 Schedule。Native derivatives 只记录 diagnostic，不参与 Wake Gate。
-
-## 5. 运行正式数据库
-
-Numerical Validation 完成后：
-
-```bat
 run_aero.bat all
 ```
 
-也可分开运行：
+也可分别运行：
 
 ```bat
 run_aero.bat grid
 run_aero.bat trim
 ```
 
-GRID 每点查询离散 Wake Schedule。TRIM 先用低成本 Wake 得到初值，再在固定 production bundle Wake 下重新配平和计算导数。每个 required alpha/beta/control 导数使用自己的 selected FD step。
+TRIM 最多 15 次迭代；仅当力残差不超过 ±1 N 且俯仰力矩残差不超过 ±1 N·m 才成功。Jacobian 使用真实 alpha/elevator 中心差分与回溯，不使用 native derivative 替代。
 
-TRIM 保持以下硬性规则：
+## 6. 更换飞机时修改
 
-- 最多 15 次迭代；
-- 仅当力残差不超过 ±1 N 且俯仰力矩残差不超过 ±1 N·m 才 PASS；
-- Jacobian 使用真实 alpha/elevator centered FD；
-- 回溯步长为 1 / 0.5 / 0.25 / 0.125；
-- native derivatives 不作 Jacobian。
+主要修改 `config/aircraft.yaml`：
 
-## 6. 如何理解状态
-
-| 状态 | 含义 |
+| 配置 | 用途 |
 |---|---|
-| `PASS` | 数值、方法和完整性满足正式规则 |
-| `WARN_NUMERICAL` | 导数有有限的步长敏感性，依 manifest 规则带警告接受 |
-| `METHOD_LIMITATION` | 工具/API 无法实现所要求的方法；例如 3.51.3 无真实负 steady-q，`Cm_q` 不能伪装为 centered FD |
-| `FAIL` | required 正式数据缺失、非有限、方法或数值检查不可接受 |
+| `aircraft.model` | 新 `.vsp3` 路径 |
+| `geometry_sets` | 薄面与厚体集合 |
+| `reference` | Sref/bref/cref 与重心来源 |
+| `controls` | 三组舵面名称、中立位与限位 |
+| `operating_conditions` | uniform 网格或 adaptive seed |
+| `grid.adaptive` | 自适应量、容差和停止限制 |
+| `trim` | 质量、搜索范围和残差门限 |
+| `numerical_convergence.wake` | Wake 代表点、候选和容差 |
+| `derivatives` | FD 候选步长和稳定性容差 |
 
-Manifest 在 `status_policy` 中显式规定各状态对 Gate 的处理。`METHOD_LIMITATION` 不会被偷偷跳过；报告会列出数量、原因和是否进入 production。
+`config/required_derivatives.yaml` 是 23 项清单的唯一权威定义。不要为取得 PASS 而删除 required 项、改符号或放宽容差。
 
-## 7. 输出和缓存
+## 7. 输出位置
 
 | 路径 | 内容 |
 |---|---|
-| `results/numerical_convergence/numerical_convergence_report.md` | 人可读 Numerical Convergence / Validation Report |
-| `results/numerical_convergence/numerical_convergence_report.json` | 完整机读报告 |
-| `results/numerical_convergence/production_numerical_settings.yaml` | 正式 Wake Schedule、selected FD steps、manifest 和 Gate |
-| `results/numerical_convergence/wake_convergence_map.csv` | 代表点、Production Wake 和 Wake=16 验证状态 |
-| `results/numerical_convergence/fd_step_selection.csv` | 逐导数 FD step 选择 |
-| `results/numerical_convergence/required_derivatives_manifest.csv` | required 导数逐项状态 |
-| `results/latest/aero_database.json/.csv` | 最新气动数据库 |
-| `results/latest/trim_derivatives.csv` | 正式 FD/native diagnostic 明确分列的导数表 |
-| `results/autotune/aircraft_aero.mat` | MATLAB/Simulink 数据；正式 FD 与 native diagnostic 分区 |
-| `results/validation/` | 验证汇总和机身参与检查 |
+| `results/latest/aero_database.json` | 完整 GRID/TRIM、23 项导数、Gate 和 adaptive cell/history |
+| `results/latest/aero_database.csv` | 一行一个真实 seed/adaptive/TRIM 点 |
+| `results/latest/trim_derivatives.csv` | 23 项 value/source/source_field/method/unit/status/wake |
+| `results/autotune/aircraft_aero.mat` | `AERO.longitudinal/lateral/controls`，包含 p/q/r rate derivatives |
+| `results/adaptive_grid/adaptive_grid_report.json` | 自适应汇总、最终 cells 与 refinement history |
+| `results/adaptive_grid/adaptive_grid_points.csv` | 全部去重后的真实 GRID 点 |
+| `results/adaptive_grid/adaptive_grid_cells.csv` | 最终 cell bounds/depth/status/termination |
+| `results/numerical_convergence/` | 三层 Gate、Wake/FD 报告与缓存 |
+| `results/validation/` | 数据验证与机身参与检查 |
 
-`results/numerical_convergence/raw/<signature>/` 保存逐 VSPAERO case 缓存。Signature 区分模型哈希、状态、舵偏、Wake（包括 16）、当前模型网格身份和分析类型。重跑相同命令会复用完整成功的真实 case，不在启动时整体清空 raw。
-
-如果 Gate FAIL，先查看报告中的 Wake、FD step 和 manifest 汇总，再按 signature 查看对应 `case_result.json` 和 `vspaero_console.txt`。
+GRID 的 `grid_source` 为 `seed` 或 `adaptive_midpoint`。自适应点集天然不规则，不会强制转换为规则矩阵。

@@ -4,7 +4,6 @@ import csv
 import hashlib
 import json
 import math
-import shutil
 import struct
 import time
 import zlib
@@ -26,11 +25,16 @@ from finite_difference import (
     required_derivative_summary,
 )
 from trim_solver import solve_longitudinal_trim
-from validation import calculate_condition
+from validation import (
+    _physics_checks,
+    _rate_integrity,
+    _sample_integrity,
+    calculate_condition,
+)
 
 
 COEFFICIENTS = ("CL", "CD", "CY", "Cl", "Cm", "Cn")
-NUMERICAL_ALGORITHM_VERSION = "3.0"
+NUMERICAL_ALGORITHM_VERSION = "5.0"
 WAKE_FD_DERIVATIVES = {
     "alpha": (("CL", "CL_alpha"), ("CD", "CD_alpha"), ("Cm", "Cm_alpha")),
     "elevator": (
@@ -317,42 +321,31 @@ def production_gate(
     adaptive: bool = False,
     expected_identity: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    gate_name = "solver_gate" if adaptive else "production_gate"
     if settings is None:
         status, reason = "FAIL", "production_numerical_settings.yaml is missing"
     else:
-        gate = settings.get("production_gate", {})
+        gate = settings.get(gate_name, {})
         status = str(gate.get("status", settings.get("convergence_status", "FAIL"))).upper()
         reason = str(gate.get("reason", "numerical validation result"))
         if expected_identity is not None and settings.get("identity") != expected_identity:
             status = "FAIL"
             reason = "Production Numerical Settings do not match the current model/OpenVSP/validation configuration"
-        if adaptive and status != "PASS":
-            return {
-                "allowed": False,
-                "status": "FAIL",
-                "forced": False,
-                "reason": "adaptive GRID requires a PASS production validation gate",
-            }
-    allowed = status in {"PASS", "WARN"} or bool(force)
-    return {"allowed": allowed, "status": status, "forced": bool(force and status == "FAIL"), "reason": reason}
-
-
-def midpoint_interpolation_error(
-    lower: dict[str, float],
-    upper: dict[str, float],
-    actual_midpoint: dict[str, float],
-    quantities: Iterable[str],
-    settings: dict[str, Any],
-) -> dict[str, Any]:
-    checks = {}
-    for name in quantities:
-        interpolated = 0.5 * (float(lower[name]) + float(upper[name]))
-        checks[name] = {
-            "interpolated": interpolated,
-            "actual": float(actual_midpoint[name]),
-            **dual_tolerance_result(interpolated, float(actual_midpoint[name]), settings),
-        }
-    return {"status": combine_status([item["status"] for item in checks.values()]), "quantities": checks}
+    if adaptive:
+        allowed = status == "PASS"
+        forced = False
+        if not allowed:
+            reason = f"adaptive GRID requires solver_gate PASS: {reason}"
+    else:
+        allowed = status in {"PASS", "WARN", "WARN_NUMERICAL"} or bool(force)
+        forced = bool(force and status == "FAIL")
+    return {
+        "allowed": allowed,
+        "status": status,
+        "forced": forced,
+        "reason": reason,
+        "gate": gate_name,
+    }
 
 
 def load_production_settings(path: Path) -> dict[str, Any] | None:
@@ -472,6 +465,31 @@ class _ConvergenceCache:
         self.failures = 0
         self.solver_duration_sec = 0.0
 
+    def _equivalent_cached_payload(
+        self, signed_request: dict[str, Any], stability: bool,
+    ) -> dict[str, Any] | None:
+        """Reuse a real solver case when only validation/manifest bookkeeping changed."""
+        comparable_keys = (
+            "condition", "control_deflections_deg", "wake_iterations",
+            "mesh_source", "analysis_type", "include_thick",
+        )
+        for result_path in sorted(self.raw_root.glob("*/case_result.json")):
+            try:
+                cached = json.loads(result_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            request = cached.get("request", {})
+            old_identity = request.get("identity", {})
+            if (
+                cached.get("status") == "SUCCESS"
+                and all(request.get(key) == signed_request.get(key) for key in comparable_keys)
+                and old_identity.get("model_sha256") == self.identity.get("model_sha256")
+                and old_identity.get("openvsp_version") == self.identity.get("openvsp_version")
+                and self._complete(cached.get("payload"), stability)
+            ):
+                return cached["payload"]
+        return None
+
     @staticmethod
     def _complete(payload: Any, stability: bool) -> bool:
         if not isinstance(payload, dict):
@@ -527,9 +545,17 @@ class _ConvergenceCache:
             ):
                 self.hits += 1
                 return payload
+        if self.enabled:
+            payload = self._equivalent_cached_payload(signed_request, stability)
+            if payload is not None:
+                self.hits += 1
+                return payload
         self.misses += 1
         if case_dir.exists():
-            shutil.rmtree(case_dir)
+            archive = self.raw_root / (
+                f"{signature}_previous_{datetime.now().strftime('%Y%m%dT%H%M%S%f')}"
+            )
+            case_dir.rename(archive)
         try:
             raw = self.runner.run(
                 condition,
@@ -660,6 +686,8 @@ def _report_markdown(report: dict[str, Any]) -> str:
         "",
         f"Generated: {report['generated_at_local']}",
         "",
+        f"Solver / GRID gate: **{report['solver_gate_status']}**",
+        f"Derivative gate: **{report['derivative_gate_status']}**",
         f"Production gate: **{report['production_gate_status']}**",
         "",
         "Tessellation / mesh quality is user responsibility and is not numerically certified by this workflow.",
@@ -697,20 +725,17 @@ def _report_markdown(report: dict[str, Any]) -> str:
     for name, record in report["fd_step_selection"].items():
         lines.append(
             f"| {name} | {formatted(record.get('selected_fd_step'))} | "
-            f"{record.get('convergence_status')} | {formatted(record.get('derivative_value'))} | "
+            f"{record.get('convergence_status')} | {formatted(record.get('value'))} | "
             f"{record.get('method')} |"
         )
     lines.extend([
         "",
-        "Each derivative selects its own centered-FD step from the configured local candidates. Native derivatives are diagnostic references only and do not enter the Wake gate, production derivative set, or TRIM Jacobian.",
+        "Alpha, beta, and control derivatives select their own centered-FD steps. Classical p/q/r derivatives come from the steady VSPAERO stability table using p_hat/q_hat/r_hat denominators. P/Q/R unsteady damping outputs remain separate diagnostics.",
         "",
         "## Required derivatives manifest",
         "",
         f"Required: **{summary['required']}**; PASS: **{summary['PASS']}**; "
-        f"WARN_NUMERICAL: **{summary['WARN_NUMERICAL']}**; "
-        f"METHOD_LIMITATION: **{summary['METHOD_LIMITATION']}**; FAIL: **{summary['FAIL']}**.",
-        "",
-        "METHOD_LIMITATION follows the explicit policy in config/required_derivatives.yaml. In particular, OpenVSP/VSPAERO 3.51.3 cannot provide a true negative steady-q input, so Cm_q is not represented as a centered FD and its native value remains diagnostic-only.",
+        f"WARN_NUMERICAL: **{summary['WARN_NUMERICAL']}**; FAIL: **{summary['FAIL']}**.",
         "",
         "## Boundary continuity",
         "",
@@ -803,6 +828,8 @@ def run_numerical_convergence(
                 "beta_deg": float(point.get("beta_deg", 0.0)),
                 "required_wake": None,
                 "status": "FAIL",
+                "solver_status": "FAIL",
+                "derivative_wake_status": "FAIL",
                 "reason": f"{type(exc).__name__}: {exc}",
                 "source": "failed_case",
                 "pretrim": pretrim,
@@ -810,6 +837,7 @@ def run_numerical_convergence(
 
     diagnostic_name = str(settings["fd_step"]["representative_state_name"])
     diagnostic_package: dict[str, Any]
+    diagnostic_base: dict[str, Any] = {}
     diagnostic_error = ""
     if diagnostic_name in point_context:
         context = point_context[diagnostic_name]
@@ -822,6 +850,7 @@ def run_numerical_convergence(
                 stability=True,
                 perturbation={"purpose": "fd_step_selection", "variable": "base"},
             )
+            diagnostic_base = base
 
             def diagnostic_polar(
                 condition: dict[str, float], label: str, controls: dict[str, float]
@@ -852,11 +881,11 @@ def run_numerical_convergence(
             items = build_required_manifest_items(
                 manifest=manifest,
                 production_records={},
-                native_records=native_records,
                 wake_level=candidates[-1],
             )
             diagnostic_package = {
-                "production_fd_derivatives": {},
+                "production_derivatives": {},
+                "unsteady_derivative_diagnostics": {},
                 "native_derivative_diagnostics": native_records,
                 "required_derivatives_manifest": {
                     "items": items,
@@ -868,11 +897,11 @@ def run_numerical_convergence(
         items = build_required_manifest_items(
             manifest=manifest,
             production_records={},
-            native_records={},
             wake_level=candidates[-1],
         )
         diagnostic_package = {
-            "production_fd_derivatives": {},
+            "production_derivatives": {},
+            "unsteady_derivative_diagnostics": {},
             "native_derivative_diagnostics": {},
             "required_derivatives_manifest": {
                 "items": items,
@@ -880,7 +909,11 @@ def run_numerical_convergence(
             },
         }
 
-    fd_selection = diagnostic_package["production_fd_derivatives"]
+    fd_selection = {
+        name: record
+        for name, record in diagnostic_package["production_derivatives"].items()
+        if record.get("method") == "centered_finite_difference"
+    }
     selected_steps: dict[str, float] = {}
     for rows in WAKE_FD_DERIVATIVES.values():
         for _, derivative in rows:
@@ -952,7 +985,7 @@ def run_numerical_convergence(
         return {
             "gate_values": {**coefficients, **fd},
             "coefficients": coefficients,
-            "production_fd_derivatives": fd,
+            "fd_derivatives_for_wake_gate": fd,
             "errors": errors,
         }
 
@@ -1013,6 +1046,8 @@ def run_numerical_convergence(
             "beta_deg": float(point.get("beta_deg", 0.0)),
             "required_wake": required_wake,
             "status": decision["status"],
+            "solver_status": base_decision["status"],
+            "derivative_wake_status": fd_decision["status"],
             "reason": decision["reason"],
             "source": "solver_convergence",
             "pretrim": context["pretrim"],
@@ -1039,7 +1074,7 @@ def run_numerical_convergence(
 
     schedule_points = [
         point for point in sample_points
-        if point.get("required_wake") is not None and point.get("status") != "FAIL"
+        if point.get("required_wake") is not None and point.get("solver_status") != "FAIL"
     ]
     schedule = {
         "algorithm": "conservative_discrete_nearest_regions",
@@ -1084,6 +1119,12 @@ def run_numerical_convergence(
             wake: wake_bundle(condition, controls_neutral, wake)["gate_values"]
             for wake in (low, high)
         }
+        solver_continuity = boundary_continuity_result(
+            values[low], values[high], COEFFICIENTS, tolerance
+        )
+        derivative_continuity = boundary_continuity_result(
+            values[low], values[high], WAKE_FD_NAMES, tolerance
+        )
         continuity = boundary_continuity_result(values[low], values[high], monitored, tolerance)
         status = continuity["status"]
         action = "none"
@@ -1101,29 +1142,90 @@ def run_numerical_convergence(
             "low_wake": low,
             "high_wake": high,
             "status": status,
+            "solver_status": solver_continuity["status"],
+            "derivative_status": derivative_continuity["status"],
             "action": action,
             "quantities": continuity["quantities"],
         })
-    boundary_status = combine_status([item["status"] for item in boundary_checks]) if boundary_checks else "PASS"
-    if boundary_status == "FAIL" and all(
-        item["action"] != "none" for item in boundary_checks if item["status"] == "FAIL"
-    ):
-        boundary_status = "WARN"
-    wake_status = combine_status([point["status"] for point in sample_points] + [boundary_status])
+    def effective_boundary_status(field: str) -> str:
+        status = combine_status([item[field] for item in boundary_checks]) if boundary_checks else "PASS"
+        if status == "FAIL" and all(
+            item["action"] != "none" for item in boundary_checks if item[field] == "FAIL"
+        ):
+            return "WARN"
+        return status
 
-    cm_q_diagnostic = {
-        "status": "METHOD_LIMITATION",
-        "numerical_diagnostic_status": "NOT_APPLICABLE",
-        "diagnostic_value": diagnostic_package.get("native_derivative_diagnostics", {}).get(
-            "Cm_q", {}
-        ).get("diagnostic_value"),
-        "reason": manifest["method_limitations"]["steady_rate_centered_difference"]["reason"],
-        "enters_production_gate": False,
-    }
+    boundary_status = effective_boundary_status("status")
+    solver_boundary_status = effective_boundary_status("solver_status")
+    derivative_boundary_status = effective_boundary_status("derivative_status")
+    solver_wake_status = combine_status(
+        [str(point.get("solver_status", "FAIL")) for point in sample_points]
+        + [solver_boundary_status]
+    )
+    derivative_wake_status = combine_status(
+        [str(point.get("derivative_wake_status", "FAIL")) for point in sample_points]
+        + [derivative_boundary_status]
+    )
+    wake_status = combine_status([solver_wake_status, derivative_wake_status])
 
     required_manifest = diagnostic_package["required_derivatives_manifest"]
     manifest_gate_status = str(required_manifest["summary"]["gate_status"])
-    gate_status = combine_status([wake_status, boundary_status, manifest_gate_status])
+    production_records = diagnostic_package["production_derivatives"]
+    integrity_items: dict[str, dict[str, str]] = {}
+    for definition in manifest["_required"]:
+        name = str(definition["name"])
+        record = production_records.get(name)
+        if not isinstance(record, dict):
+            integrity_items[name] = {
+                "status": "FAIL", "reason": "production derivative record is missing",
+            }
+            continue
+        method = str(record.get("method", ""))
+        method_status, method_reason = (
+            _sample_integrity(record)
+            if method == "centered_finite_difference"
+            else _rate_integrity(record)
+            if method == "vspaero_steady_rate_derivative"
+            else ("FAIL", f"unsupported production method: {method or 'missing'}")
+        )
+        metadata_ok = all((
+            method == str(definition["method"]),
+            str(record.get("units", "")) == str(definition["unit"]),
+            bool(str(record.get("source", "")).strip()),
+            bool(str(record.get("source_field", "")).strip()),
+            bool(str(record.get("coordinate_sign_convention", "")).strip()),
+        ))
+        metadata_status = "PASS" if metadata_ok else "FAIL"
+        integrity_items[name] = {
+            "status": combine_status([method_status, metadata_status]),
+            "reason": (
+                method_reason if metadata_ok else
+                "method/unit/source/source_field/coordinate-sign metadata is incomplete or inconsistent"
+            ),
+        }
+    integrity_status = combine_status([
+        item["status"] for item in integrity_items.values()
+    ]) if integrity_items else "FAIL"
+    diagnostic_context = point_context.get(diagnostic_name)
+    if diagnostic_context is None or not diagnostic_base:
+        physics_status = "FAIL"
+        physics_rows: list[dict[str, Any]] = []
+    else:
+        physics_status, physics_rows = _physics_checks(
+            speed=float(diagnostic_context["condition"]["speed_mps"]),
+            result={
+                "inputs": diagnostic_context["condition"],
+                "outputs": diagnostic_base,
+            },
+            records=production_records,
+            manifest_rows=list(manifest["_required"]),
+            config=config["validation"],
+        )
+    solver_gate_status = solver_wake_status
+    derivative_gate_status = combine_status([
+        manifest_gate_status, derivative_wake_status, integrity_status, physics_status,
+    ])
+    gate_status = combine_status([solver_gate_status, derivative_gate_status])
     convergence_status = gate_status
     native_diagnostic_status = "DIAGNOSTIC_ONLY"
     selected_fd_steps = {
@@ -1133,7 +1235,7 @@ def run_numerical_convergence(
     }
     generated = datetime.now().astimezone().isoformat(timespec="seconds")
     production = {
-        "schema_version": "3.0",
+        "schema_version": "5.0",
         "generated_at_local": generated,
         "identity": convergence_identity(config, str(runner.vsp.GetVSPVersion())),
         "convergence_status": convergence_status,
@@ -1158,35 +1260,63 @@ def run_numerical_convergence(
         "required_derivatives_manifest": required_manifest,
         "diagnostics": {
             "native_derivatives": {"status": native_diagnostic_status, "enters_production_gate": False},
-            "Cm_q": cm_q_diagnostic,
+            "steady_rate_source": "VSPAERO_Stab wrt p/q/r normalized by bref/(2V), cref/(2V), bref/(2V)",
+            "production_derivative_integrity": {
+                "status": integrity_status,
+                "items": integrity_items,
+            },
+            "physics_sign_sanity": {
+                "status": physics_status,
+                "checks": physics_rows,
+            },
+        },
+        "solver_gate": {
+            "status": solver_gate_status,
+            "reason": "model/OpenVSP identity plus base-coefficient Wake convergence, schedule and boundary continuity",
+        },
+        "derivative_gate": {
+            "status": derivative_gate_status,
+            "reason": "derivative Wake/FD-step convergence, 23-source completeness, units/methods, and physics/sign sanity",
         },
         "production_gate": {
             "status": gate_status,
-            "reason": (
-                "Wake coefficient/required-FD validation, boundary continuity, and the explicit "
-                "required-derivative manifest policy; mesh convergence is excluded"
-            ),
+            "reason": "combination of solver_gate and derivative_gate; mesh convergence is excluded",
             "force_option": "--force",
         },
+        "adaptive_grid_eligible": solver_gate_status == "PASS",
     }
     cache_summary = cache.summary(time.perf_counter() - started)
     report = {
-        "schema_version": "3.0",
+        "schema_version": "5.0",
         "generated_at_local": generated,
         "convergence_status": convergence_status,
+        "solver_gate_status": solver_gate_status,
+        "derivative_gate_status": derivative_gate_status,
         "production_gate_status": gate_status,
+        "adaptive_grid_eligible": solver_gate_status == "PASS",
         "mesh": production["mesh"],
         "wake": {
             "status": wake_status,
+            "solver_status": solver_wake_status,
+            "derivative_status": derivative_wake_status,
             "sample_points": sample_points,
             "details": wake_details,
             "boundary_status": boundary_status,
+            "solver_boundary_status": solver_boundary_status,
+            "derivative_boundary_status": derivative_boundary_status,
             "boundary_checks": boundary_checks,
         },
         "fd_step_selection": fd_selection,
         "fd_step_diagnostic_error": diagnostic_error,
         "required_derivatives_manifest": required_manifest,
-        "cm_q": cm_q_diagnostic,
+        "production_derivative_integrity": {
+            "status": integrity_status,
+            "items": integrity_items,
+        },
+        "physics_sign_sanity": {
+            "status": physics_status,
+            "checks": physics_rows,
+        },
         "native_derivative_diagnostic": {"status": native_diagnostic_status},
         "cache": cache_summary,
         "production_numerical_settings": production,
@@ -1217,7 +1347,7 @@ def run_numerical_convergence(
             "name": name,
             "selected_fd_step": record.get("selected_fd_step"),
             "convergence_status": record.get("convergence_status"),
-            "derivative_value": record.get("derivative_value"),
+            "derivative_value": record.get("value"),
             "method": record.get("method"),
         }
         for name, record in fd_selection.items()

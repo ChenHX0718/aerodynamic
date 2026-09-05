@@ -8,7 +8,6 @@ from coordinate_system import COORDINATE_CONVENTION
 
 STATUS_RANK = {
     "PASS": 0,
-    "METHOD_LIMITATION": 1,
     "WARN": 2,
     "WARN_NUMERICAL": 2,
     "FAIL": 3,
@@ -205,15 +204,15 @@ def _state_snapshot(condition: dict[str, float], controls: dict[str, float]) -> 
     }
 
 
-def _native_value(payload: dict[str, Any], name: str) -> float | None:
+def _native_measurement(payload: dict[str, Any], name: str) -> dict[str, Any] | None:
     diagnostics = payload.get("native_derivative_diagnostics", {})
     stability = diagnostics.get("stability", {})
     if name in stability:
-        return float(stability[name]["standard_value"])
+        return stability[name]
     for control in diagnostics.get("controls", {}).values():
         derivative = control.get("derivatives", {}).get(name)
         if derivative is not None:
-            return float(derivative["standard_value"])
+            return derivative
     return None
 
 
@@ -227,7 +226,7 @@ def _coordinate_sign_convention() -> str:
 def required_derivative_summary(
     items: list[dict[str, Any]], manifest: dict[str, Any]
 ) -> dict[str, Any]:
-    statuses = ("PASS", "WARN_NUMERICAL", "METHOD_LIMITATION", "FAIL")
+    statuses = ("PASS", "WARN_NUMERICAL", "FAIL")
     counts = {
         status: sum(item.get("validation_status") == status for item in items)
         for status in statuses
@@ -249,9 +248,6 @@ def required_derivative_summary(
         "warn_numerical_names": [
             item["name"] for item in items if item["validation_status"] == "WARN_NUMERICAL"
         ],
-        "method_limitation_names": [
-            item["name"] for item in items if item["validation_status"] == "METHOD_LIMITATION"
-        ],
         "fail_names": [item["name"] for item in items if item["validation_status"] == "FAIL"],
     }
 
@@ -260,7 +256,6 @@ def build_required_manifest_items(
     *,
     manifest: dict[str, Any],
     production_records: dict[str, dict[str, Any]],
-    native_records: dict[str, dict[str, Any]],
     wake_level: int | None,
 ) -> list[dict[str, Any]]:
     convention = _coordinate_sign_convention()
@@ -268,33 +263,24 @@ def build_required_manifest_items(
     for definition in manifest["_required"]:
         name = str(definition["name"])
         production = production_records.get(name)
-        native = native_records.get(name, {})
-        limitation_key = definition.get("method_limitation")
         if production is not None:
-            status = str(production["convergence_status"])
-            value = production.get("derivative_value")
-            source = "production_centered_fd"
-            method = "centered_finite_difference"
+            status = str(production["validation_status"])
+            value = production.get("value")
+            source = str(production["source"])
+            method = str(production["method"])
             step = production.get("selected_fd_step")
-            production_included = status != "FAIL"
-            reason = production.get("convergence", {}).get("reason", "")
-        elif limitation_key is not None:
-            limitation = manifest["method_limitations"][str(limitation_key)]
-            status = str(limitation["status"])
-            value = native.get("diagnostic_value")
-            source = "vspaero_native_diagnostic_reference"
-            method = "centered_finite_difference_unavailable"
-            step = None
-            production_included = bool(limitation["production_included"])
-            reason = str(limitation["reason"])
+            production_included = bool(production.get("production_included", status != "FAIL"))
+            reason = str(production.get("reason", ""))
+            source_field = production.get("source_field")
         else:
             status = "FAIL"
             value = None
             source = "missing"
-            method = "centered_finite_difference"
+            method = str(definition["method"])
             step = None
             production_included = False
-            reason = "required production centered-FD derivative is missing"
+            reason = "required production derivative is missing"
+            source_field = None
         items.append({
             "name": name,
             "category": str(definition["category"]),
@@ -304,18 +290,63 @@ def build_required_manifest_items(
             "required": bool(definition["required"]),
             "value": value,
             "source": source,
+            "source_field": source_field,
             "method": method,
             "selected_fd_step": step,
             "selected_fd_step_unit": "deg" if step is not None else None,
             "units": str(definition["unit"]),
             "coordinate_sign_convention": convention,
-            "wake_level": wake_level,
+            "wake_iterations": production.get("wake_iterations", wake_level) if production else wake_level,
             "validation_status": status,
             "production_included": production_included,
             "gate_action": str(manifest["status_policy"][status]).upper(),
             "reason": reason,
         })
     return items
+
+
+def build_production_rate_derivatives(
+    *, manifest: dict[str, Any], base_outputs: dict[str, Any], wake_iterations: int | None,
+) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    for definition in manifest["_required"]:
+        variable = str(definition["perturbation"])
+        if variable not in {"p", "q", "r"}:
+            continue
+        name = str(definition["name"])
+        measurement = _native_measurement(base_outputs, name)
+        value = None if measurement is None else measurement.get("standard_value")
+        try:
+            numeric = float(value)
+            finite = math.isfinite(numeric)
+        except (TypeError, ValueError):
+            numeric = math.nan
+            finite = False
+        expected_unit = str(definition["unit"])
+        actual_unit = None if measurement is None else measurement.get("standard_unit")
+        unit_matches = actual_unit == expected_unit
+        status = "PASS" if finite and unit_matches else "FAIL"
+        reason = (
+            "finite VSPAERO steady-stability derivative with verified normalized-rate denominator"
+            if status == "PASS"
+            else "VSPAERO steady-stability source field is missing or has an invalid unit/value"
+        )
+        records[name] = {
+            **{key: value for key, value in definition.items() if not str(key).startswith("_")},
+            "name": name,
+            "value": numeric if finite else None,
+            "units": expected_unit,
+            "method": "vspaero_steady_rate_derivative",
+            "source": "VSPAERO_Stab",
+            "source_field": None if measurement is None else measurement.get("raw_field"),
+            "wake_iterations": wake_iterations,
+            "validation_status": status,
+            "coordinate_sign_convention": _coordinate_sign_convention(),
+            "production_included": status != "FAIL",
+            "reason": reason,
+            "source_measurement": measurement,
+        }
+    return records
 
 
 def calculate_trim_derivatives(
@@ -339,11 +370,14 @@ def calculate_trim_derivatives(
 
     for row in rows:
         name = str(row["name"])
-        value = _native_value(base_outputs, name)
+        measurement = _native_measurement(base_outputs, name)
         native_records[name] = {
             "name": name,
-            "diagnostic_value": value,
+            "diagnostic_value": (
+                None if measurement is None else measurement.get("standard_value")
+            ),
             "source": "vspaero_native_derivative",
+            "source_field": None if measurement is None else measurement.get("raw_field"),
             "method": "vspaero_native_derivative",
             "units": str(row["unit"]),
             "diagnostic_only": True,
@@ -405,29 +439,38 @@ def calculate_trim_derivatives(
             }
             production_records[name] = {
                 **{key: value for key, value in row.items()},
-                "derivative_value": selection["derivative_value"],
-                "source": "production_centered_fd",
+                "value": selection["derivative_value"],
+                "units": str(row["unit"]),
+                "source": "VSPAERO_Polar centered +/- solver cases",
+                "source_field": f"VSPAERO_Polar.{coefficient}",
                 "method": "centered_finite_difference",
                 "selected_fd_step": selection["selected_fd_step"],
                 "selected_fd_step_unit": "deg",
                 "convergence_status": selection["status"],
                 "validation_status": selection["status"],
                 "production_included": selection["status"] != "FAIL",
-                "wake_level": derivative_config.get("_bundle_wake_iterations"),
+                "wake_iterations": derivative_config.get("_bundle_wake_iterations"),
                 "coordinate_sign_convention": _coordinate_sign_convention(),
                 "base_state": _state_snapshot(condition, base_controls),
                 "samples": samples,
                 "convergence": selection,
+                "reason": str(selection["reason"]),
             }
 
+    rate_records = build_production_rate_derivatives(
+        manifest=manifest,
+        base_outputs=base_outputs,
+        wake_iterations=derivative_config.get("_bundle_wake_iterations"),
+    )
+    all_production = {**production_records, **rate_records}
     items = build_required_manifest_items(
         manifest=manifest,
-        production_records=production_records,
-        native_records=native_records,
+        production_records=all_production,
         wake_level=derivative_config.get("_bundle_wake_iterations"),
     )
     return {
-        "production_fd_derivatives": production_records,
+        "production_derivatives": all_production,
+        "unsteady_derivative_diagnostics": {},
         "native_derivative_diagnostics": native_records,
         "required_derivatives_manifest": {
             "items": items,

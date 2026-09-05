@@ -1,0 +1,156 @@
+{
+  "mode": "adaptive",
+  "active_dimensions": [
+    "speed_mps"
+  ],
+  "initial_seed_point_count": 2,
+  "initial_cell_count": 1,
+  "final_unique_point_count": 3,
+  "new_solver_runs": 3,
+  "new_solver_duration_sec": 2678.945822800277,
+  "persistent_cache_hits": 0,
+  "deduplicated_point_reuses": 2,
+  "cache_hits": 2,
+  "accepted_cell_count": 1,
+  "refined_cell_count": 0,
+  "max_depth_reached": 0,
+  "max_interpolation_error": 1.0649999999999202e-05,
+  "per_coefficient_worst_error": {
+    "CL": {
+      "absolute_error": 1.0000000000287557e-07,
+      "relative_error": 8.828696796319808e-07,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    },
+    "CD": {
+      "absolute_error": 1.0649999999999202e-05,
+      "relative_error": 0.00021299999999998404,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    },
+    "Cm": {
+      "absolute_error": 1.800000000003188e-06,
+      "relative_error": 3.600000000006376e-05,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    },
+    "CY": {
+      "absolute_error": 1.5000000000000365e-07,
+      "relative_error": 3.000000000000073e-06,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    },
+    "Cl": {
+      "absolute_error": 5.000000000002832e-08,
+      "relative_error": 1.0000000000005664e-06,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    },
+    "Cn": {
+      "absolute_error": 9.999999999994822e-08,
+      "relative_error": 1.9999999999989644e-06,
+      "status": "PASS",
+      "cell_id": "cell_000001"
+    }
+  },
+  "termination_reason": "all final cells satisfy interpolation tolerance",
+  "status": "PASS",
+  "cells": [
+    {
+      "cell_id": "cell_000001",
+      "parent_cell_id": null,
+      "depth": 0,
+      "bounds": {
+        "speed_mps": [
+          8.0,
+          9.0
+        ],
+        "alpha_deg": [
+          0.0,
+          0.0
+        ],
+        "beta_deg": [
+          0.0,
+          0.0
+        ]
+      },
+      "midpoint": {
+        "speed_mps": 8.5,
+        "alpha_deg": 0.0,
+        "beta_deg": 0.0
+      },
+      "interpolation": {
+        "status": "PASS",
+        "quantities": {
+          "CL": {
+            "interpolated": 0.1132669,
+            "actual": 0.113267,
+            "status": "PASS",
+            "difference": 1.0000000000287557e-07,
+            "relative_difference": 8.828696796319808e-07,
+            "pass_limit": 0.008398010000000001,
+            "warn_limit": 0.02906136,
+            "reference_scale": 0.113267
+          },
+          "CD": {
+            "interpolated": 0.01390875,
+            "actual": 0.0138981,
+            "status": "PASS",
+            "difference": 1.0649999999999202e-05,
+            "relative_difference": 0.00021299999999998404,
+            "pass_limit": 0.006500000000000001,
+            "warn_limit": 0.024,
+            "reference_scale": 0.05
+          },
+          "Cm": {
+            "interpolated": -0.036693199999999995,
+            "actual": -0.036695,
+            "status": "PASS",
+            "difference": 1.800000000003188e-06,
+            "relative_difference": 3.600000000006376e-05,
+            "pass_limit": 0.006500000000000001,
+            "warn_limit": 0.024,
+            "reference_scale": 0.05
+          },
+          "CY": {
+            "interpolated": 0.00019375,
+            "actual": 0.0001936,
+            "status": "PASS",
+            "difference": 1.5000000000000365e-07,
+            "relative_difference": 3.000000000000073e-06,
+            "pass_limit": 0.006500000000000001,
+            "warn_limit": 0.024,
+            "reference_scale": 0.05
+          },
+          "Cl": {
+            "interpolated": -0.00056045,
+            "actual": -0.0005605,
+            "status": "PASS",
+            "difference": 5.000000000002832e-08,
+            "relative_difference": 1.0000000000005664e-06,
+            "pass_limit": 0.006500000000000001,
+            "warn_limit": 0.024,
+            "reference_scale": 0.05
+          },
+          "Cn": {
+            "interpolated": -0.00032879999999999997,
+            "actual": -0.0003287,
+            "status": "PASS",
+            "difference": 9.999999999994822e-08,
+            "relative_difference": 1.9999999999989644e-06,
+            "pass_limit": 0.006500000000000001,
+            "warn_limit": 0.024,
+            "reference_scale": 0.05
+          }
+        }
+      },
+      "status": "PASS",
+      "termination_reason": "interpolation tolerance satisfied"
+    }
+  ],
+  "refinement_history": [],
+  "solver_gate_status": "PASS",
+  "derivative_gate_status": "WARN",
+  "production_gate_status": "WARN",
+  "adaptive_grid_eligible": true
+}

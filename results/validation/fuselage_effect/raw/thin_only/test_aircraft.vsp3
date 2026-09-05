@@ -433,8 +433,8 @@
           <V_Attach_Location Value="9.999999999999999547e-07" ID="PDDSCCVQLTO"/>
         </Attach>
         <Shape>
-          <Tess_U Value="8.000000000000000000e+00" ID="XNZZKRMDGWL"/>
-          <Tess_W Value="1.700000000000000000e+01" ID="BKIINPPHLJK"/>
+          <Tess_U Value="1.600000000000000000e+01" ID="XNZZKRMDGWL"/>
+          <Tess_W Value="6.500000000000000000e+01" ID="BKIINPPHLJK"/>
           <Wake Value="0.000000000000000000e+00" ID="VKTUQNOLJLY"/>
         </Shape>
         <Negative_Volume_Props>
@@ -473,11 +473,11 @@
           <CurvedArea Value="1.629059999477415488e+01" ID="QYGMRUOGGPX"/>
           <LECluster Value="2.500000000000000000e-01" ID="INPIJHQWOYW"/>
           <MAC Value="1.558061009097813532e+00" ID="TWPCTNHBVQZ"/>
-          <MaxGrowth Value="1.963769402454648594e+00" ID="JGLQXHEXFIF"/>
+          <MaxGrowth Value="1.203942213647358539e+00" ID="JGLQXHEXFIF"/>
           <RelativeDihedralFlag Value="0.000000000000000000e+00" ID="PAYXREIRQRP"/>
           <RelativeTwistFlag Value="0.000000000000000000e+00" ID="QGYYLBOFNAE"/>
           <RotateAirfoilMatchDideralFlag Value="1.000000000000000000e+00" ID="RPBNHXFBMWB"/>
-          <SmallPanelW Value="3.796702073528082644e-02" ID="TYKBDPOKRYA"/>
+          <SmallPanelW Value="2.566859543904191111e-03" ID="TYKBDPOKRYA"/>
           <TECluster Value="2.500000000000000000e-01" ID="CFFRYKLGKXE"/>
           <TotalAR Value="6.865807690224414728e+00" ID="EYGHIEQCXGW"/>
           <TotalArea Value="1.629059999999999775e+01" ID="MYGAEGDDNHC"/>
@@ -1454,8 +1454,8 @@
           <V_Attach_Location Value="9.999999999999999547e-07" ID="CELRKYYCGPU"/>
         </Attach>
         <Shape>
-          <Tess_U Value="8.000000000000000000e+00" ID="BFMBGQJXMMA"/>
-          <Tess_W Value="1.700000000000000000e+01" ID="SINJKNADJRK"/>
+          <Tess_U Value="1.600000000000000000e+01" ID="BFMBGQJXMMA"/>
+          <Tess_W Value="3.300000000000000000e+01" ID="SINJKNADJRK"/>
           <Wake Value="0.000000000000000000e+00" ID="ZJBGVYYJBBR"/>
         </Shape>
         <Negative_Volume_Props>
@@ -1494,11 +1494,11 @@
           <CurvedArea Value="3.546199983664453104e+00" ID="LEELAFOKOUW"/>
           <LECluster Value="2.500000000000000000e-01" ID="SPZZQEYJLGP"/>
           <MAC Value="1.081648342169830190e+00" ID="OKYITXFJPKT"/>
-          <MaxGrowth Value="1.963769402454648594e+00" ID="VMOAMXLTOHN"/>
+          <MaxGrowth Value="1.437005756083839181e+00" ID="VMOAMXLTOHN"/>
           <RelativeDihedralFlag Value="0.000000000000000000e+00" ID="VPUXBWZJHBR"/>
           <RelativeTwistFlag Value="0.000000000000000000e+00" ID="LEOSXIGQUIP"/>
           <RotateAirfoilMatchDideralFlag Value="0.000000000000000000e+00" ID="TZIKDDOJKKA"/>
-          <SmallPanelW Value="2.993145037155870575e-02" ID="ECJQTTTEUNW"/>
+          <SmallPanelW Value="8.194920167448434961e-03" ID="ECJQTTTEUNW"/>
           <TECluster Value="2.500000000000000000e-01" ID="WSJROPPREPW"/>
           <TotalAR Value="3.145789859567988067e+00" ID="BYLWXPHHMPE"/>
           <TotalArea Value="3.546200000000000241e+00" ID="ZDYLNLRKDLB"/>
@@ -2371,8 +2371,8 @@
           <V_Attach_Location Value="9.999999999999999547e-07" ID="SUYYUECARJC"/>
         </Attach>
         <Shape>
-          <Tess_U Value="8.000000000000000000e+00" ID="XJGDNIXXKCC"/>
-          <Tess_W Value="1.700000000000000000e+01" ID="NFMBNZHAVBK"/>
+          <Tess_U Value="1.600000000000000000e+01" ID="XJGDNIXXKCC"/>
+          <Tess_W Value="3.300000000000000000e+01" ID="NFMBNZHAVBK"/>
           <Wake Value="0.000000000000000000e+00" ID="ISRYNGWASVM"/>
         </Shape>
         <Negative_Volume_Props>
@@ -2411,11 +2411,11 @@
           <CurvedArea Value="2.954599975431494663e+00" ID="RAJHRYIWUTX"/>
           <LECluster Value="2.500000000000000000e-01" ID="KSKJTKAJXEG"/>
           <MAC Value="2.152414219482028379e+00" ID="YCSWVIARLPN"/>
-          <MaxGrowth Value="1.963769402454648594e+00" ID="NYPZYAWEHRR"/>
+          <MaxGrowth Value="1.437005756083839181e+00" ID="NYPZYAWEHRR"/>
           <RelativeDihedralFlag Value="0.000000000000000000e+00" ID="LFFUIIQPFDT"/>
           <RelativeTwistFlag Value="0.000000000000000000e+00" ID="VHKUVHNLDXQ"/>
           <RotateAirfoilMatchDideralFlag Value="0.000000000000000000e+00" ID="OLLGJEIAAUF"/>
-          <SmallPanelW Value="2.912684832004108770e-02" ID="AZWHHSDDBNW"/>
+          <SmallPanelW Value="1.045388872663810531e-02" ID="AZWHHSDDBNW"/>
           <TECluster Value="2.500000000000000000e-01" ID="TNMSWOXNFTU"/>
           <TotalAR Value="1.072361741014011827e+00" ID="MPJZMJZOIZE"/>
           <TotalArea Value="2.954600000000000559e+00" ID="WFVDCFGTWUJ"/>
@@ -3460,8 +3460,8 @@
           <V_Attach_Location Value="9.999999999999999547e-07" ID="KRJPZKTQUOF"/>
         </Attach>
         <Shape>
-          <Tess_U Value="8.000000000000000000e+00" ID="HNKRICOXHVZ"/>
-          <Tess_W Value="1.700000000000000000e+01" ID="FIAIURWVJVS"/>
+          <Tess_U Value="1.600000000000000000e+01" ID="HNKRICOXHVZ"/>
+          <Tess_W Value="4.900000000000000000e+01" ID="FIAIURWVJVS"/>
           <Wake Value="0.000000000000000000e+00" ID="FQBFEUEEHNS"/>
         </Shape>
         <Negative_Volume_Props>

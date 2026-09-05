@@ -1,43 +1,34 @@
-schema_version: "1.0"
+schema_version: "2.0"
 description: 调参模型使用的唯一权威气动导数清单；角度与舵偏导数均按 rad，无量纲角速度导数按 p_hat/q_hat/r_hat。
 status_policy:
   PASS: ACCEPT
   WARN_NUMERICAL: ACCEPT_WITH_WARNING
-  METHOD_LIMITATION: ACCEPT_WITH_WARNING
   FAIL: REJECT
-method_limitations:
-  steady_rate_centered_difference:
-    perturbations: [p, q, r]
-    production_method: centered_finite_difference
-    available_diagnostic: vspaero_native_derivative
-    production_included: false
-    status: METHOD_LIMITATION
-    reason: "OpenVSP/VSPAERO 3.51.3 does not expose a true negative steady p/q/r input, so a standard centered finite difference cannot be formed without fabricating data."
 derivatives:
-  - {name: CL_alpha, category: longitudinal, required: true, coefficient: CL, perturbation: alpha, unit: 1/rad, definition: "dCL/dalpha at trim", expected_sign: positive}
-  - {name: CD_alpha, category: longitudinal, required: true, coefficient: CD, perturbation: alpha, unit: 1/rad, definition: "dCD/dalpha at trim"}
-  - {name: Cm_alpha, category: longitudinal, required: true, coefficient: Cm, perturbation: alpha, unit: 1/rad, definition: "dCm/dalpha at trim", expected_sign: negative}
-  - {name: CL_q, category: longitudinal, required: true, coefficient: CL, perturbation: q, unit: 1/q_hat, definition: "dCL/dq_hat; q_hat=q*cref/(2V)", method_limitation: steady_rate_centered_difference}
-  - {name: Cm_q, category: longitudinal, required: true, coefficient: Cm, perturbation: q, unit: 1/q_hat, definition: "dCm/dq_hat; q_hat=q*cref/(2V)", expected_sign: negative, method_limitation: steady_rate_centered_difference}
+  - {name: CL_alpha, category: longitudinal, required: true, coefficient: CL, perturbation: alpha, unit: 1/rad, method: centered_finite_difference, definition: "dCL/dalpha at trim", expected_sign: positive}
+  - {name: CD_alpha, category: longitudinal, required: true, coefficient: CD, perturbation: alpha, unit: 1/rad, method: centered_finite_difference, definition: "dCD/dalpha at trim"}
+  - {name: Cm_alpha, category: longitudinal, required: true, coefficient: Cm, perturbation: alpha, unit: 1/rad, method: centered_finite_difference, definition: "dCm/dalpha at trim", expected_sign: negative}
+  - {name: CL_q, category: longitudinal, required: true, coefficient: CL, perturbation: q, unit: 1/q_hat, method: vspaero_steady_rate_derivative, definition: "dCL/dq_hat; q_hat=q*cref/(2V)"}
+  - {name: Cm_q, category: longitudinal, required: true, coefficient: Cm, perturbation: q, unit: 1/q_hat, method: vspaero_steady_rate_derivative, definition: "dCm/dq_hat; q_hat=q*cref/(2V)", expected_sign: negative}
 
-  - {name: CY_beta, category: lateral, required: true, coefficient: CY, perturbation: beta, unit: 1/rad, definition: "dCY/dbeta at trim"}
-  - {name: Cl_beta, category: lateral, required: true, coefficient: Cl, perturbation: beta, unit: 1/rad, definition: "dCl/dbeta at trim"}
-  - {name: Cn_beta, category: lateral, required: true, coefficient: Cn, perturbation: beta, unit: 1/rad, definition: "dCn/dbeta at trim", expected_sign: positive}
-  - {name: CY_p, category: lateral, required: true, coefficient: CY, perturbation: p, unit: 1/p_hat, definition: "dCY/dp_hat; p_hat=p*bref/(2V)", method_limitation: steady_rate_centered_difference}
-  - {name: Cl_p, category: lateral, required: true, coefficient: Cl, perturbation: p, unit: 1/p_hat, definition: "dCl/dp_hat; p_hat=p*bref/(2V)", expected_sign: negative, method_limitation: steady_rate_centered_difference}
-  - {name: Cn_p, category: lateral, required: true, coefficient: Cn, perturbation: p, unit: 1/p_hat, definition: "dCn/dp_hat; p_hat=p*bref/(2V)", method_limitation: steady_rate_centered_difference}
-  - {name: CY_r, category: lateral, required: true, coefficient: CY, perturbation: r, unit: 1/r_hat, definition: "dCY/dr_hat; r_hat=r*bref/(2V)", method_limitation: steady_rate_centered_difference}
-  - {name: Cl_r, category: lateral, required: true, coefficient: Cl, perturbation: r, unit: 1/r_hat, definition: "dCl/dr_hat; r_hat=r*bref/(2V)", method_limitation: steady_rate_centered_difference}
-  - {name: Cn_r, category: lateral, required: true, coefficient: Cn, perturbation: r, unit: 1/r_hat, definition: "dCn/dr_hat; r_hat=r*bref/(2V)", expected_sign: negative, method_limitation: steady_rate_centered_difference}
+  - {name: CY_beta, category: lateral, required: true, coefficient: CY, perturbation: beta, unit: 1/rad, method: centered_finite_difference, definition: "dCY/dbeta at trim"}
+  - {name: Cl_beta, category: lateral, required: true, coefficient: Cl, perturbation: beta, unit: 1/rad, method: centered_finite_difference, definition: "dCl/dbeta at trim"}
+  - {name: Cn_beta, category: lateral, required: true, coefficient: Cn, perturbation: beta, unit: 1/rad, method: centered_finite_difference, definition: "dCn/dbeta at trim", expected_sign: positive}
+  - {name: CY_p, category: lateral, required: true, coefficient: CY, perturbation: p, unit: 1/p_hat, method: vspaero_steady_rate_derivative, definition: "dCY/dp_hat; p_hat=p*bref/(2V)"}
+  - {name: Cl_p, category: lateral, required: true, coefficient: Cl, perturbation: p, unit: 1/p_hat, method: vspaero_steady_rate_derivative, definition: "dCl/dp_hat; p_hat=p*bref/(2V)", expected_sign: negative}
+  - {name: Cn_p, category: lateral, required: true, coefficient: Cn, perturbation: p, unit: 1/p_hat, method: vspaero_steady_rate_derivative, definition: "dCn/dp_hat; p_hat=p*bref/(2V)"}
+  - {name: CY_r, category: lateral, required: true, coefficient: CY, perturbation: r, unit: 1/r_hat, method: vspaero_steady_rate_derivative, definition: "dCY/dr_hat; r_hat=r*bref/(2V)"}
+  - {name: Cl_r, category: lateral, required: true, coefficient: Cl, perturbation: r, unit: 1/r_hat, method: vspaero_steady_rate_derivative, definition: "dCl/dr_hat; r_hat=r*bref/(2V)"}
+  - {name: Cn_r, category: lateral, required: true, coefficient: Cn, perturbation: r, unit: 1/r_hat, method: vspaero_steady_rate_derivative, definition: "dCn/dr_hat; r_hat=r*bref/(2V)", expected_sign: negative}
 
-  - {name: CL_delta_e, category: elevator, required: true, coefficient: CL, perturbation: elevator, unit: 1/rad, definition: "dCL/ddelta_e at trim"}
-  - {name: CD_delta_e, category: elevator, required: true, coefficient: CD, perturbation: elevator, unit: 1/rad, definition: "dCD/ddelta_e at trim"}
-  - {name: Cm_delta_e, category: elevator, required: true, coefficient: Cm, perturbation: elevator, unit: 1/rad, definition: "dCm/ddelta_e at trim"}
+  - {name: CL_delta_e, category: elevator, required: true, coefficient: CL, perturbation: elevator, unit: 1/rad, method: centered_finite_difference, definition: "dCL/ddelta_e at trim"}
+  - {name: CD_delta_e, category: elevator, required: true, coefficient: CD, perturbation: elevator, unit: 1/rad, method: centered_finite_difference, definition: "dCD/ddelta_e at trim"}
+  - {name: Cm_delta_e, category: elevator, required: true, coefficient: Cm, perturbation: elevator, unit: 1/rad, method: centered_finite_difference, definition: "dCm/ddelta_e at trim"}
 
-  - {name: CY_delta_a, category: aileron, required: true, coefficient: CY, perturbation: aileron, unit: 1/rad, definition: "dCY/ddelta_a at trim"}
-  - {name: Cl_delta_a, category: aileron, required: true, coefficient: Cl, perturbation: aileron, unit: 1/rad, definition: "dCl/ddelta_a at trim"}
-  - {name: Cn_delta_a, category: aileron, required: true, coefficient: Cn, perturbation: aileron, unit: 1/rad, definition: "dCn/ddelta_a at trim"}
+  - {name: CY_delta_a, category: aileron, required: true, coefficient: CY, perturbation: aileron, unit: 1/rad, method: centered_finite_difference, definition: "dCY/ddelta_a at trim"}
+  - {name: Cl_delta_a, category: aileron, required: true, coefficient: Cl, perturbation: aileron, unit: 1/rad, method: centered_finite_difference, definition: "dCl/ddelta_a at trim"}
+  - {name: Cn_delta_a, category: aileron, required: true, coefficient: Cn, perturbation: aileron, unit: 1/rad, method: centered_finite_difference, definition: "dCn/ddelta_a at trim"}
 
-  - {name: CY_delta_r, category: rudder, required: true, coefficient: CY, perturbation: rudder, unit: 1/rad, definition: "dCY/ddelta_r at trim"}
-  - {name: Cl_delta_r, category: rudder, required: true, coefficient: Cl, perturbation: rudder, unit: 1/rad, definition: "dCl/ddelta_r at trim"}
-  - {name: Cn_delta_r, category: rudder, required: true, coefficient: Cn, perturbation: rudder, unit: 1/rad, definition: "dCn/ddelta_r at trim"}
+  - {name: CY_delta_r, category: rudder, required: true, coefficient: CY, perturbation: rudder, unit: 1/rad, method: centered_finite_difference, definition: "dCY/ddelta_r at trim"}
+  - {name: Cl_delta_r, category: rudder, required: true, coefficient: Cl, perturbation: rudder, unit: 1/rad, method: centered_finite_difference, definition: "dCl/ddelta_r at trim"}
+  - {name: Cn_delta_r, category: rudder, required: true, coefficient: Cn, perturbation: rudder, unit: 1/rad, method: centered_finite_difference, definition: "dCn/ddelta_r at trim"}

@@ -1,2 +1,5 @@
-﻿alpha_deg,base_coefficient_status,beta_deg,fd_derivative_status,name,production_level_unchanged,production_wake,scope,speed_mps,status,wake16_status
-6.0,PASS,0.0,WARN,medium_alpha,True,12,targeted_affected_path_real_verification,9.0,WARN,WARN
+﻿alpha_deg,base_coefficient_status,beta_deg,derivative_wake_status,fd_derivative_status,name,native_derivative_diagnostic,reason,required_wake,solver_status,source,speed_mps,status,wake16_status,wake16_triggered
+0.0,PASS,0.0,PASS,PASS,linear_low_alpha,DIAGNOSTIC_ONLY,boundary continuity required upgrade from Wake 3 to Wake 12,12,PASS,solver_convergence+boundary_upgrade,8.0,PASS,NOT_NEEDED,False
+4.034006062668017,PASS,0.0,PASS,PASS,cruise_trim,DIAGNOSTIC_ONLY,boundary continuity required upgrade from Wake 3 to Wake 12,12,PASS,solver_convergence+boundary_upgrade,8.0,PASS,NOT_NEEDED,False
+6.0,PASS,0.0,PASS,PASS,medium_alpha,DIAGNOSTIC_ONLY,boundary continuity required upgrade from Wake 3 to Wake 12,12,PASS,solver_convergence+boundary_upgrade,9.0,PASS,NOT_NEEDED,False
+10.0,PASS,2.0,WARN,WARN,high_alpha_beta,DIAGNOSTIC_ONLY,Wake 12->16 remains outside PASS tolerance; production Wake remains 12 with a numerical warning,12,PASS,solver_convergence,9.0,WARN,FAIL,True

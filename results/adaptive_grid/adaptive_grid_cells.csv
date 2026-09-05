@@ -1,0 +1,2 @@
+﻿alpha_deg_max,alpha_deg_min,beta_deg_max,beta_deg_min,cell_id,depth,parent_cell_id,speed_mps_max,speed_mps_min,status,termination_reason
+0.0,0.0,0.0,0.0,cell_000001,0,,9.0,8.0,PASS,interpolation tolerance satisfied

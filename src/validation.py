@@ -111,6 +111,22 @@ def _sample_integrity(record: dict[str, Any]) -> tuple[str, str]:
     return "FAIL", f"unsupported derivative method: {method or 'missing'}"
 
 
+def _rate_integrity(record: dict[str, Any]) -> tuple[str, str]:
+    if record.get("method") != "vspaero_steady_rate_derivative":
+        return "FAIL", "rate derivative does not use the declared VSPAERO steady method"
+    try:
+        finite = math.isfinite(float(record["value"]))
+    except (KeyError, TypeError, ValueError):
+        finite = False
+    if not finite:
+        return "FAIL", "rate derivative value is missing or non-finite"
+    if not str(record.get("source_field", "")).startswith("VSPAERO_Stab."):
+        return "FAIL", "rate derivative has no traceable VSPAERO_Stab source field"
+    if str(record.get("units", "")) not in {"1/p_hat", "1/q_hat", "1/r_hat"}:
+        return "FAIL", "rate derivative denominator is not a supported normalized body rate"
+    return "PASS", "finite verified VSPAERO steady-stability normalized-rate derivative"
+
+
 def validate_trim_result(
     result: dict[str, Any], manifest: dict[str, Any], validation_config: dict[str, Any]
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -165,7 +181,7 @@ def validate_trim_result(
     ])
 
     derivative_package = result.get("derivatives", {})
-    records = derivative_package.get("production_fd_derivatives", {})
+    records = derivative_package.get("production_derivatives", {})
     manifest_output = derivative_package.get("required_derivatives_manifest", {})
     manifest_items = manifest_output.get("items", [])
     required_rows = list(manifest["_required"])
@@ -178,9 +194,9 @@ def validate_trim_result(
         if not isinstance(item, dict):
             item = {
                 "name": name, "required": True, "value": None, "source": "missing",
-                "method": "centered_finite_difference", "selected_fd_step": None,
+                "method": definition["method"], "selected_fd_step": None,
                 "units": definition["unit"], "coordinate_sign_convention": "missing",
-                "wake_level": None, "validation_status": "FAIL",
+                "wake_iterations": None, "validation_status": "FAIL",
                 "production_included": False, "gate_action": "REJECT",
                 "reason": "required manifest output item is missing",
             }
@@ -189,34 +205,29 @@ def validate_trim_result(
         record = records.get(name)
         status = str(item.get("validation_status", "FAIL")).upper()
         integrity_message = str(item.get("reason", ""))
-        if item.get("source") == "production_centered_fd":
-            if not isinstance(record, dict):
-                status = "FAIL"
-                integrity_message = "production centered-FD record is missing"
-            else:
-                value = record.get("derivative_value")
-                try:
-                    finite = math.isfinite(float(value))
-                except (TypeError, ValueError):
-                    finite = False
-                integrity_status, integrity_message = _sample_integrity(record)
-                raw_status = str(record.get("convergence_status", "FAIL")).upper()
-                status = combine_status([
-                    raw_status, integrity_status, "PASS" if finite else "FAIL"
-                ])
-                if status == "WARN":
-                    status = "WARN_NUMERICAL"
-                record["validation_status"] = status
-                item["validation_status"] = status
-                item["production_included"] = status != "FAIL"
-                item["gate_action"] = str(manifest["status_policy"][status]).upper()
-        elif status == "METHOD_LIMITATION":
-            integrity_message = str(item.get("reason", "declared method limitation"))
-        else:
+        if not isinstance(record, dict):
             status = "FAIL"
-            item["validation_status"] = status
+            integrity_message = "production derivative record is missing"
+            item["validation_status"] = "FAIL"
             item["production_included"] = False
             item["gate_action"] = "REJECT"
+        else:
+            method = str(record.get("method", ""))
+            integrity_status, integrity_message = (
+                _sample_integrity(record)
+                if method == "centered_finite_difference"
+                else _rate_integrity(record)
+                if method == "vspaero_steady_rate_derivative"
+                else ("FAIL", f"unsupported production method: {method or 'missing'}")
+            )
+            raw_status = str(record.get("validation_status", "FAIL")).upper()
+            status = combine_status([raw_status, integrity_status])
+            if status == "WARN":
+                status = "WARN_NUMERICAL"
+            record["validation_status"] = status
+            item["validation_status"] = status
+            item["production_included"] = status != "FAIL"
+            item["gate_action"] = str(manifest["status_policy"][status]).upper()
         rows.append(_row(
             speed=speed, level="NUMERICAL", check=name, status=status,
             value=item.get("value"), limit=item.get("gate_action"),
@@ -229,7 +240,7 @@ def validate_trim_result(
         "invalid": 0,
         "validation_failed": manifest_summary["FAIL"],
         "validation_warned": (
-            manifest_summary["WARN_NUMERICAL"] + manifest_summary["METHOD_LIMITATION"]
+            manifest_summary["WARN_NUMERICAL"]
         ),
         "status": manifest_summary["gate_status"],
     })
@@ -242,7 +253,7 @@ def validate_trim_result(
         limit="manifest status_policy",
         message=(
             f"PASS={manifest_summary['PASS']}, WARN_NUMERICAL={manifest_summary['WARN_NUMERICAL']}, "
-            f"METHOD_LIMITATION={manifest_summary['METHOD_LIMITATION']}, FAIL={manifest_summary['FAIL']}"
+            f"FAIL={manifest_summary['FAIL']}"
         ),
     ))
 
@@ -291,7 +302,11 @@ def _physics_checks(
         record = records.get(name)
         if not record:
             continue
-        value = float(record["derivative_value"])
+        try:
+            value = float(record["value"])
+        except (KeyError, TypeError, ValueError):
+            statuses.append("FAIL")
+            continue
         status = "PASS"
         message = "finite and below configured magnitude limit"
         if abs(value) > limit:
@@ -369,7 +384,7 @@ def summarize_dataset(trim_results: list[dict[str, Any]], manifest: dict[str, An
     failed = sum(int(item.get("required_derivatives", {}).get("validation_failed", 0)) for item in validations)
     status_counts = {
         status: sum(int(item.get("required_derivatives", {}).get(status, 0)) for item in validations)
-        for status in ("PASS", "WARN_NUMERICAL", "METHOD_LIMITATION", "FAIL")
+        for status in ("PASS", "WARN_NUMERICAL", "FAIL")
     }
     derivative_status = combine_status([
         str(item.get("derivative_status", "FAIL")) for item in validations

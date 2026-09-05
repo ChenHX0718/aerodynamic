@@ -45,23 +45,19 @@ def load_openvsp_config(root: Path | None = None) -> dict[str, Any]:
 def load_derivative_manifest(path: Path) -> dict[str, Any]:
     manifest = _read_yaml(path)
     policy = manifest.get("status_policy")
-    if not isinstance(policy, dict) or set(policy) != {
-        "PASS", "WARN_NUMERICAL", "METHOD_LIMITATION", "FAIL"
-    }:
+    if not isinstance(policy, dict) or set(policy) != {"PASS", "WARN_NUMERICAL", "FAIL"}:
         raise ConfigError(
-            "Derivative manifest status_policy must explicitly define PASS, "
-            "WARN_NUMERICAL, METHOD_LIMITATION, and FAIL"
+            "Derivative manifest status_policy must explicitly define PASS, WARN_NUMERICAL, and FAIL"
         )
     if any(str(policy[name]).upper() not in {"ACCEPT", "ACCEPT_WITH_WARNING", "REJECT"}
            for name in policy):
         raise ConfigError("Derivative manifest status_policy contains an invalid gate action")
-    limitations = manifest.get("method_limitations")
-    if not isinstance(limitations, dict):
-        raise ConfigError("Derivative manifest method_limitations must be a mapping")
     rows = manifest.get("derivatives")
     if not isinstance(rows, list) or not rows:
         raise ConfigError(f"Derivative manifest has no derivatives: {path}")
-    required_keys = {"name", "category", "required", "coefficient", "perturbation", "unit", "definition"}
+    required_keys = {
+        "name", "category", "required", "coefficient", "perturbation", "unit", "definition", "method",
+    }
     names: set[str] = set()
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
@@ -82,11 +78,14 @@ def load_derivative_manifest(path: Path) -> dict[str, Any]:
         expected_sign = row.get("expected_sign")
         if expected_sign not in {None, "positive", "negative"}:
             raise ConfigError(f"expected_sign for {name} must be positive or negative")
-        limitation = row.get("method_limitation")
-        if limitation is not None and str(limitation) not in limitations:
-            raise ConfigError(f"Unknown method limitation for {name}: {limitation}")
-        if str(row["perturbation"]) in {"p", "q", "r"} and limitation is None:
-            raise ConfigError(f"Rate derivative {name} must declare its method limitation")
+        method = str(row["method"])
+        expected_method = (
+            "vspaero_steady_rate_derivative"
+            if str(row["perturbation"]) in {"p", "q", "r"}
+            else "centered_finite_difference"
+        )
+        if method != expected_method:
+            raise ConfigError(f"{name} must use method={expected_method}, got {method}")
     manifest["_path"] = path.resolve()
     manifest["_by_name"] = {str(row["name"]): row for row in rows}
     manifest["_required"] = [row for row in rows if bool(row["required"])]
@@ -212,6 +211,22 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
     grid = _require_mapping(data, "grid")
     if str(grid.get("mode", "")).lower() not in {"uniform", "adaptive"}:
         raise ConfigError("grid.mode must be uniform or adaptive")
+    adaptive = _require_mapping(grid, "adaptive")
+    quantities = adaptive.get("quantities")
+    allowed_quantities = {"CL", "CD", "Cm", "CY", "Cl", "Cn"}
+    if not isinstance(quantities, list) or not quantities or not set(quantities) <= allowed_quantities:
+        raise ConfigError("grid.adaptive.quantities must be a non-empty subset of CL/CD/Cm/CY/Cl/Cn")
+    if len(set(str(item) for item in quantities)) != len(quantities):
+        raise ConfigError("grid.adaptive.quantities contains duplicates")
+    _validate_tolerance(adaptive.get("tolerance"), "grid.adaptive.tolerance")
+    if int(adaptive.get("max_depth", -1)) < 0:
+        raise ConfigError("grid.adaptive.max_depth cannot be negative")
+    if int(adaptive.get("max_cases", 0)) <= 0:
+        raise ConfigError("grid.adaptive.max_cases must be positive")
+    min_spacing = _require_mapping(adaptive, "min_spacing")
+    for name in ("speed_mps", "alpha_deg", "beta_deg"):
+        if _require_positive(min_spacing, name, "grid.adaptive.min_spacing") < 0.001:
+            raise ConfigError(f"grid.adaptive.min_spacing.{name} must be at least 0.001")
     _validate_numerical_convergence(data)
 
     model_value = aircraft.get("model")
@@ -260,6 +275,8 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
         raise ConfigError("solver.wake_iterations must be positive")
     if int(solver.get("ncpu", 0)) <= 0:
         raise ConfigError("solver.ncpu must be positive")
+    if not isinstance(solver.get("run_unsteady_diagnostics", False), bool):
+        raise ConfigError("solver.run_unsteady_diagnostics must be true or false")
 
     source = str(reference.get("source", "")).lower()
     if source not in {"model", "config"}:

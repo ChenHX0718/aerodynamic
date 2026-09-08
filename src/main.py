@@ -22,7 +22,13 @@ from case_generator import (
     grid_case_id,
 )
 from adaptive_grid import run_adaptive_grid, write_adaptive_report
-from config_loader import ConfigError, load_openvsp_config, load_project_config, locate_openvsp
+from config_loader import (
+    ConfigError,
+    load_openvsp_config,
+    load_project_config,
+    locate_openvsp,
+    resolve_analysis_selection,
+)
 from coordinate_system import (
     COORDINATE_CONVENTION,
     RATE_CASE,
@@ -45,6 +51,7 @@ from numerical_convergence import (
 )
 from openvsp_interface import GeometrySelection, OpenVSPError, OpenVSPModel, load_openvsp_api
 from regression import compare_regression
+from response_scan import ResponseCaseSpec, run_response_scan
 from trim_solver import solve_longitudinal_trim
 from validation import (
     ValidationError,
@@ -57,9 +64,13 @@ from validation import (
 from vspaero_runner import AeroRunResult, VSPAERORunner
 
 
-INTERNAL_SCHEMA_VERSION = "8.0.0"
-AUTOTUNE_SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "8.0"
+INTERNAL_SCHEMA_VERSION = "9.0.0"
+AUTOTUNE_SCHEMA_VERSION = "2.0"
+TOOL_VERSION = "9.0"
+# Base GRID/TRIM solver signatures stay at the last physically compatible
+# version. Response cases add their own versioned settings separately.
+SOLVER_CACHE_SCHEMA_VERSION = "8.0.0"
+SOLVER_CACHE_TOOL_VERSION = "8.0"
 COEFFICIENT_NAMES = ("CL", "CD", "Cm", "CY", "Cl", "Cn")
 
 
@@ -223,8 +234,8 @@ def _signature_context(
     # name here so equivalent configs in different directories share cache.
     derivative_signature["manifest"] = config["_paths"]["manifest"].name
     return {
-        "schema_version": INTERNAL_SCHEMA_VERSION,
-        "tool_version": TOOL_VERSION,
+        "schema_version": SOLVER_CACHE_SCHEMA_VERSION,
+        "tool_version": SOLVER_CACHE_TOOL_VERSION,
         "openvsp_version": openvsp_version,
         "model_sha256": model_sha256,
         "reference": reference,
@@ -313,6 +324,126 @@ def _grid_case(
     return result, False
 
 
+def _load_response_result(path: Path, signature: str) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    coefficients = data.get("coefficients", {})
+    if (
+        data.get("signature") != signature or data.get("status") != "PASS"
+        or set(COEFFICIENT_NAMES) - set(coefficients)
+    ):
+        return None
+    try:
+        finite = all(math.isfinite(float(coefficients[name])) for name in COEFFICIENT_NAMES)
+    except (TypeError, ValueError):
+        finite = False
+    return data if finite else None
+
+
+def _grid_response_signature(
+    *, signature_context: dict[str, Any], base: dict[str, Any],
+    spec: ResponseCaseSpec, condition: dict[str, Any], response_settings: dict[str, Any],
+    deflections: dict[str, float], wake_iterations: int,
+) -> str:
+    """Sign response-specific inputs without invalidating an unchanged base GRID case."""
+    return stable_signature({
+        **signature_context,
+        "mode": "GRID_RESPONSE",
+        "base_grid_signature": base.get("signature"),
+        "base_grid_case_id": spec.base_grid_case_id,
+        "condition": condition,
+        "response_scan": response_settings,
+        "variable": spec.variable,
+        "perturbation_value": spec.perturbation_value,
+        "perturbation_unit": spec.perturbation_unit,
+        "control_deflections_deg": deflections,
+        "wake_iterations": wake_iterations,
+        "coordinate_convention": COORDINATE_CONVENTION,
+    })
+
+
+def _run_grid_responses(
+    *, grid_results: list[dict[str, Any]], context: dict[str, Any],
+    config: dict[str, Any], results_root: Path,
+) -> dict[str, Any]:
+    response_root = results_root / "response_cases"
+
+    def evaluate(
+        spec: ResponseCaseSpec, base: dict[str, Any]
+    ) -> tuple[dict[str, Any], bool]:
+        condition = dict(base["inputs"])
+        wake_iterations = int(
+            base.get("numerical_settings", {}).get(
+                "wake_iterations", config["solver"]["wake_iterations"]
+            )
+        )
+        deflections = {
+            role: float(item.get("neutral_deg", 0.0))
+            for role, item in config["controls"].items()
+        }
+        deflections[spec.variable] = float(spec.perturbation_value)
+        signature = _grid_response_signature(
+            signature_context=context["signature_context"], base=base, spec=spec,
+            condition=condition, response_settings=config["response_scan"],
+            deflections=deflections, wake_iterations=wake_iterations,
+        )
+        case_dir = response_root / spec.case_id
+        result_path = case_dir / "result.json"
+        if config["_resume_enabled"]:
+            cached = _load_response_result(result_path, signature)
+            if cached is not None:
+                return cached, True
+        raw_dir = _reset_raw(case_dir)
+        try:
+            raw = context["runner"].run(
+                condition, raw_dir, "polar", stability=False, include_thick=True,
+                control_deflections_deg=deflections, wake_iterations=wake_iterations,
+            )
+            mapped = map_polar_coefficients(raw.raw_data)
+            coefficients = {
+                name: float(mapped[name]["standard_value"]) for name in COEFFICIENT_NAMES
+            }
+            result = {
+                "schema_version": INTERNAL_SCHEMA_VERSION,
+                "signature": signature,
+                "status": "PASS",
+                **spec.as_dict(),
+                "condition": condition,
+                "control_deflections_deg": deflections,
+                "coefficients": coefficients,
+                "wake_iterations": wake_iterations,
+                "solver_status": "SUCCESS",
+                "solver_duration_sec": raw.duration_sec,
+                "raw_directory": str(raw.case_dir),
+            }
+        except Exception as exc:
+            result = {
+                "schema_version": INTERNAL_SCHEMA_VERSION,
+                "signature": signature,
+                "status": "FAIL",
+                **spec.as_dict(),
+                "condition": condition,
+                "control_deflections_deg": deflections,
+                "coefficients": {},
+                "wake_iterations": wake_iterations,
+                "solver_status": "FAIL",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+        _write_json(result_path, result)
+        return result, False
+
+    return run_response_scan(
+        grid_results=grid_results,
+        settings=config["response_scan"],
+        controls=config["controls"],
+        evaluator=evaluate,
+    )
+
+
 def _trim_case(
     spec: CaseSpec, *, runner: VSPAERORunner, config: dict[str, Any],
     reference: dict[str, float], cases_root: Path,
@@ -320,6 +451,9 @@ def _trim_case(
     production_settings: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], bool]:
     trim_config = config["trim"]
+    # The removed trim.enabled field never affected the physical TRIM request.
+    # Keep its historical constant only inside the opaque solver cache payload.
+    trim_cache_identity = {"enabled": True, **trim_config}
     fallback_wake = int(config["solver"]["wake_iterations"])
     if production_settings is None:
         schedule = None
@@ -331,7 +465,7 @@ def _trim_case(
         max_upgrades = int(production_settings["trim"]["max_wake_upgrades"])
     signature = stable_signature({
         **signature_context, "mode": spec.mode,
-        "speed_mps": spec.speed_mps, "beta_deg": spec.beta_deg, "trim": trim_config,
+        "speed_mps": spec.speed_mps, "beta_deg": spec.beta_deg, "trim": trim_cache_identity,
         "production_numerical_settings": production_settings,
     })
     case_dir = cases_root / spec.case_id
@@ -678,6 +812,9 @@ def _summary_text(summary: dict[str, Any], output_dir: Path) -> str:
         f"({summary['grid']['completed']}/{summary['grid']['requested']})",
         f"TRIM                     : {summary['trim']['status']} "
         f"({summary['trim']['completed']}/{summary['trim']['requested']})",
+        f"GRID responses           : {summary['response']['status']} "
+        f"({summary['response']['control_samples']} control samples; "
+        f"{summary['response']['rate_fields']} rate fields)",
         f"Required derivatives     : {derivative['required_derivatives']}",
         f"Required instances       : {derivative['required_instances']}",
         f"Calculated               : {derivative['calculated']}",
@@ -693,6 +830,8 @@ def _summary_text(summary: dict[str, Any], output_dir: Path) -> str:
         f"Solver / GRID Gate       : {summary['solver_gate_status']}",
         f"Derivative Gate          : {summary['derivative_gate_status']}",
         f"Production Gate          : {summary['production_gate_status']}",
+        f"Simulink delivery        : {summary['simulink_delivery_status']} "
+        f"({summary['simulink_delivery_model']})",
         f"DATASET                   : {summary['final_status']}",
         "",
         f"Output                   : {output_dir}",
@@ -783,6 +922,10 @@ def run_workflow(
     if command == "regression" and config_path is None:
         config_path = Path(__file__).resolve().parents[1] / "tests" / "regression" / "regression.yaml"
     config = load_project_config(config_path)
+    grid_requested, trim_requested = (
+        resolve_analysis_selection(command, config["analysis"])
+        if command in {"all", "grid", "trim"} else (False, False)
+    )
     context = _startup(config)
     _print_startup(context, config)
     if command == "check":
@@ -809,15 +952,11 @@ def run_workflow(
     solver_gate_status = "NOT_REQUESTED"
     derivative_gate_status = "NOT_REQUESTED"
     gate_config = config["numerical_convergence"]["production_gate"]
-    if (
-        command in {"all", "grid"}
-        and grid_mode == "adaptive"
-        and not bool(gate_config["enabled"])
-    ):
+    if grid_requested and grid_mode == "adaptive" and not bool(gate_config["enabled"]):
         raise RuntimeError(
             "Adaptive GRID requires an enabled Solver / GRID Gate and cannot be forced."
         )
-    if command in {"all", "grid", "trim"} and bool(gate_config["enabled"]):
+    if (grid_requested or trim_requested) and bool(gate_config["enabled"]):
         production_settings = load_production_settings(config["_paths"]["production_settings"])
         adaptive = grid_mode == "adaptive"
         expected_identity = convergence_identity(config, context["version"])
@@ -829,21 +968,30 @@ def run_workflow(
             production_settings, force=False, adaptive=True,
             expected_identity=expected_identity,
         )
-        gate_status = str(delivery_gate["status"])
+        gate_status = str(delivery_gate["status"]) if trim_requested else "NOT_REQUESTED"
         solver_gate_status = str(adaptive_gate["status"])
-        derivative_gate_status = str(
-            (production_settings or {}).get("derivative_gate", {}).get("status", "FAIL")
+        derivative_gate_status = (
+            str((production_settings or {}).get("derivative_gate", {}).get("status", "FAIL"))
+            if trim_requested else "NOT_REQUESTED"
         )
         required_gates = []
-        if command in {"all", "grid"} and adaptive:
-            required_gates.append(adaptive_gate)
-        if command in {"all", "trim"} or (command == "grid" and not adaptive):
+        if grid_requested:
+            if adaptive:
+                required_gates.append(adaptive_gate)
+            else:
+                solver_delivery_gate = {
+                    **adaptive_gate,
+                    "allowed": solver_gate_status in {"PASS", "WARN", "WARN_NUMERICAL"} or force,
+                    "forced": bool(force and solver_gate_status == "FAIL"),
+                }
+                required_gates.append(solver_delivery_gate)
+        if trim_requested:
             required_gates.append(delivery_gate)
         denied = next((item for item in required_gates if not item["allowed"]), None)
         if denied is not None:
             suffix = (
                 "Run 'python run.py numerical-convergence' first. Adaptive GRID cannot be forced."
-                if denied["gate"] == "solver_gate"
+                if denied["gate"] == "solver_gate" and adaptive
                 else "Run 'python run.py numerical-convergence' first, or use --force with an explicit audit record."
             )
             raise RuntimeError(
@@ -853,15 +1001,15 @@ def run_workflow(
             f"Gates: solver={solver_gate_status}, derivative={derivative_gate_status}, "
             f"production={gate_status}"
         )
-        if delivery_gate["forced"]:
+        forced_gate = next((item for item in required_gates if item.get("forced")), None)
+        if forced_gate is not None:
             _write_json(results_root / "numerical_convergence" / "production_force_override.json", {
-                "timestamp": _now(), "command": command, "gate": delivery_gate,
+                "timestamp": _now(), "command": command, "gate": forced_gate,
                 "config_file": config["_paths"]["config_file"],
             })
     cases_root = results_root / "cases"
-    grid_requested = command in {"all", "grid"}
     grid_specs = generate_grid_cases(config) if grid_requested and grid_mode == "uniform" else []
-    trim_specs = generate_trim_cases(config) if command in {"all", "trim"} else []
+    trim_specs = generate_trim_cases(config) if trim_requested else []
     grid_results: list[dict[str, Any]] = []
     adaptive_report: dict[str, Any] | None = None
     trim_results: list[dict[str, Any]] = []
@@ -916,6 +1064,39 @@ def run_workflow(
             grid_skipped += int(skipped)
             print(f"GRID {index}/{len(grid_specs)} V={spec.speed_mps:g}: {'CACHED' if skipped else result['status']}")
 
+    response_data: dict[str, Any] = {
+        "enabled": False,
+        "scope": str(config["response_scan"]["scope"]),
+        "selected_base_case_ids": [],
+        "controls": {},
+        "rates": {},
+        "linearity": [],
+        "gate": {"status": "NOT_REQUESTED", "reason": "response_scan is disabled or GRID was not requested"},
+        "cache": {"baseline_reuses": 0, "persistent_cache_hits": 0, "new_solver_runs": 0},
+        "assumptions": {
+            "additive_response_assumption": True,
+            "baseline_requires_trim": False,
+            "rate_representation": "local_linear_derivative",
+            "arbitrary_independent_rate_sweep_supported": False,
+            "rate_capability_reason": (
+                "OpenVSP 3.51.3 VSPAEROSweep exposes UnsteadyType but no independent "
+                "P/Q/R value inputs; verified steady .stab derivatives are used"
+            ),
+            "ignored_cross_terms": [
+                "q_hat*elevator", "p_hat*aileron", "elevator*aileron", "q_hat*r_hat",
+            ],
+        },
+    }
+    if grid_requested and bool(config["response_scan"]["enabled"]):
+        response_data = _run_grid_responses(
+            grid_results=grid_results, context=context, config=config, results_root=results_root,
+        )
+        print(
+            f"GRID response scan: {response_data['gate']['status']} "
+            f"({sum(len(rows) for rows in response_data['controls'].values())} control samples, "
+            f"{len(response_data['selected_base_case_ids'])} base points)"
+        )
+
     for index, spec in enumerate(trim_specs, 1):
         result, skipped = _trim_case(
             spec, runner=context["runner"], config=config, reference=context["reference"],
@@ -961,14 +1142,25 @@ def run_workflow(
         adaptive_report["status"] if adaptive_report is not None else "PASS",
     ])
     trim_status = trim_dataset["overall_status"] if trim_results else "NOT_REQUESTED"
+    response_status = str(response_data["gate"]["status"])
     final_parts = [fuselage_validation["status"], "PASS" if portability["portable"] else "FAIL"]
     if grid_requested:
         final_parts.append(grid_status)
+        if bool(config["response_scan"]["enabled"]):
+            final_parts.append(response_status)
     if trim_results:
         final_parts.append(trim_status)
     if gate_status != "NOT_REQUESTED":
         final_parts.append(gate_status)
     final_status = combine_status(final_parts)
+    grid_simulink_ready = bool(
+        grid_requested
+        and grid_status != "FAIL"
+        and response_data.get("enabled")
+        and response_status == "PASS"
+    )
+    trim_simulink_ready = bool(trim_results and trim_status != "FAIL")
+    simulink_delivery_status = "PASS" if grid_simulink_ready or trim_simulink_ready else "FAIL"
     validation_rows = [row for item in trim_results for row in item.get("validation_rows", [])]
     validation_rows.append({
         "speed_mps": "", "level": "DATASET", "check": "fuselage participation",
@@ -987,6 +1179,7 @@ def run_workflow(
         ("solver / GRID numerical gate", solver_gate_status, "identity, Wake schedule/convergence and boundary continuity"),
         ("derivative gate", derivative_gate_status, "FD convergence and 23-source completeness/validity"),
         ("production gate", gate_status, "combination of solver and derivative gates"),
+        ("GRID response gate", response_status, "control response completeness and local steady-rate fields"),
     ):
         if status != "NOT_REQUESTED":
             validation_rows.append({
@@ -1019,6 +1212,15 @@ def run_workflow(
             "failed": len(trim_failed), "skipped": trim_skipped,
             "status": trim_status,
         },
+        "response": {
+            "enabled": bool(response_data.get("enabled")),
+            "scope": response_data.get("scope"),
+            "base_points": len(response_data.get("selected_base_case_ids", [])),
+            "control_samples": sum(len(rows) for rows in response_data.get("controls", {}).values()),
+            "rate_fields": sum(len(rows) for rows in response_data.get("rates", {}).values()),
+            "status": response_status,
+            "cache": response_data.get("cache", {}),
+        },
         "derivatives": trim_dataset,
         "fuselage_effect_status": fuselage_validation["status"],
         "fuselage_validation_skipped": fuselage_skipped,
@@ -1026,8 +1228,14 @@ def run_workflow(
         "solver_gate_status": solver_gate_status,
         "derivative_gate_status": derivative_gate_status,
         "production_gate_status": gate_status,
+        "simulink_delivery_status": simulink_delivery_status,
+        "simulink_delivery_model": (
+            "GRID_PLUS_RESPONSE" if grid_simulink_ready else "TRIM_DERIVATIVES" if trim_simulink_ready else "NONE"
+        ),
         "final_status": final_status,
         "limitations": [
+            "Control and rate contributions currently use an additive response assumption; configured higher-order cross terms are not modeled.",
+            "OpenVSP 3.51.3 exposes no independent arbitrary P/Q/R value inputs in VSPAEROSweep, so GRID rate data remain local steady .stab derivatives rather than fabricated response curves.",
             "Q and R unsteady damping analyses report combined q+alpha_dot and r-beta_dot terms; they are exported as diagnostics and are not decomposed or substituted for classical rate derivatives.",
         ],
     }
@@ -1045,6 +1253,12 @@ def run_workflow(
         "solver": "VSPAERO mixed ThinGeomSet + GeomSet",
         "coordinate_system": COORDINATE_CONVENTION,
         "production_numerical_settings": production_settings,
+        "analysis_selection": {
+            "grid_enabled": grid_requested,
+            "trim_enabled": trim_requested,
+            "source": "analysis switches for all; explicit subcommand for grid/trim",
+        },
+        "additive_response_assumption": True,
     }
     geometry_data = {
         "thin_set_index": context["geometry"].thin_set_index,
@@ -1063,6 +1277,7 @@ def run_workflow(
         manifest=_json_safe(config["_manifest"]),
         grid_results=grid_results,
         trim_results=trim_results,
+        responses=response_data,
         validation={
             "rows": validation_rows, "fuselage_effect": fuselage_validation,
             "portability": portability, "dataset_status": final_status,

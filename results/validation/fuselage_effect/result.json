@@ -1,5 +1,5 @@
 {
-  "signature": "dd6923e8c83489d9680fef8b9ac528b6d5a90013a184a54c39580da1f84f01b6",
+  "signature": "663a08aaea5ba222fc725dd07c36171b6b49bdf235a8e04ee59dc9a8c00c5fc5",
   "status": "PASS",
   "case_id": "CASE_V000008000_AP000000000_BP000000000",
   "condition": {
@@ -39,5 +39,5 @@
   },
   "minimum_absolute_change": 1e-08,
   "max_absolute_change": 0.041563379489999996,
-  "solver_duration_sec": 32.80336120002903
+  "solver_duration_sec": 32.569044799998665
 }

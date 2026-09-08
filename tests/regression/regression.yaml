@@ -3,7 +3,8 @@ aircraft:
   model: "../../aircraft/test_aircraft.vsp3"
 
 analysis:
-  modes: [GRID_DATABASE, TRIM_DATABASE]
+  grid_enabled: true
+  trim_enabled: true
 
 operating_conditions:
   speed: {start: 8, step: 1, end: 9, unit: m/s}
@@ -23,6 +24,23 @@ grid:
     max_depth: 3
     max_cases: 100
     min_spacing: {speed_mps: 0.25, alpha_deg: 0.25, beta_deg: 0.25}
+
+response_scan:
+  enabled: false
+  scope: audit
+  variables: [p, q, r, elevator, aileron, rudder]
+  representative_states: []
+  control_levels_deg:
+    elevator: [-5, 0, 5]
+    aileron: [-5, 0, 5]
+    rudder: [-5, 0, 5]
+  rates: {representation: local_linear_derivative, source: vspaero_steady_stab}
+  linearity:
+    minimum_samples: 3
+    minimum_response_range: 1.0e-5
+    slope_floor: 1.0e-6
+    linear: {normalized_max_deviation: 0.05, slope_variation: 0.15, r_squared_min: 0.995, asymmetry: 0.10}
+    weakly_nonlinear: {normalized_max_deviation: 0.15, slope_variation: 0.40, r_squared_min: 0.98, asymmetry: 0.30}
 
 atmosphere:
   rho_kg_m3: 1.225
@@ -80,7 +98,6 @@ controls:
   rudder: {group: Rudder, neutral_deg: 0, min_deg: -20, max_deg: 20}
 
 trim:
-  enabled: true
   mass_kg: 25.0
   gravity_m_s2: 9.80665
   operating_conditions:

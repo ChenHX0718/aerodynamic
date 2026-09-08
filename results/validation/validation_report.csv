@@ -1,49 +1,5 @@
 ﻿check,level,limit,message,speed_mps,status,value
-VSPAERO completion,SOLVER,,all requested solver runs completed,8.0,PASS,
-converged,TRIM,,Lift=Weight and Cm=0 residuals converged,8.0,PASS,
-lift residual,TRIM,1.0,absolute force residual in N,8.0,PASS,-0.2665549599999508
-pitch moment residual,TRIM,1.0,absolute pitch moment residual in N*m,8.0,PASS,0.07376211981600002
-alpha range,TRIM,-5..12 deg,trim alpha is inside the configured search range,8.0,PASS,4.034006062668017
-elevator range,TRIM,-20..20 deg,trim elevator is inside the configured search range,8.0,PASS,-4.814922003617181
-CL_alpha,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,4.700659873273386
-CD_alpha,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.2781414852500147
-Cm_alpha,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-1.127856599235177
-CL_q,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,9.0139018
-Cm_q,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,-13.3702268
-CY_beta,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-0.35413987446421835
-Cl_beta,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-0.10130866115832135
-Cn_beta,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.042410919839576774
-CY_p,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,-0.0568985
-Cl_p,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,-0.4776185
-Cn_p,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,-0.0524077
-CY_r,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,0.2543309
-Cl_r,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,0.0850254
-Cn_r,NUMERICAL,ACCEPT,vspaero_steady_rate_derivative: finite verified VSPAERO steady-stability normalized-rate derivative,8.0,PASS,-0.0864278
-CL_delta_e,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.5034238318048049
-CD_delta_e,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.006552756642869337
-Cm_delta_e,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-1.4253102344772264
-CY_delta_a,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-0.014428149887034501
-Cl_delta_a,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-0.27947494828992003
-Cn_delta_a,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.008614385356126974
-CY_delta_r,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,-0.1579169507902658
-Cl_delta_r,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.004288225411593753
-Cn_delta_r,NUMERICAL,ACCEPT,centered_finite_difference: all candidate steps contain real plus/minus samples and the selected pair exists,8.0,PASS,0.06741717888790778
-required derivative set,DERIVATIVE,manifest status_policy,"PASS=23, WARN_NUMERICAL=0, FAIL=0",8.0,PASS,23/23
-CL_alpha,PHYSICS,expected positive,finite and below configured magnitude limit,8.0,PASS,4.700659873273386
-Cm_alpha,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-1.127856599235177
-Cm_q,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-13.3702268
-Cn_beta,PHYSICS,expected positive,finite and below configured magnitude limit,8.0,PASS,0.042410919839576774
-Cl_p,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-0.4776185
-Cn_r,PHYSICS,expected negative,finite and below configured magnitude limit,8.0,PASS,-0.0864278
-beta=0 symmetry CY,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,0.0002839
-beta=0 symmetry Cl,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,0.0006409
-beta=0 symmetry Cn,PHYSICS,WARN>0.02; FAIL>0.05,absolute trim coefficient for a nominally symmetric airplane,8.0,PASS,0.0004224
-beta centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,0.0036659954429999995
-aileron centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,0.0037131303134999996
-rudder centered-pair symmetry,PHYSICS,WARN>0.02; FAIL>0.05,maximum CY/Cl/Cn midpoint bias of the nominal plus/minus pair,8.0,PASS,0.0036633638379999995
-trim flight point overall,DATASET,,"worst status across solver, trim, numerical, derivative, and physics validation",8.0,PASS,
 fuselage participation,DATASET,1e-08,thin+thick differs from thin-only,,PASS,0.041563379489999996
 portable paths,DATASET,0,no scattered absolute paths outside config/openvsp.yaml,,PASS,0
 solver / GRID numerical gate,DATASET,PASS/WARN,"identity, Wake schedule/convergence and boundary continuity",,PASS,PASS
-derivative gate,DATASET,PASS/WARN,FD convergence and 23-source completeness/validity,,WARN,WARN
-production gate,DATASET,PASS/WARN,combination of solver and derivative gates,,WARN,WARN
+GRID response gate,DATASET,PASS/WARN,control response completeness and local steady-rate fields,,PASS,PASS

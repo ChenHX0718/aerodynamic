@@ -1,0 +1,38 @@
+{
+  "schema_version": "9.0.0",
+  "signature": "62466dc0da9ef8b67e98d1abea6cb3ddb36e87adf8641d8beb286bafc8fb638a",
+  "status": "PASS",
+  "case_id": "RESP_CASE_V000008000_AP000000000_BP000000000_RUDDER_M000005000",
+  "base_grid_case_id": "CASE_V000008000_AP000000000_BP000000000",
+  "variable": "rudder",
+  "perturbation_value": -5.0,
+  "perturbation_unit": "deg",
+  "condition": {
+    "speed_mps": 8.0,
+    "alpha_deg": 0.0,
+    "beta_deg": 0.0,
+    "rho_kg_m3": 1.225,
+    "dynamic_viscosity_pa_s": 1.7894e-05,
+    "speed_of_sound_mps": 340.294,
+    "mach": 0.023509083322068566,
+    "reynolds_cref": 816027.7187884208,
+    "dynamic_pressure_pa": 39.2
+  },
+  "control_deflections_deg": {
+    "aileron": 0.0,
+    "elevator": 0.0,
+    "rudder": -5.0
+  },
+  "coefficients": {
+    "CL": 0.116072808857,
+    "CD": 0.016762356414,
+    "Cm": -0.041660955996,
+    "CY": 0.019164362324,
+    "Cl": -0.000730227621,
+    "Cn": -0.006896727017
+  },
+  "wake_iterations": 12,
+  "solver_status": "SUCCESS",
+  "solver_duration_sec": 104.17192470000009,
+  "raw_directory": "E:\\aerodynamic\\results\\response_cases\\RESP_CASE_V000008000_AP000000000_BP000000000_RUDDER_M000005000\\raw\\polar"
+}

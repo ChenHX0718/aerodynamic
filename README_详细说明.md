@@ -1,200 +1,158 @@
 # OpenVSP/VSPAERO 气动数据库工作流：详细说明
 
-## 1. 目标与责任边界
+## 1. 目标数据模型
 
-项目从 OpenVSP `.vsp3` 生成 uniform/adaptive GRID、纵向 TRIM、23 项 production 气动导数，并导出 JSON、CSV 和 MATLAB `.mat`。工作流验证 VSPAERO 完整性、Wake、FD 步长、TRIM、导数来源和数据结构；Tessellation/mesh 由用户负责，脚本不修改也不认证网格独立性。
-
-完整数据流为：
+本工程面向 ArduPilot SITL -> 飞控/PID/AutoTune -> 舵机 -> Simulink 非线性 6DOF 闭环。当前气动模型为：
 
 ```text
-模型与配置 identity
-  -> 几何集、参考量、舵面和当前网格可求解性
-  -> 基础系数 Wake 3/5/8/12（必要时 Wake16 verification）
-  -> alpha/beta/control 的真实 centered FD 与逐项步长选择
-  -> steady .stab 的经典 p/q/r rate derivatives
-  -> Solver Gate + Derivative Gate -> Production Gate
-  -> uniform/adaptive GRID + 两阶段 TRIM
-  -> validation -> JSON/CSV/MAT
+C(V,alpha,beta,p,q,r,delta_a,delta_e,delta_r)
+  ~= C0(V,alpha,beta)
+   + delta_Cp + delta_Cq + delta_Cr
+   + delta_Caileron + delta_Celevator + delta_Crudder
 ```
 
-## 2. 23 项 production derivative
+`C` 表示 `CL, CD, CY, Cl, Cm, Cn`。`additive_response_assumption = true` 在 JSON 和 MAT metadata 中明示保存。当前忽略 `q*elevator`、`p*aileron`、`elevator*aileron`、`q*r` 等交叉项；不建立九维完整笛卡尔网格。以后只为有证据的强耦合添加二维修正。
 
-`config/required_derivatives.yaml` 是唯一清单。最终权威集合是：
+## 2. GRID 与 TRIM 的物理关系
+
+GRID 是飞行包线中的一般气动状态。基准设定为 `p=q=r=0`，三舵面均在 neutral。它不需要满足力和力矩平衡，所以 `Cm != 0`、`Cl != 0`、`Cn != 0` 都合法。局部气动导数和局部响应的定义也不要求 baseline 是 TRIM 点。
+
+TRIM 是满足指定平衡条件的特殊 operating-point 子集。纵向平飞 TRIM 求解：
 
 ```text
-derivatives.production_derivatives
+qbar*Sref*CL - mass*g = 0
+qbar*Sref*cref*Cm = 0
 ```
 
-`production_derivatives` 是唯一正式 production 集合：其中 15 项的 `method` 为
-`centered_finite_difference`，8 项为 `vspaero_steady_rate_derivative`。FD 步长、
-rate 来源与原始字段均保存在各自记录内，不再输出第二套重复 production 集合。
+它使用有界 Newton、真实 alpha/elevator centered-difference Jacobian、回溯和 Wake upgrade。TRIM 仍用于初始状态、模型健康检查、局部线性化和 AutoTune 辅助分析，但不是 GRID 的前置。
 
-每条记录至少包含 `name, value, units, method, source, source_field, wake_iterations, validation_status, coordinate_sign_convention, production_included`。JSON、CSV、MAT、validation 和 regression 均以该集合为正式来源。
+## 3. 唯一模式选择逻辑
 
-### 2.1 steady p/q/r 的真实语义
-
-OpenVSP 3.51.3 的 `VSPAEROSweep` 实际输入使用 `UnsteadyType`。枚举为 steady default 与 P/Q/R analysis；steady 会生成 `.stab`。VSPAERO 3.51.3 求解器实现对 rate perturbation 使用：
-
-```text
-dC/dp_hat: ΔC / [Δp * bref/(2Vinf)]
-dC/dq_hat: ΔC / [Δq * cref/(2Vinf)]
-dC/dr_hat: ΔC / [Δr * bref/(2Vinf)]
+```yaml
+analysis:
+  grid_enabled: true
+  trim_enabled: false
 ```
 
-所以 steady `.stab` 的 `CL_q, CMm_q, CFy_p, CMl_p, CMn_p, CFy_r, CMl_r, CMn_r` 是本项目需要的经典无量纲速率导数。它们的方法标为 `vspaero_steady_rate_derivative`，而非 centered FD，但方法差异本身不构成警告。
+`analysis.modes` 和 `trim.enabled` 不再是可用配置，避免真值来源冲突。`all` 严格按上述开关；`grid` 和 `trim` 显式只运行对应模块。`all` 且两开关都关闭时，在启动求解器前报错。
 
-### 2.2 steady 与 P/Q/R unsteady 的区别
+## 4. 基础 GRID：uniform 与 adaptive
 
-`STABILITY_DEFAULT` 用小稳态扰动形成包括 wrt p/q/r 的稳定性表。`STABILITY_P/Q/R_ANALYSIS` 则运行时间相关 damping analysis，生成 `.pstab/.qstab/.rstab`。后者可包含：
+Uniform GRID 计算 `operating_conditions` 的规则 `(V,alpha,beta)` 笛卡尔积。Adaptive GRID 从同一 seed axes 开始，用 corner 插值的中心预测与真实 VSPAERO 中点对比；非线性超限时按归一化跨度只分裂一个轴。
 
-- P：p damping 诊断；
-- Q：`q + alpha_dot` 组合量；
-- R：`r - beta_dot` 组合量。
+Adaptive 最终数据是不规则点集，`grid_source` 为 `seed` 或 `adaptive_midpoint`。Response `full_grid` 直接覆盖这些实际点，不补成规则矩阵。
 
-组合量不是独立的 `q` 或 `r` 偏导；除非求解器同时给出足够的独立方程并经过验证，否则不能拆分。因此 `q+alpha_dot`、`r-beta_dot` 只保存在 `unsteady_derivative_diagnostics`，永不写入 required `CL_q/Cm_q/CY_r/Cl_r/Cn_r`。
+## 5. 控制面非线性响应
 
-OpenVSP 3.51.3 在 P/Q/R 分支内部把 `NumberOfTimeSteps` 设为 128，外部 sweep 的较小 `NumTimeSteps` 不会缩短它。生产 8 项无需运行这些昂贵诊断，默认 `solver.run_unsteady_diagnostics: false`；显式开启后脚本会自动运行和解析，用户无需手工操作。
+`response_scan.control_levels_deg` 是各控制面的绝对 DeflectionAngle，正向表示增加 OpenVSP Control Surface Group 设置；真实后缘方向由 `.vsp3` 的 gain 和铰链定义。
 
-### 2.3 单位与坐标符号
+对每个选定 baseline，其他舵面固定 neutral，只改变一个舵面并运行真实 VSPAERO polar。每个 sample 保存六系数绝对值以及相对中立 baseline 的 `delta_CL ... delta_Cn`。中立点复用基础 GRID steady baseline，不重复求解。即使线性审计推荐 derivative，原始 response samples 也不删除。
 
-项目标准体轴为 `+X forward, +Y right, +Z down`，右手系；OpenVSP 几何/分量字段为 `+X aft, +Y right, +Z up`。唯一映射位于 `src/coordinate_system.py`：
+## 6. 线性 / 非线性审计
+
+对每个 base point、control variable 和 coefficient 组合计算：
+
+- neutral 两侧最近样本的 centered slope（每 rad）；
+- 全范围最小二乘一阶拟合 slope/intercept；
+- 最大绝对残差与 normalized maximum deviation；
+- 相邻区间 slope variation；
+- `R²`；
+- 正负等幅 sample 相对 baseline 的不对称度。
+
+阈值全部位于 `response_scan.linearity`。分类为 `LINEAR`、`WEAKLY_NONLINEAR`、`NONLINEAR`或 `INSUFFICIENT_DATA`。只有 `LINEAR` 推荐 `derivative`，其他推荐 `response_table`。分类仅是建议，不自动改 production schema。
+
+## 7. p/q/r 的实现和限制
+
+OpenVSP 3.51.3 steady `VSPAERO_Stab` 已验证提供经典无量纲 rate derivatives：
 
 ```text
-CX = -CFx
-CY =  CFy
-CZ = -CFz
-Cl = -CMx = CMl
-Cm =  CMy = CMm
-Cn = -CMz = CMn
+p_hat = p*bref/(2V)
+q_hat = q*cref/(2V)
+r_hat = r*bref/(2V)
 ```
 
-因此 production rate 使用 OpenVSP 已写出的标准 `CFy/CL/CMl/CMm/CMn` stability 字段，不再二次翻转。单位分别为 `1/p_hat`、`1/q_hat`、`1/r_hat`，并把原字段名保存在 `source_field`。
+每个基础 GRID case 已运行 steady stability，response 层直接将六系数 `C_p/C_q/C_r` 整理为随 `(V,alpha,beta)` 变化的局部导数场，`representation = local_linear_derivative`，不增加 rate solver cases。
 
-## 3. Centered FD 与 TRIM
+P/Q/R damping analysis 是不同的时间相关诊断；Q/R 可输出 `q+alpha_dot`和 `r-beta_dot`，不能拆成独立 q/alpha_dot 或 r/beta_dot。当前 runner 没有已验证的任意独立 body-rate 输入，因此绝不生成伪 rate curves。
 
-alpha、beta、elevator、aileron、rudder 使用相同的公共扰动与 degree-to-radian 实现。每个变量按配置计算多个真实正负 case；同一变量的 solver pair 可被多个系数复用，但每个导数独立选择稳定步长。没有 PASS 稳定区但在 WARN 门限内时为 `WARN_NUMERICAL`；缺失、非有限或超过 WARN 为 `FAIL`。
+## 8. scope: audit / full_grid
 
-TRIM 求解：
+`audit` 使用少量代表 GRID 点。用户可配置 `representative_states`；留空则从成功 GRID 点确定性选低 V/低 alpha、中 V/中 alpha、高 V/中 alpha、高 alpha 和最大 `|beta|` 附近点，并去重。所有点均不依赖 TRIM。
+
+`full_grid` 使用当次全部成功基础 GRID 点。求解量约为 `base_points * sum(non-neutral control levels)`，应先 audit 再升级。
+
+## 9. Gate 职责
+
+1. Solver / GRID Gate：基础六系数 Wake 收敛、离散 Wake schedule 和 boundary continuity。Uniform 接受 PASS/WARN；Adaptive 必须 PASS。
+2. Response Gate：控制面 samples 数量/求解完整性，以及 p/q/r 六系数 steady rate fields 完整性。响应非线性本身不是失败。
+3. Derivative Gate：Wake/FD step 稳定性、23 项 source/method/unit/finite 完整性，继续为 TRIM 局部导数包服务。
+4. TRIM validation：仅当 TRIM 运行时检查收敛、残差、边界、Jacobian/derivatives 和物理合理性。
+5. Simulink delivery：GRID+response 模型不因 TRIM 未运行而失败；选择 TRIM 交付时，完整 TRIM derivative package 仍必须通过。
+
+Gate 门限未因 GRID-only 而放宽，也没有关闭旧检查。
+
+## 10. 缓存与 resume
+
+基础 GRID 仍用现有 case cache。Response signature 包含 model hash/OpenVSP 版本、base GRID signature、`(V,alpha,beta)`、response enabled/scope/variables/全部 levels、variable/value/unit、neutral/实际三舵偏、Wake、reference、rate source、几何集和坐标约定。改变 scan levels 使 response cache 失效，但不会使未变的基础 GRID cache 失效。中立点和共用 baseline 不重复求解。
+
+## 11. 坐标和符号
+
+内部体轴为 `+X forward, +Y right, +Z down`，右手系；OpenVSP 字段为 `+X aft, +Y right, +Z up`。唯一映射位于 `src/coordinate_system.py`：
 
 ```text
-qbar * Sref * CL - mass*g = 0
-qbar * Sref * cref * Cm = 0
+CX=-CFx, CY=CFy, CZ=-CFz
+Cl=-CMx=CMl, Cm=CMy=CMm, Cn=-CMz=CMn
 ```
 
-先以低成本 Wake pre-trim，再查询完整 derivative bundle 的最大生产 Wake并重新配平。Jacobian 使用真实 alpha/elevator centered FD；Newton 步受界限约束并按 `1, 0.5, 0.25, 0.125` 回溯。15 次仅是停止上限，必须同时满足 ±1 N 和 ±1 N·m 才成功。
+状态角和舵偏 samples 使用 deg，角度导数使用 `1/rad`，rate 导数使用 `1/p_hat`、`1/q_hat`、`1/r_hat`。
 
-## 4. 三层 Gate
+## 12. JSON / CSV / MAT schema
 
-`production_numerical_settings.yaml` 明确保存：
-
-1. `solver_gate`：model/OpenVSP/config identity、基础六系数 Wake convergence、离散 Wake schedule、与基础 GRID 数值直接相关的 boundary continuity。
-2. `derivative_gate`：derivative Wake/FD step convergence、23 项 source/method/unit/finite 完整性及导数数值检查。
-3. `production_gate`：以上两者的最坏状态，用于最终数据库和 AUTOTUNE 交付。
-
-`adaptive_grid_eligible` 仅由 `solver_gate == PASS` 决定。这让 `solver PASS + derivative WARN` 可以运行 Adaptive GRID，同时最终 dataset 仍诚实保留 WARN。Solver Gate 为 WARN/FAIL 时 Adaptive GRID 被拒绝，且 `--force` 无效。Uniform GRID/TRIM 保留 PASS/WARN policy；production FAIL 只有显式审计性 `--force` 可运行，但不会改变真实状态。
-
-Gate 不包含 Tessellation convergence。状态体系为 `PASS/WARN_NUMERICAL/FAIL`；不存在为已支持方法保留的永久限制状态。
-
-## 5. Wake 与缓存
-
-正式 Wake 候选为 3/5/8/12。只有从某等级到所有后续等级都 PASS 才选择较低值；8→12 不通过时才运行 verification-only Wake16。12→16 PASS 也只验证 Wake12，不把16加入 production schedule。
-
-Numerical cache signature 包含模型哈希、OpenVSP/算法版本、状态、舵偏、Wake、分析类型和厚体选择。只有完整成功的真实 case 才命中；旧配置仅改变 validation/manifest bookkeeping 而物理求解请求完全等价时，可复用其 solver payload。正式 GRID/TRIM 还签入 production settings identity。
-
-Adaptive GRID 的 evaluator 始终走统一 `_grid_case`，所以 seed、corner、midpoint 均先查持久 cache；同一次 refinement 中几何坐标相同的点再由内存 key 去重。报告分别记录 persistent cache hits、deduplicated reuses 和 new solver runs。
-
-## 6. Adaptive GRID 算法
-
-### 6.1 Seed 与插值
-
-`operating_conditions.speed/alpha/beta` 定义 seed axes。长度大于1的轴为 active；其余轴固定，算法自然退化为 1D/2D。每个初始 cell：
-
-1. 获取全部真实 corner；
-2. 在几何中心计算真实 VSPAERO case；
-3. 由 corner 在中心做 linear/bilinear/trilinear 插值；
-4. 对 `grid.adaptive.quantities` 逐项使用独立绝对+相对 tolerance；
-5. PASS 接受，WARN/FAIL 局部 refine。
-
-中心恰好是每个 active 轴的 0.5 位置，所以 multilinear 中心预测等于所有去重 corner 的等权平均。
-
-### 6.2 确定性局部二分
-
-只选择一个 active axis：
+JSON 核心路径：
 
 ```text
-normalized_span = current_cell_span / whole_seed_domain_span
-```
-
-取最大者；相同按 V、alpha、beta。生成两个 child，继续独立中心检查，不会一次把3D cell切成8份。队列、cell ID、排序和 tie-break 固定，因此相同输入与 solver cache 得到相同 refinement history。
-
-### 6.3 停止状态
-
-- 所有最终 cell PASS：整体 PASS；
-- `max_depth/min_spacing/max_cases` 阻止继续细分且遗留 WARN：整体 WARN；
-- 遗留 FAIL 或 solver/插值数据失败：整体 FAIL。
-
-`max_cases` 对全部去重真实点生效；`min_spacing` 判断二分后的半跨度；达到任何上限都不会自动成功。报告包含 active dimensions、seed/final point counts、cache/new runs、accepted/refined cells、最大深度、总体和逐系数最坏误差、终止原因、final bounds/status 与完整 history。
-
-## 7. 配置新飞机
-
-在 OpenVSP 中先完成几何、参考量、重心、三组 Control Surface Group、薄面/厚体 Set 和用户认可的 Tessellation。然后修改：
-
-- `aircraft.model`、`geometry_sets`、`reference`；
-- `controls` 的组名、中立位和限位；
-- `trim.mass_kg`、alpha/elevator 范围和工况；
-- `operating_conditions` 作为 uniform axes 或 adaptive seed；
-- `grid.adaptive` 的量、容差和资源上限；
-- Wake representative states 与 FD candidates。
-
-更换模型或网格会改变模型哈希，旧 cache 不会误命中。不要通过删导数、改符号或放宽门限消除真实 WARN/FAIL。
-
-## 8. 输出结构
-
-### 8.1 JSON
-
-`results/latest/aero_database.json` 包含：
-
-```text
-grid.mode
-grid.results                 # 所有真实 seed + adaptive midpoint
-grid.adaptive_summary
-grid.cells
-grid.refinement_history
+metadata.analysis_selection / additive_response_assumption
+grid.results / adaptive_summary / cells / refinement_history
+responses.controls.elevator|aileron|rudder
+responses.rates.p|q|r
+responses.linearity / gate / cache / assumptions
 trim.results[].derivatives.production_derivatives
-trim.results[].derivatives.unsteady_derivative_diagnostics
-trim.results[].derivatives.native_derivative_diagnostics
-trim.results[].derivatives.required_derivatives_manifest
+validation / summary
 ```
 
-### 8.2 CSV
+CSV 分层：`aero_database.csv` 仅基础 GRID，`grid_response_samples.csv` 仅控制面 samples，`grid_response_summary.csv` 保存线性审计和 rate derivatives，`trim_database.csv` 仅 TRIM，`trim_derivatives.csv` 仅 TRIM 23 项导数。
 
-`aero_database.csv` 一行一个真实 solver point，`grid_source` 标记 `seed/adaptive_midpoint`；TRIM 列以 `production_<name>` 读取统一23项集合。`trim_derivatives.csv` 提供逐项 value/source/source_field/method/unit/wake/status。
+MATLAB `AERO` schema 2.0：
 
-Adaptive 独立报告位于 `results/adaptive_grid/`：JSON 保存汇总、cells 与 history；points/cells CSV 方便检查不规则点集。
+```text
+AERO.meta / reference / grid
+AERO.responses.controls.elevator|aileron|rudder
+AERO.responses.rates.p|q|r
+AERO.linearity / assumptions
+```
 
-### 8.3 MATLAB
+Control arrays 包含 base ID、V/alpha/beta、绝对 deflection、neutral offset、六系数绝对值和增量。Rate arrays 包含 base ID、状态、normalization、source、representation 和六系数局部导数。TRIM 通过时，兼容保留 `flight_points/trim/longitudinal/lateral/controls/native_derivative_diagnostics`。
 
-`results/autotune/aircraft_aero.mat` 的 `AERO.longitudinal/lateral/controls` 从 `production_derivatives` 建立，故包含 `CL_q, Cm_q, CY_p, Cl_p, Cn_p, CY_r, Cl_r, Cn_r`。`AERO.grid` 保存不规则点的 V/alpha/beta、`grid_source` 和六系数，不强制规则矩阵。native 与 unsteady diagnostic 不会覆盖 production。
+## 13. 代码职责
 
-## 9. 主要代码职责
-
-| 文件 | 作用 |
+| 文件 | 职责 |
 |---|---|
-| `src/main.py` | CLI 与 workflow orchestration |
-| `src/vspaero_runner.py` | steady/P/Q/R analysis 设置、执行和原始文件完整性 |
-| `src/coordinate_system.py` | 唯一坐标、符号、单位与 steady/unsteady 字段映射 |
-| `src/finite_difference.py` | centered FD、rate production 合并与 manifest |
-| `src/numerical_convergence.py` | Wake/FD 验证、三层 Gate、cache 与报告 |
-| `src/adaptive_grid.py` | 1D/2D/3D midpoint 插值、局部二分、去重和报告 |
-| `src/validation.py` | TRIM、23项来源/数值/物理完整性检查 |
-| `src/export_results.py` | JSON/CSV/MAT 导出及 MAT 回读检查 |
-| `src/trim_solver.py` | 有界 centered-FD Newton TRIM 与回溯 |
+| `src/main.py` | CLI、模式解析和流程编排 |
+| `src/response_scan.py` | response cases、baseline 选择/复用、增量、线性审计和 rate fields |
+| `src/vspaero_runner.py` | 唯一 VSPAERO runner |
+| `src/coordinate_system.py` | 唯一坐标、符号和字段映射 |
+| `src/adaptive_grid.py` | Adaptive GRID 中点验证和细分 |
+| `src/finite_difference.py` | centered FD 和 TRIM production derivatives |
+| `src/numerical_convergence.py` | Wake/FD、schedule 和旧三层 Gate |
+| `src/validation.py` | TRIM/导数/物理/portability 检查 |
+| `src/export_results.py` | 分层 CSV/JSON/MAT 与 MAT 回读验证 |
 
-## 10. 排查顺序
+Response 模块不复制 runner、Wake schedule、坐标映射、centered FD 或缓存系统。
 
-1. 运行 `run_aero.bat check`。
-2. 查看 numerical report 中 solver/derivative/production 三层状态。
-3. Solver FAIL 按 signature 查看 `raw/<signature>/case_result.json` 与 `vspaero_console.txt`。
-4. Derivative WARN/FAIL 检查对应 source field、unit、FD samples 和 selected step。
-5. Adaptive 非 PASS 查看 final cell 的 bounds、逐系数误差和 termination reason。
-6. 修改模型/网格后重新运行 numerical-convergence，避免 identity 不匹配。
+## 14. 已知限制和扩展
+
+- 控制面响应为独立一维表，高阶交叉项未建模。
+- p/q/r 是局部线性导数场，不是任意 rate response table。
+- Linearity audit 不自动丢弃 samples，也不自动将 production 永久压缩成导数。
+- Tessellation/mesh 由 `.vsp3` 管理，脚本不覆盖 Tess_U/Tess_W，Gate 不宣称 mesh independence。
+- 从 audit 扩展到 full_grid 前，应根据曲率、不对称和飞行范围调整 levels；然后设置 `response_scan.scope: full_grid` 并运行 `run_aero.bat grid` 或 `run_aero.bat all`。

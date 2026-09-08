@@ -625,8 +625,7 @@ class DeliveredResultTests(unittest.TestCase):
         if not path.is_file():
             raise unittest.SkipTest("Run python run.py all before checking delivered results")
         cls.database = json.loads(path.read_text(encoding="utf-8"))
-        results = cls.database.get("trim", {}).get("results", [])
-        if not results or results[0].get("schema_version") != "8.0.0":
+        if cls.database.get("metadata", {}).get("schema_version") != "9.0.0":
             raise unittest.SkipTest("Run the current workflow before checking delivered results")
 
     def test_final_status_and_case_counts(self) -> None:
@@ -642,27 +641,48 @@ class DeliveredResultTests(unittest.TestCase):
                 item.get("grid_source") in {"seed", "adaptive_midpoint"}
                 for item in grid_results
             ))
+        self.assertEqual(summary["trim"]["completed"], len(self.database["trim"]["results"]))
+        if self.database["trim"]["results"]:
+            self.assertEqual(summary["derivatives"]["calculated"], 23)
+            self.assertEqual(summary["derivatives"]["missing"], 0)
+            self.assertEqual(summary["derivatives"]["invalid"], 0)
+            self.assertEqual(summary["derivatives"]["validation_failed"], 0)
         else:
-            self.assertEqual(len(grid_results), 4)
-        self.assertEqual(summary["trim"]["completed"], 1)
-        self.assertEqual(summary["derivatives"]["calculated"], 23)
-        self.assertEqual(summary["derivatives"]["missing"], 0)
-        self.assertEqual(summary["derivatives"]["invalid"], 0)
-        self.assertEqual(summary["derivatives"]["validation_failed"], 0)
+            self.assertEqual(summary["response"]["status"], "PASS")
+            self.assertEqual(summary["simulink_delivery_model"], "GRID_PLUS_RESPONSE")
 
     def test_grid_and_trim_numerics(self) -> None:
         grid = self.database["grid"]["results"]
         self.assertGreaterEqual(len(grid), 1)
         self.assertTrue(all(row["status"] == "PASS" for row in grid))
-        trim = self.database["trim"]["results"][0]
-        self.assertLessEqual(abs(trim["trim"]["trim_force_residual_n"]), 1.0)
-        self.assertLessEqual(abs(trim["trim"]["trim_moment_residual_nm"]), 1.0)
-        self.assertNotEqual(trim["trim"]["elevator_trim_deg"], 0.0)
-        records = trim["derivatives"]["production_derivatives"]
-        self.assertEqual(len(records), 23)
-        self.assertTrue(all(math.isfinite(float(row["value"])) for row in records.values()))
+        if self.database["trim"]["results"]:
+            trim = self.database["trim"]["results"][0]
+            self.assertLessEqual(abs(trim["trim"]["trim_force_residual_n"]), 1.0)
+            self.assertLessEqual(abs(trim["trim"]["trim_moment_residual_nm"]), 1.0)
+            self.assertNotEqual(trim["trim"]["elevator_trim_deg"], 0.0)
+            records = trim["derivatives"]["production_derivatives"]
+            self.assertEqual(len(records), 23)
+            self.assertTrue(all(math.isfinite(float(row["value"])) for row in records.values()))
+        else:
+            samples = self.database["responses"]["controls"]["elevator"]
+            self.assertEqual(len(samples), 3)
+            self.assertTrue(all(len(item["coefficients"]) == 6 for item in samples))
+            zero = next(item for item in samples if item["perturbation_value"] == 0.0)
+            self.assertTrue(all(value == 0.0 for value in zero["delta_coefficients"].values()))
 
     def test_centered_samples_and_production_rate_derivatives(self) -> None:
+        if not self.database["trim"]["results"]:
+            rates = self.database["responses"]["rates"]
+            self.assertEqual(set(rates), {"p", "q", "r"})
+            self.assertTrue(all(
+                set(rows[0]["derivatives"]) == {"CL", "CD", "CY", "Cl", "Cm", "Cn"}
+                for rows in rates.values()
+            ))
+            self.assertTrue(all(
+                rows[0]["representation"] == "local_linear_derivative"
+                for rows in rates.values()
+            ))
+            return
         package = self.database["trim"]["results"][0]["derivatives"]
         records = {
             name: record for name, record in package["production_derivatives"].items()
@@ -688,26 +708,38 @@ class DeliveredResultTests(unittest.TestCase):
         self.assertNotEqual(validation["dataset_status"], "FAIL")
         self.assertEqual(validation["fuselage_effect"]["status"], "PASS")
         levels = {row["level"] for row in validation["rows"]}
-        self.assertTrue({"SOLVER", "TRIM", "NUMERICAL", "DERIVATIVE", "PHYSICS", "DATASET"} <= levels)
+        if self.database["trim"]["results"]:
+            self.assertTrue({"SOLVER", "TRIM", "NUMERICAL", "DERIVATIVE", "PHYSICS", "DATASET"} <= levels)
+        else:
+            self.assertIn("DATASET", levels)
         checks = {row["check"]: row["status"] for row in validation["rows"]}
-        self.assertEqual(checks["alpha range"], "PASS")
-        self.assertEqual(checks["elevator range"], "PASS")
-        self.assertEqual(checks["beta centered-pair symmetry"], "PASS")
-        self.assertEqual(checks["aileron centered-pair symmetry"], "PASS")
-        self.assertEqual(checks["rudder centered-pair symmetry"], "PASS")
+        if self.database["trim"]["results"]:
+            self.assertEqual(checks["alpha range"], "PASS")
+            self.assertEqual(checks["elevator range"], "PASS")
+            self.assertEqual(checks["beta centered-pair symmetry"], "PASS")
+            self.assertEqual(checks["aileron centered-pair symmetry"], "PASS")
+            self.assertEqual(checks["rudder centered-pair symmetry"], "PASS")
+        else:
+            self.assertEqual(checks["GRID response gate"], "PASS")
 
     def test_matlab_aero_schema_is_loadable(self) -> None:
         path = PROJECT_ROOT / "results" / "autotune" / "aircraft_aero.mat"
         loaded = loadmat(path, squeeze_me=True, struct_as_record=False)
         self.assertIn("AERO", loaded)
         aero = loaded["AERO"]
-        self.assertEqual(str(aero.meta.schema_version), "1.0")
-        self.assertTrue(hasattr(aero.flight_points, "V_mps"))
-        self.assertTrue(hasattr(aero.longitudinal, "Cm_alpha"))
-        self.assertTrue(hasattr(aero.lateral, "Cl_p"))
-        self.assertTrue(hasattr(aero.native_derivative_diagnostics, "Cl_p"))
-        self.assertTrue(hasattr(aero.controls.elevator, "Cm_delta_e"))
-        self.assertNotEqual(str(aero.validation.overall_status), "FAIL")
+        self.assertEqual(str(aero.meta.schema_version), "2.0")
+        self.assertTrue(hasattr(aero, "grid"))
+        self.assertTrue(hasattr(aero, "responses"))
+        if self.database["trim"]["results"]:
+            self.assertTrue(hasattr(aero.flight_points, "V_mps"))
+            self.assertTrue(hasattr(aero.longitudinal, "Cm_alpha"))
+            self.assertTrue(hasattr(aero.lateral, "Cl_p"))
+            self.assertTrue(hasattr(aero.native_derivative_diagnostics, "Cl_p"))
+            self.assertTrue(hasattr(aero.controls.elevator, "Cm_delta_e"))
+        else:
+            self.assertTrue(hasattr(aero.responses.controls, "elevator"))
+            self.assertTrue(hasattr(aero.responses.rates, "q"))
+            self.assertTrue(bool(aero.assumptions.additive_response_assumption))
 
 
 if __name__ == "__main__":

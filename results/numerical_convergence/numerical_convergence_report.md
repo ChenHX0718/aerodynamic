@@ -1,6 +1,6 @@
 # Numerical Convergence / Validation Report
 
-Generated: 2026-09-04T21:36:26+08:00
+Generated: 2026-09-06T19:22:33+08:00
 
 Solver / GRID gate: **PASS**
 Derivative gate: **WARN**
@@ -53,4 +53,4 @@ Status: **WARN**. Checks performed: 3.
 
 ## Cache / resume
 
-Enabled: **True**; cache hits: **295**; new solver runs: **0**; failed real cases: **0**; solver time: **0.0 s**; wall time: **20.0 s**.
+Enabled: **True**; cache hits: **295**; new solver runs: **0**; failed real cases: **0**; solver time: **0.0 s**; wall time: **19.0 s**.

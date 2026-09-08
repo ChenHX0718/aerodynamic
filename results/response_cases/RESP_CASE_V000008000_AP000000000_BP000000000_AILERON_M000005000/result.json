@@ -1,0 +1,38 @@
+{
+  "schema_version": "9.0.0",
+  "signature": "4f9670e25dbe9cd67d10637aa07dee57645aecb434331c490ce5905a9be642ac",
+  "status": "PASS",
+  "case_id": "RESP_CASE_V000008000_AP000000000_BP000000000_AILERON_M000005000",
+  "base_grid_case_id": "CASE_V000008000_AP000000000_BP000000000",
+  "variable": "aileron",
+  "perturbation_value": -5.0,
+  "perturbation_unit": "deg",
+  "condition": {
+    "speed_mps": 8.0,
+    "alpha_deg": 0.0,
+    "beta_deg": 0.0,
+    "rho_kg_m3": 1.225,
+    "dynamic_viscosity_pa_s": 1.7894e-05,
+    "speed_of_sound_mps": 340.294,
+    "mach": 0.023509083322068566,
+    "reynolds_cref": 816027.7187884208,
+    "dynamic_pressure_pa": 39.2
+  },
+  "control_deflections_deg": {
+    "aileron": -5.0,
+    "elevator": 0.0,
+    "rudder": 0.0
+  },
+  "coefficients": {
+    "CL": 0.114357736599,
+    "CD": 0.018784263306,
+    "Cm": -0.036538422416,
+    "CY": 0.006038098857,
+    "Cl": 0.023965132014,
+    "Cn": -0.001097250017
+  },
+  "wake_iterations": 12,
+  "solver_status": "SUCCESS",
+  "solver_duration_sec": 79.02555190000203,
+  "raw_directory": "E:\\aerodynamic\\results\\response_cases\\RESP_CASE_V000008000_AP000000000_BP000000000_AILERON_M000005000\\raw\\polar"
+}

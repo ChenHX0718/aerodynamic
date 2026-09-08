@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import string
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -190,6 +191,112 @@ def _validate_numerical_convergence(data: dict[str, Any]) -> None:
         raise ConfigError("numerical_convergence.production_gate.enabled must be boolean")
 
 
+def resolve_analysis_selection(command: str, analysis: dict[str, Any]) -> tuple[bool, bool]:
+    """Resolve the only workflow switches; explicit subcommands select one module."""
+    normalized = str(command).lower()
+    if normalized == "grid":
+        return True, False
+    if normalized == "trim":
+        return False, True
+    if normalized != "all":
+        return False, False
+    grid_enabled = bool(analysis["grid_enabled"])
+    trim_enabled = bool(analysis["trim_enabled"])
+    if not grid_enabled and not trim_enabled:
+        raise ConfigError(
+            "analysis.grid_enabled and analysis.trim_enabled are both false; "
+            "the all command has no aerodynamic module to run"
+        )
+    return grid_enabled, trim_enabled
+
+
+def _validate_response_scan(data: dict[str, Any], controls: dict[str, Any]) -> None:
+    response = _require_mapping(data, "response_scan")
+    if not isinstance(response.get("enabled"), bool):
+        raise ConfigError("response_scan.enabled must be boolean")
+    scope = str(response.get("scope", "")).lower()
+    if scope not in {"audit", "full_grid"}:
+        raise ConfigError("response_scan.scope must be audit or full_grid")
+    response["scope"] = scope
+    allowed = {"p", "q", "r", "elevator", "aileron", "rudder"}
+    variables = response.get("variables")
+    if (
+        not isinstance(variables, list) or not variables
+        or len(set(str(item) for item in variables)) != len(variables)
+        or not set(str(item) for item in variables) <= allowed
+    ):
+        raise ConfigError("response_scan.variables must be a unique non-empty subset of p/q/r/elevator/aileron/rudder")
+    response["variables"] = [str(item) for item in variables]
+    representatives = response.get("representative_states", [])
+    if not isinstance(representatives, list):
+        raise ConfigError("response_scan.representative_states must be a list")
+    for index, state in enumerate(representatives):
+        if not isinstance(state, dict):
+            raise ConfigError(f"response_scan.representative_states[{index}] must be a mapping")
+        _require_positive(state, "speed_mps", f"response_scan.representative_states[{index}]")
+        if "alpha_deg" not in state:
+            raise ConfigError(f"response_scan.representative_states[{index}].alpha_deg is required")
+        float(state["alpha_deg"])
+        float(state.get("beta_deg", 0.0))
+
+    levels = _require_mapping(response, "control_levels_deg")
+    for role in ("elevator", "aileron", "rudder"):
+        values = levels.get(role)
+        if not isinstance(values, list) or len(values) < 3:
+            raise ConfigError(f"response_scan.control_levels_deg.{role} must contain at least three values")
+        normalized = [float(value) for value in values]
+        if normalized != sorted(set(normalized)):
+            raise ConfigError(f"response_scan.control_levels_deg.{role} must be unique and increasing")
+        lower = float(controls[role].get("min_deg", -90.0))
+        upper = float(controls[role].get("max_deg", 90.0))
+        neutral = float(controls[role].get("neutral_deg", 0.0))
+        outside = [value for value in normalized if not lower <= value <= upper]
+        if outside:
+            raise ConfigError(
+                f"response_scan.control_levels_deg.{role} contains {outside[0]:g} deg outside "
+                f"controls.{role} limits {lower:g}..{upper:g} deg"
+            )
+        if not any(math.isclose(value, neutral, abs_tol=1.0e-12) for value in normalized):
+            raise ConfigError(f"response_scan.control_levels_deg.{role} must include the neutral value {neutral:g}")
+        if role in response["variables"] and not (
+            any(value < neutral for value in normalized) and any(value > neutral for value in normalized)
+        ):
+            raise ConfigError(f"response_scan.control_levels_deg.{role} must bracket neutral")
+        levels[role] = normalized
+
+    rates = _require_mapping(response, "rates")
+    if str(rates.get("representation", "")) != "local_linear_derivative":
+        raise ConfigError("response_scan.rates.representation must be local_linear_derivative")
+    if str(rates.get("source", "")) != "vspaero_steady_stab":
+        raise ConfigError("response_scan.rates.source must be vspaero_steady_stab")
+
+    linearity = _require_mapping(response, "linearity")
+    minimum_samples = int(linearity.get("minimum_samples", 0))
+    if minimum_samples < 3:
+        raise ConfigError("response_scan.linearity.minimum_samples must be at least 3")
+    for role in ("elevator", "aileron", "rudder"):
+        if role in response["variables"] and len(levels[role]) < minimum_samples:
+            raise ConfigError(
+                f"response_scan.control_levels_deg.{role} must contain at least "
+                f"linearity.minimum_samples={minimum_samples} values"
+            )
+    _require_positive(linearity, "minimum_response_range", "response_scan.linearity")
+    _require_positive(linearity, "slope_floor", "response_scan.linearity")
+    linear = _require_mapping(linearity, "linear")
+    weak = _require_mapping(linearity, "weakly_nonlinear")
+    for name in ("normalized_max_deviation", "slope_variation", "asymmetry"):
+        _require_positive(linear, name, "response_scan.linearity.linear")
+        _require_positive(weak, name, "response_scan.linearity.weakly_nonlinear")
+        if float(linear[name]) >= float(weak[name]):
+            raise ConfigError(f"response_scan linear.{name} must be stricter than weakly_nonlinear.{name}")
+    for label, settings in (("linear", linear), ("weakly_nonlinear", weak)):
+        value = float(settings.get("r_squared_min", -1.0))
+        if not 0.0 <= value <= 1.0:
+            raise ConfigError(f"response_scan.linearity.{label}.r_squared_min must be within 0..1")
+    if float(linear["r_squared_min"]) <= float(weak["r_squared_min"]):
+        raise ConfigError("response_scan linear.r_squared_min must be stricter than weakly_nonlinear.r_squared_min")
+
+
 def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]:
     root = project_root().resolve()
     path = Path(config_path).resolve() if config_path else root / "config" / "aircraft.yaml"
@@ -236,17 +343,13 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
     if not model_path.is_file():
         raise ConfigError(f"Aircraft model not found: {model_path}")
 
-    modes = analysis.get("modes")
-    if isinstance(modes, str):
-        modes = [modes]
-    if not isinstance(modes, list) or not modes:
-        raise ConfigError("analysis.modes must be a non-empty list")
-    normalized_modes = [str(item).upper() for item in modes]
-    allowed_modes = {"GRID_DATABASE", "TRIM_DATABASE"}
-    invalid = [item for item in normalized_modes if item not in allowed_modes]
-    if invalid:
-        raise ConfigError(f"Unsupported analysis mode(s): {', '.join(invalid)}")
-    data["analysis"]["modes"] = normalized_modes
+    if "modes" in analysis:
+        raise ConfigError(
+            "analysis.modes is obsolete; use only analysis.grid_enabled and analysis.trim_enabled"
+        )
+    for name in ("grid_enabled", "trim_enabled"):
+        if not isinstance(analysis.get(name), bool):
+            raise ConfigError(f"analysis.{name} must be boolean")
 
     for name in ("speed", "alpha", "beta"):
         _validate_axis(operating.get(name), f"operating_conditions.{name}")
@@ -305,28 +408,27 @@ def load_project_config(config_path: str | Path | None = None) -> dict[str, Any]
         if not lower <= neutral <= upper:
             raise ConfigError(f"controls.{role}.neutral_deg must be inside min_deg/max_deg")
 
-    if "TRIM_DATABASE" in normalized_modes:
-        trim = _require_mapping(data, "trim")
-        if not bool(trim.get("enabled", False)):
-            raise ConfigError("TRIM_DATABASE is requested but trim.enabled is false")
-        _require_positive(trim, "mass_kg", "trim")
-        _require_positive(trim, "gravity_m_s2", "trim")
-        trim_conditions = _require_mapping(trim, "operating_conditions")
-        for name in ("speed", "beta"):
-            _validate_axis(trim_conditions.get(name), f"trim.operating_conditions.{name}")
-        for variable in ("alpha", "elevator"):
-            bounds = _require_mapping(trim, variable)
-            for key in ("initial_deg", "min_deg", "max_deg"):
-                if key not in bounds:
-                    raise ConfigError(f"trim.{variable}.{key} is required")
-            if float(bounds["min_deg"]) >= float(bounds["max_deg"]):
-                raise ConfigError(f"trim.{variable}.min_deg must be less than max_deg")
-            if not float(bounds["min_deg"]) <= float(bounds["initial_deg"]) <= float(bounds["max_deg"]):
-                raise ConfigError(f"trim.{variable}.initial_deg must be inside min_deg/max_deg")
-        _require_positive(trim, "force_tolerance_n", "trim")
-        _require_positive(trim, "moment_tolerance_nm", "trim")
-        if int(trim.get("max_iterations", 0)) <= 0:
-            raise ConfigError("trim.max_iterations must be positive")
+    _validate_response_scan(data, controls)
+
+    trim = _require_mapping(data, "trim")
+    _require_positive(trim, "mass_kg", "trim")
+    _require_positive(trim, "gravity_m_s2", "trim")
+    trim_conditions = _require_mapping(trim, "operating_conditions")
+    for name in ("speed", "beta"):
+        _validate_axis(trim_conditions.get(name), f"trim.operating_conditions.{name}")
+    for variable in ("alpha", "elevator"):
+        bounds = _require_mapping(trim, variable)
+        for key in ("initial_deg", "min_deg", "max_deg"):
+            if key not in bounds:
+                raise ConfigError(f"trim.{variable}.{key} is required")
+        if float(bounds["min_deg"]) >= float(bounds["max_deg"]):
+            raise ConfigError(f"trim.{variable}.min_deg must be less than max_deg")
+        if not float(bounds["min_deg"]) <= float(bounds["initial_deg"]) <= float(bounds["max_deg"]):
+            raise ConfigError(f"trim.{variable}.initial_deg must be inside min_deg/max_deg")
+    _require_positive(trim, "force_tolerance_n", "trim")
+    _require_positive(trim, "moment_tolerance_nm", "trim")
+    if int(trim.get("max_iterations", 0)) <= 0:
+        raise ConfigError("trim.max_iterations must be positive")
 
     manifest_value = derivatives.get("manifest")
     if not manifest_value:

@@ -18,6 +18,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
+set "AERO_COMMAND=%~1"
+if "%AERO_COMMAND%"=="" set "AERO_COMMAND=all"
+
+if /I "%AERO_COMMAND%"=="check" goto run_command
+if /I "%AERO_COMMAND%"=="smoke" goto run_command
+if /I "%AERO_COMMAND%"=="numerical-convergence" goto run_command
+if /I "%AERO_COMMAND%"=="regression" goto run_command
+
 if not exist "%PROJECT_ROOT%results\numerical_convergence\production_numerical_settings.yaml" (
     echo.
     echo [ERROR] Production Numerical Settings not found.
@@ -26,7 +34,12 @@ if not exist "%PROJECT_ROOT%results\numerical_convergence\production_numerical_s
     exit /b 1
 )
 
-"%PYTHON_EXE%" -u "%PROJECT_ROOT%run.py" all --config "%PROJECT_ROOT%config\aircraft.yaml"
+:run_command
+if "%~1"=="" (
+    "%PYTHON_EXE%" -u "%PROJECT_ROOT%run.py" all --config "%PROJECT_ROOT%config\aircraft.yaml"
+) else (
+    "%PYTHON_EXE%" -u "%PROJECT_ROOT%run.py" %*
+)
 set "RUN_STATUS=%ERRORLEVEL%"
 echo.
 if "%RUN_STATUS%"=="0" (

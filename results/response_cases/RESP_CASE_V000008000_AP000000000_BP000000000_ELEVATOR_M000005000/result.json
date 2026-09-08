@@ -1,0 +1,38 @@
+{
+  "schema_version": "9.0.0",
+  "signature": "402268a0bf5f1964e5114a0289f5521b015a6440dfe543474c355b17123bf924",
+  "status": "PASS",
+  "case_id": "RESP_CASE_V000008000_AP000000000_BP000000000_ELEVATOR_M000005000",
+  "base_grid_case_id": "CASE_V000008000_AP000000000_BP000000000",
+  "variable": "elevator",
+  "perturbation_value": -5.0,
+  "perturbation_unit": "deg",
+  "condition": {
+    "speed_mps": 8.0,
+    "alpha_deg": 0.0,
+    "beta_deg": 0.0,
+    "rho_kg_m3": 1.225,
+    "dynamic_viscosity_pa_s": 1.7894e-05,
+    "speed_of_sound_mps": 340.294,
+    "mach": 0.023509083322068566,
+    "reynolds_cref": 816027.7187884208,
+    "dynamic_pressure_pa": 39.2
+  },
+  "control_deflections_deg": {
+    "aileron": 0.0,
+    "elevator": -5.0,
+    "rudder": 0.0
+  },
+  "coefficients": {
+    "CL": 0.072141220178,
+    "CD": 0.017124246396,
+    "Cm": 0.083658214164,
+    "CY": 0.003752264038,
+    "Cl": -0.000571576851,
+    "Cn": -0.000310169213
+  },
+  "wake_iterations": 12,
+  "solver_status": "SUCCESS",
+  "solver_duration_sec": 76.69041740000102,
+  "raw_directory": "E:\\aerodynamic\\results\\response_cases\\RESP_CASE_V000008000_AP000000000_BP000000000_ELEVATOR_M000005000\\raw\\polar"
+}

@@ -105,12 +105,55 @@ def _derivative_rows(
     return rows
 
 
+def flatten_response_sample(sample: dict[str, Any]) -> dict[str, Any]:
+    return {
+        **{
+            name: sample.get(name)
+            for name in (
+                "case_id", "base_grid_case_id", "speed_mps", "alpha_deg", "beta_deg",
+                "variable", "perturbation_value", "perturbation_unit", "neutral_value",
+                "offset_from_neutral_deg", "wake_iterations", "solver_status",
+                "solver_duration_sec", "status", "cache_hit", "source", "raw_directory",
+            )
+        },
+        **{name: sample.get("coefficients", {}).get(name) for name in ("CL", "CD", "CY", "Cl", "Cm", "Cn")},
+        **{
+            f"delta_{name}": sample.get("delta_coefficients", {}).get(name)
+            for name in ("CL", "CD", "CY", "Cl", "Cm", "Cn")
+        },
+    }
+
+
+def _response_summary_rows(responses: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = list(responses.get("linearity", []))
+    for variable, records in responses.get("rates", {}).items():
+        for record in records:
+            for coefficient, derivative in record.get("derivatives", {}).items():
+                rows.append({
+                    "base_grid_case_id": record.get("base_grid_case_id"),
+                    "speed_mps": record.get("speed_mps"),
+                    "alpha_deg": record.get("alpha_deg"),
+                    "beta_deg": record.get("beta_deg"),
+                    "variable": variable,
+                    "coefficient": coefficient,
+                    "classification": "INSUFFICIENT_DATA",
+                    "recommended_representation": "derivative",
+                    "representation": "local_linear_derivative",
+                    "derivative_value": derivative.get("value"),
+                    "derivative_unit": derivative.get("unit"),
+                    "source_field": derivative.get("source_field"),
+                    "reason": "OpenVSP steady .stab supplies a local derivative, not an arbitrary-rate curve",
+                })
+    return rows
+
+
 def build_database(
     *, metadata: dict[str, Any], reference: dict[str, Any], geometry: dict[str, Any],
     manifest: dict[str, Any], grid_results: list[dict[str, Any]],
     trim_results: list[dict[str, Any]], validation: dict[str, Any],
     summary: dict[str, Any], grid_mode: str = "uniform",
     adaptive_report: dict[str, Any] | None = None,
+    responses: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "metadata": metadata,
@@ -139,6 +182,10 @@ def build_database(
             ),
         },
         "trim": {"results": trim_results, "flat_table": [flatten_case(item) for item in trim_results]},
+        "responses": responses or {
+            "enabled": False, "controls": {}, "rates": {}, "linearity": [],
+            "gate": {"status": "NOT_REQUESTED"},
+        },
         "derivative_table": _derivative_rows(trim_results, metadata["coordinate_system"]),
         "validation": validation,
         "summary": summary,
@@ -272,9 +319,89 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             for name in ("CL", "CD", "Cm", "CY", "Cl", "Cn")
         },
     }
+    response_data = database.get("responses", {})
+
+    def control_response_arrays(rows: list[dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "independent_variable_unit": "deg",
+            "coefficient_unit": "dimensionless",
+            "delta_coefficient_unit": "dimensionless",
+            "base_grid_case_id": _row_array(
+                [item["base_grid_case_id"] for item in rows], numeric=False
+            ),
+            "V_mps": _row_array([item["speed_mps"] for item in rows]),
+            "alpha_deg": _row_array([item["alpha_deg"] for item in rows]),
+            "beta_deg": _row_array([item["beta_deg"] for item in rows]),
+            "deflection_deg": _row_array([item["perturbation_value"] for item in rows]),
+            "offset_from_neutral_deg": _row_array(
+                [item["offset_from_neutral_deg"] for item in rows]
+            ),
+            "source": _row_array([item["source"] for item in rows], numeric=False),
+            **{
+                name: _row_array([item["coefficients"][name] for item in rows])
+                for name in ("CL", "CD", "CY", "Cl", "Cm", "Cn")
+            },
+            **{
+                f"delta_{name}": _row_array([
+                    item["delta_coefficients"][name] for item in rows
+                ])
+                for name in ("CL", "CD", "CY", "Cl", "Cm", "Cn")
+            },
+        }
+
+    def rate_response_arrays(rows: list[dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "base_grid_case_id": _row_array(
+                [item["base_grid_case_id"] for item in rows], numeric=False
+            ),
+            "V_mps": _row_array([item["speed_mps"] for item in rows]),
+            "alpha_deg": _row_array([item["alpha_deg"] for item in rows]),
+            "beta_deg": _row_array([item["beta_deg"] for item in rows]),
+            "representation": "local_linear_derivative",
+            "derivative_unit": (
+                next(iter(rows[0].get("derivatives", {}).values())).get("unit", "")
+                if rows and rows[0].get("derivatives") else ""
+            ),
+            "normalization": _row_array(
+                [item["normalization"] for item in rows], numeric=False
+            ),
+            "source": "VSPAERO steady .stab",
+            **{
+                name: _row_array([
+                    item.get("derivatives", {}).get(name, {}).get("value", math.nan)
+                    for item in rows
+                ])
+                for name in ("CL", "CD", "CY", "Cl", "Cm", "Cn")
+            },
+        }
+
+    linearity_rows = list(response_data.get("linearity", []))
+    linearity = {
+        "base_grid_case_id": _row_array(
+            [item["base_grid_case_id"] for item in linearity_rows], numeric=False
+        ),
+        "variable": _row_array([item["variable"] for item in linearity_rows], numeric=False),
+        "coefficient": _row_array(
+            [item["coefficient"] for item in linearity_rows], numeric=False
+        ),
+        "classification": _row_array(
+            [item["classification"] for item in linearity_rows], numeric=False
+        ),
+        "recommended_representation": _row_array(
+            [item["recommended_representation"] for item in linearity_rows], numeric=False
+        ),
+        **{
+            name: _row_array([item.get(name, math.nan) for item in linearity_rows])
+            for name in (
+                "centered_slope_per_rad", "global_fit_slope_per_rad",
+                "maximum_absolute_residual", "normalized_max_deviation",
+                "slope_variation", "r_squared", "asymmetry",
+            )
+        },
+    }
     return {
         "meta": {
-            "schema_version": "1.0",
+            "schema_version": "2.0",
             "aircraft_name": database["metadata"]["aircraft_name"],
             "creation_time": database["metadata"]["generated_at_local"],
             "openvsp_version": database["metadata"]["openvsp_version"],
@@ -290,6 +417,7 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
                 "mesh_numerically_certified": False,
                 "wake_rule": "discrete state schedule plus derivative-bundle maximum",
             },
+            "analysis_selection": database["metadata"].get("analysis_selection", {}),
         },
         "reference": database["reference"],
         "flight_points": flight_points,
@@ -302,6 +430,21 @@ def _aero_mat(database: dict[str, Any], accepted: list[dict[str, Any]]) -> dict[
             "elevator": derivative_arrays({"elevator"}),
             "rudder": derivative_arrays({"rudder"}),
         },
+        "responses": {
+            "controls": {
+                name: control_response_arrays(list(response_data.get("controls", {}).get(name, [])))
+                for name in ("elevator", "aileron", "rudder")
+            },
+            "rates": {
+                name: rate_response_arrays(list(response_data.get("rates", {}).get(name, [])))
+                for name in ("p", "q", "r")
+            },
+        },
+        "linearity": linearity,
+        "assumptions": response_data.get("assumptions", {
+            "additive_response_assumption": True,
+            "baseline_requires_trim": False,
+        }),
         "native_derivative_diagnostics": native_diagnostics,
         "validation": validation,
     }
@@ -318,9 +461,20 @@ def export_database(
     validation_dir.mkdir(parents=True, exist_ok=True)
     paths: dict[str, Any] = {}
 
-    all_rows = database["grid"]["flat_table"] + database["trim"]["flat_table"]
+    response_samples = [
+        sample
+        for rows in database.get("responses", {}).get("controls", {}).values()
+        for sample in rows
+    ]
+    response_summary = _response_summary_rows(database.get("responses", {}))
     if export_config.get("csv", True):
-        _write_csv(latest_dir / "aero_database.csv", all_rows)
+        _write_csv(latest_dir / "aero_database.csv", database["grid"]["flat_table"])
+        _write_csv(latest_dir / "trim_database.csv", database["trim"]["flat_table"])
+        _write_csv(
+            latest_dir / "grid_response_samples.csv",
+            [flatten_response_sample(item) for item in response_samples],
+        )
+        _write_csv(latest_dir / "grid_response_summary.csv", response_summary)
         _write_csv(latest_dir / "trim_derivatives.csv", database["derivative_table"])
         _write_csv(validation_dir / "validation_report.csv", database["validation"]["rows"])
         fuselage = database["validation"].get("fuselage_effect", {})
@@ -335,6 +489,9 @@ def export_database(
             for name, delta in fuselage.get("delta", {}).items()
         ])
         paths["csv"] = latest_dir / "aero_database.csv"
+        paths["response_csv"] = latest_dir / "grid_response_samples.csv"
+        paths["response_summary_csv"] = latest_dir / "grid_response_summary.csv"
+        paths["trim_csv"] = latest_dir / "trim_database.csv"
         paths["derivative_csv"] = latest_dir / "trim_derivatives.csv"
         paths["validation_csv"] = validation_dir / "validation_report.csv"
 
@@ -370,8 +527,17 @@ def export_database(
         if item.get("validation", {}).get("overall_status") in accepted_statuses
     ]
     mat_path = autotune_dir / "aircraft_aero.mat"
-    if export_config.get("mat", True) and command in {"all", "trim"}:
-        if accepted and len(accepted) == len(database["trim"]["results"]):
+    grid_results = database.get("grid", {}).get("results", [])
+    grid_ready = bool(
+        grid_results
+        and all(item.get("status") == "PASS" for item in grid_results)
+        and database.get("responses", {}).get("enabled")
+        and database.get("responses", {}).get("gate", {}).get("status") == "PASS"
+    )
+    trim_results = database["trim"]["results"]
+    trim_ready = bool(accepted and len(accepted) == len(trim_results))
+    if export_config.get("mat", True) and command in {"all", "grid", "trim"}:
+        if grid_ready or trim_ready:
             autotune_dir.mkdir(parents=True, exist_ok=True)
             savemat(
                 mat_path, {"AERO": _aero_mat(database, accepted)},
@@ -379,29 +545,37 @@ def export_database(
             )
             loaded = loadmat(mat_path, squeeze_me=True, struct_as_record=False)
             aero = loaded.get("AERO")
-            if aero is None or not hasattr(aero, "meta") or not hasattr(aero, "flight_points"):
-                raise RuntimeError("MAT verification failed: AERO.meta/flight_points is unreadable")
-            if not hasattr(aero.meta, "schema_version") or str(aero.meta.schema_version) != "1.0":
-                raise RuntimeError("MAT verification failed: AERO.meta.schema_version is not 1.0")
-            if not hasattr(aero, "longitudinal") or not hasattr(aero.longitudinal, "Cm_alpha"):
-                raise RuntimeError("MAT verification failed: AERO.longitudinal.Cm_alpha is unreadable")
-            for container, name in (
-                (aero.longitudinal, "CL_q"),
-                (aero.longitudinal, "Cm_q"),
-                (aero.lateral, "CY_p"),
-                (aero.lateral, "Cl_p"),
-                (aero.lateral, "Cn_p"),
-                (aero.lateral, "CY_r"),
-                (aero.lateral, "Cl_r"),
-                (aero.lateral, "Cn_r"),
-            ):
-                if not hasattr(container, name):
-                    raise RuntimeError(f"MAT verification failed: production rate derivative {name} is unreadable")
+            if aero is None or not hasattr(aero, "meta") or not hasattr(aero, "grid"):
+                raise RuntimeError("MAT verification failed: AERO.meta/grid is unreadable")
+            if not hasattr(aero.meta, "schema_version") or str(aero.meta.schema_version) != "2.0":
+                raise RuntimeError("MAT verification failed: AERO.meta.schema_version is not 2.0")
+            if grid_ready:
+                if not hasattr(aero, "responses") or not hasattr(aero.responses, "controls"):
+                    raise RuntimeError("MAT verification failed: AERO.responses.controls is unreadable")
+                if not hasattr(aero.responses.controls, "elevator"):
+                    raise RuntimeError("MAT verification failed: GRID elevator response is unreadable")
+                if not hasattr(aero.responses, "rates") or not hasattr(aero.responses.rates, "q"):
+                    raise RuntimeError("MAT verification failed: GRID local q derivatives are unreadable")
+            if trim_ready:
+                if not hasattr(aero, "longitudinal") or not hasattr(aero.longitudinal, "Cm_alpha"):
+                    raise RuntimeError("MAT verification failed: AERO.longitudinal.Cm_alpha is unreadable")
+                for container, name in (
+                    (aero.longitudinal, "CL_q"),
+                    (aero.longitudinal, "Cm_q"),
+                    (aero.lateral, "CY_p"),
+                    (aero.lateral, "Cl_p"),
+                    (aero.lateral, "Cn_p"),
+                    (aero.lateral, "CY_r"),
+                    (aero.lateral, "Cl_r"),
+                    (aero.lateral, "Cn_r"),
+                ):
+                    if not hasattr(container, name):
+                        raise RuntimeError(f"MAT verification failed: production rate derivative {name} is unreadable")
             paths["mat"] = mat_path
             paths["mat_status"] = "PASS"
         else:
             paths["mat_status"] = (
-                "FAIL (no complete accepted TRIM dataset; any prior MAT artifact was retained "
+                "FAIL (neither GRID+response nor a complete accepted TRIM dataset is available; any prior MAT artifact was retained "
                 "and is not evidence for this run)"
             )
     else:

@@ -2,9 +2,9 @@ aircraft:
   name: test_aircraft
   model: "../aircraft/test_aircraft.vsp3"
 
-# all / grid / trim / regression 由统一入口选择；这里仅定义 all 的默认组成。
 analysis:
-  modes: [GRID_DATABASE, TRIM_DATABASE]
+  grid_enabled: true
+  trim_enabled: true
 
 # Adaptive GRID 真实最小验收：2 个速度 × 1 个迎角 × 1 个侧滑角。
 operating_conditions:
@@ -29,6 +29,23 @@ grid:
       speed_mps: 0.25
       alpha_deg: 0.25
       beta_deg: 0.25
+
+response_scan:
+  enabled: false
+  scope: audit
+  variables: [p, q, r, elevator, aileron, rudder]
+  representative_states: []
+  control_levels_deg:
+    elevator: [-5, 0, 5]
+    aileron: [-5, 0, 5]
+    rudder: [-5, 0, 5]
+  rates: {representation: local_linear_derivative, source: vspaero_steady_stab}
+  linearity:
+    minimum_samples: 3
+    minimum_response_range: 1.0e-5
+    slope_floor: 1.0e-6
+    linear: {normalized_max_deviation: 0.05, slope_variation: 0.15, r_squared_min: 0.995, asymmetry: 0.10}
+    weakly_nonlinear: {normalized_max_deviation: 0.15, slope_variation: 0.40, r_squared_min: 0.98, asymmetry: 0.30}
 
 atmosphere:
   rho_kg_m3: 1.225
@@ -95,7 +112,6 @@ controls:
 
 # 稳态水平直飞纵向 Trim：Lift=Weight 且 Cm=0。
 trim:
-  enabled: true
   mass_kg: 25.0
   gravity_m_s2: 9.80665
   operating_conditions:
